@@ -1,0 +1,99 @@
+% interacttfssample.tex
+% v1.05 - August 2017
+
+\documentclass[]{interact}
+
+%\usepackage{epstopdf}% To incorporate .eps illustrations using PDFLaTeX, etc.
+\usepackage[caption=false]{subfig}% Support for small, `sub' figures and tables
+%\usepackage[nolists,tablesfirst]{endfloat}% To `separate' figures and tables from text if required
+
+%\usepackage[doublespacing]{setspace}% To produce a `double spaced' document if required
+%\setlength\parindent{24pt}% To increase paragraph indentation when line spacing is doubled
+%\setlength\bibindent{2em}% To increase hanging indent in bibliography when line spacing is doubled
+
+\usepackage[numbers,sort&compress]{natbib}% Citation support using natbib.sty
+\bibpunct[, ]{[}{]}{,}{n}{,}{,}% Citation support using natbib.sty
+\renewcommand\bibfont{\fontsize{10}{12}\selectfont}% Bibliography support using natbib.sty
+
+%\theoremstyle{plain}% Theorem-like structures provided by amsthm.sty
+%\newtheorem{theorem}{Theorem}[section]
+%\newtheorem{lemma}[theorem]{Lemma}
+%\newtheorem{corollary}[theorem]{Corollary}
+%\newtheorem{proposition}[theorem]{Proposition}
+
+%\theoremstyle{definition}
+%\newtheorem{definition}[theorem]{Definition}
+%\newtheorem{example}[theorem]{Example}
+
+%\theoremstyle{remark}
+%\newtheorem{remark}{Remark}
+%\newtheorem{notation}{Notation}
+
+\begin{document}
+
+\articletype{REVIEW ARTICLE}% Specify the article type or omit as appropriate
+
+\title{The Integrated Nested Laplace Approximation applied to spatial point process models}
+
+\author{
+\name{Kenneth Flagg\thanks{CONTACT Kenneth Flagg. Email: kenneth.flagg@montana.edu} and Andrew Hoegh}
+\affil{Montana State University, Bozeman, MT}
+}
+
+\maketitle
+
+\begin{abstract}
+This template is for authors who are preparing a manuscript for a Taylor \& Francis journal using the \LaTeX\ document preparation system and the \texttt{interact} class file, which is available via selected journals' home pages on the Taylor \& Francis website.
+\end{abstract}
+
+\begin{keywords}
+\end{keywords}
+
+
+\section{Introduction}
+
+\cite{rueetal}
+
+\section{Log-Gaussian Cox Process}
+
+\section{INLA}
+
+\section{The SPDE Approach}
+
+\section{Going Off-Grid}
+
+\section{Illustrations}
+
+\section{Conclusion}
+
+
+%\section*{Acknowledgement(s)}
+
+%An unnumbered section, e.g.\ \verb"\section*{Acknowledgements}", may be used for thanks, etc.\ if required and included \emph{in the non-anonymous version} before any Notes or References.
+
+%\section*{Disclosure statement}
+
+%An unnumbered section, e.g.\ \verb"\section*{Disclosure statement}", may be used to declare any potential conflict of interest and included \emph{in the non-anonymous version} before any Notes or References, after any Acknowledgements and before any Funding information.
+
+%\section*{Funding}
+
+%An unnumbered section, e.g.\ \verb"\section*{Funding}", may be used for grant details, etc.\ if required and included \emph{in the non-anonymous version} before any Notes or References.
+
+%\section*{Notes on contributor(s)}
+
+%An unnumbered section, e.g.\ \verb"\section*{Notes on contributors}", may be included \emph{in the non-anonymous version} if required. A photograph may be added if requested.
+
+%\section*{Nomenclature/Notation}
+
+%An unnumbered section, e.g.\ \verb"\section*{Nomenclature}" (or \verb"\section*{Notation}"), may be included if required, before any Notes or References.
+
+%\section*{Notes}
+
+%An unnumbered `Notes' section may be included before the References (if using the \verb"endnotes" package, use the command \verb"\theendnotes" where the notes are to appear, instead of creating a \verb"\section*").
+
+\section{References}
+
+\bibliographystyle{tfs}
+\bibliography{jas-inla-review}
+
+\end{document}
