@@ -56,25 +56,91 @@ spatial prediction is a high-dimensional problem
 
 many dependent latent variables but joint dist not necessarily needed
 
-INLA fast approximation for marginals useful for mapping
+INLA fast approximation for marginals useful for mapping \cite{rueetal}
 
-\cite{rueetal}
 
 \section{Log-Gaussian Cox Process}
 
+Poisson process intensity $\lambda(\mathbf{s})$ events per unit area
+
+Model $\log\lambda(\mathbf{s}) = Z(\mathbf{s})$, $Z(\mathbf{s})$ spatial Gaussian process
+
+Random continuous function: $Z(\mathbf{s})$ a Gaussian random variable, Mean $\mu$ Matern covariance function
+
+Poisson process log-likelihood: $\ell(\lambda) = C - \int \lambda(\mathbf{s}) d\mathbf{s} + \sum \log(\lambda(\mathbf{s_{i}}))$
+
+(Need to add covariate to notation)
+
 \section{INLA}
+
+Integrated Nested Laplace Approximation
+
+Bayesian Hierarchical models, many latent Gaussian variables, few parameters
+
+Laplace approximation in general: $\int \exp[h(x)]\mathrm{d}x$, Taylor expansion of $h(x)$
+
+Example from @rinla
+
+- $\mathbf{y} = (y_{1}, \dots, y_{n})'$ independent Gaussian observations
+
+- $y_{i} \sim \mathrm{N}(\theta, \sigma^{2})$
+
+- $\theta \sim \mathrm{N}(\mu_{0}, \sigma_{0}^{2})$
+
+- $\psi = 1/\sigma^{2}$, $\psi \sim \mathrm{Gamma}(a, b)$
+
+- The posterior distribution of $\psi$:
+$$p(\psi|\mathbf{y}) \propto \frac{p(\mathbf{y} | \theta, \psi) p(\theta) p(\psi)}
+{p(\theta | \psi, \mathbf{y})}$$
+
+- Laplace approximation:
+$$\tilde{p}(\psi|\mathbf{y}) \propto \frac{p(\mathbf{y} | \theta, \psi) p(\theta) p(\psi)}
+{\tilde{p}_{G}(\theta^{*} | \psi, \mathbf{y})}$$
+
+Repeat for $\theta$, will depend on $\psi$
+
+Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\theta}$
+
 
 \section{The SPDE Approach}
 
 GP has dense covariance matrix
 
-SPDE result approximates GP with CAR and sparse covariance matrix
+SPDE result approximates GP with CAR and sparse covariance matrix \cite{lindgrenetal}
+
+$$(\kappa^{2} - \Delta)^{\alpha / 2} (\tau Z(\mathbf{s})) = W(\mathbf{s})$$
+
+Choose nodes $\mathbf{s}_{i}$ to model $Z(\mathbf{s}_{i})$, build a triangular mesh, autoregressive model on the nodes
+
+Change of basis: barycentric coordinates allow sparse matrices and simple linear inerpolation
+
 
 \section{Going Off the Grid}
 
-\setion{Variable Sampling Effort}
+Log-likelihood:
+$$\ell(Z) = C - \int \exp\left[Z(\mathbf{s})\right] d\mathbf{s} + \sum Z(\mathbf{s_{i}})$$
+
+\cite{simpsonetal}:
+$$\ell(Z) \approx C - \sum_{i} \tilde{\alpha}_{i} \exp\left[\sum_{j} z_{j}\phi_{j}(\tilde{\mathbf{s}}_{i})\right] + \sum_{i} \sum_{j} z_{j}\phi_{j}(\mathbf{s_{i}})$$
+
+(Poisson distribution)
+
+
+\section{Variable Sampling Effort}
+
+Observed a thinned process
+
+Thinning process can be known or unknown
+
+Scale SPDE node integration weights by thinning probabilities when known
+
+Incorporate log-linear model for thinning probability when unknown \cite{yuanetal}
+
 
 \section{Illustrations}
+
+Examples with data, maybe \texttt{bei} dataset, Victorville, or a simulation study
+
 
 \section{Conclusion}
 
@@ -102,8 +168,6 @@ SPDE result approximates GP with CAR and sparse covariance matrix
 %\section*{Notes}
 
 %An unnumbered `Notes' section may be included before the References (if using the \verb"endnotes" package, use the command \verb"\theendnotes" where the notes are to appear, instead of creating a \verb"\section*").
-
-\section{References}
 
 \bibliographystyle{tfs}
 \bibliography{jas-inla-review}
