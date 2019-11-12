@@ -49,6 +49,14 @@ This template is for authors who are preparing a manuscript for a Taylor \& Fran
 \begin{keywords}
 \end{keywords}
 
+\section*{Delete Me Later - Manuscript Organization from JAS Author Instructions}
+\begin{itemize}
+
+  \item {\bf Introduction:} Please introduce one or more current statistical research methods that have been widely used by other discipline(s) in the Introduction section or divide the discussion into two or more subsections within this Introduction section.
+  \item {\bf Methodology or Approach:} Present the method(s) and relevant applications being reviewed in this or more sections.
+  \item {\bf Application of your Methodology:} Present some applications of the reviewed methods to some recent data in this or more sections. Also note: Simulation studies can be presented as a sub-section in this section or in a new standalone section.
+  \item {\bf Conclusion and Discussion:} In this conclusion and discussion section, provide conclusions of your review and provide anticipated future direction(s) in this area.
+  \end{itemize}
 
 \section{Introduction}
 
@@ -56,10 +64,7 @@ spatial prediction is a high-dimensional problem
 
 many dependent latent variables but joint dist not necessarily needed
 
-INLA fast approximation for marginals useful for mapping \cite{rueetal}
-
-
-\section{Log-Gaussian Cox Process}
+\subsection{Log-Gaussian Cox Process}
 
 Poisson process intensity $\lambda(\mathbf{s})$ events per unit area
 
@@ -71,7 +76,8 @@ Poisson process log-likelihood: $\ell(\lambda) = C - \int \lambda(\mathbf{s}) d\
 
 (Need to add covariate to notation)
 
-\section{INLA}
+\subsection{INLA}
+INLA fast approximation for marginals useful for mapping \cite{rueetal}
 
 Integrated Nested Laplace Approximation
 
@@ -102,7 +108,9 @@ Repeat for $\theta$, will depend on $\psi$
 Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\theta}$
 
 
-\section{The SPDE Approach}
+
+\section{Methodology}
+\subsection{The SPDE Approach}
 
 GP has dense covariance matrix
 
@@ -115,7 +123,7 @@ Choose nodes $\mathbf{s}_{i}$ to model $Z(\mathbf{s}_{i})$, build a triangular m
 Change of basis: barycentric coordinates allow sparse matrices and simple linear inerpolation
 
 
-\section{Going Off the Grid}
+\subsection{Going Off the Grid}
 
 Log-likelihood:
 $$\ell(Z) = C - \int \exp\left[Z(\mathbf{s})\right] d\mathbf{s} + \sum Z(\mathbf{s_{i}})$$
@@ -126,7 +134,7 @@ $$\ell(Z) \approx C - \sum_{i} \tilde{\alpha}_{i} \exp\left[\sum_{j} z_{j}\phi_{
 (Poisson distribution)
 
 
-\section{Variable Sampling Effort}
+\subsection{Variable Sampling Effort -- Delete this subsection?}
 
 Observed a thinned process
 
@@ -137,12 +145,17 @@ Scale SPDE node integration weights by thinning probabilities when known
 Incorporate log-linear model for thinning probability when unknown \cite{yuanetal}
 
 
-\section{Illustrations}
-
-Examples with data, maybe \texttt{bei} dataset, Victorville, or a simulation study
+\section{Applications}
 
 
-\section{Conclusion}
+\subsection{Simulation Study}
+
+\subsection{Data Application}
+
+Examples with data, maybe \texttt{bei} dataset or Victorville
+
+
+\section{Conclusion and Discussion}
 
 
 %\section*{Acknowledgement(s)}
