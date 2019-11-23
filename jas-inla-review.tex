@@ -31,9 +31,29 @@
 
 \begin{document}
 
+{\Large\bf Progress this week}
+
+{\large\bf\today}
+
+\begin{itemize}
+
+\item Added some keywords.
+
+\item Turned introduction into complete sentences.
+
+\end{itemize}
+
+\vfill
+
+\textbf{Previous word count:} --- \hfill \textbf{Current word count:}
+
+\textbf{Previous page count:} --- \hfill \textbf{Current page count:}
+
+\pagebreak
+
 \articletype{REVIEW ARTICLE}% Specify the article type or omit as appropriate
 
-\title{The Integrated Nested Laplace Approximation applied to spatial point process models}
+\title{The Integrated Nested Laplace Approximation applied to Spatial Point Process Models}
 
 \author{
 \name{Kenneth Flagg\thanks{CONTACT Kenneth Flagg. Email: kenneth.flagg@montana.edu} and Andrew Hoegh}
@@ -47,22 +67,46 @@ This template is for authors who are preparing a manuscript for a Taylor \& Fran
 \end{abstract}
 
 \begin{keywords}
+INLA, spatial prediction, log-Gaussian Cox process, spatial point process
 \end{keywords}
 
-\section*{Delete Me Later - Manuscript Organization from JAS Author Instructions}
-\begin{itemize}
-
-  \item {\bf Introduction:} Please introduce one or more current statistical research methods that have been widely used by other discipline(s) in the Introduction section or divide the discussion into two or more subsections within this Introduction section.
-  \item {\bf Methodology or Approach:} Present the method(s) and relevant applications being reviewed in this or more sections.
-  \item {\bf Application of your Methodology:} Present some applications of the reviewed methods to some recent data in this or more sections. Also note: Simulation studies can be presented as a sub-section in this section or in a new standalone section.
-  \item {\bf Conclusion and Discussion:} In this conclusion and discussion section, provide conclusions of your review and provide anticipated future direction(s) in this area.
-  \end{itemize}
 
 \section{Introduction}
+%  {\bf Introduction:} Please introduce one or more current statistical research methods that have been widely used by other discipline(s) in the Introduction section or divide the discussion into two or more subsections within this Introduction section.
 
-spatial prediction is a high-dimensional problem
+Spatial prediction is a high-dimensional inference problem. When the goal of
+statistical modeling is to produce a graphical map of a random variable over
+space, the model ultimately must be able to predict that random variable at
+every pixel of the image. A map image will typically be at least several
+hundred by several hundred pixels, so in total there can easily be hundreds of
+thoudands of pixels requiring predictions. Thus, even when a model has only
+half a dozen parameters, it may include hundreds of thousands of latent
+variables.
 
-many dependent latent variables but joint dist not necessarily needed
+Spatial point process models further complicate the situation with difficult
+likelihoods. {\it (Cite some computational papers --- Baddely?)} Both maximum
+likelihood and Bayesian model fitting require integrating the intensity
+function over space, but the integral is generally not available in closed
+form. Many methods have been introduced including quadrature-based
+approximations {\it (cite Baddeley)}, pseudodata approaches
+{\it (cite Baddeley/Berman/Turner etc)}, and Markov chain Monte
+Carlo~\cite{moellerwaagepetersen}.
+
+Development of the integrated nested Laplace approximation (INLA) has made
+accurate approximate model fitting considerably more feasible for a particular
+class of log-Gaussian Cox process (LGCP) models. INLA was developed to fit
+Bayesian hierarchical models with many latent Gaussian
+variables~\cite{rueetal}. A key part of INLA's computational simplicity is that
+it calculates the posterior distribution of each latent Gaussian variable one
+at a time; that is, it provides only the posterior marginal distributions
+rather that the full joint distribution.
+
+When using a LGCP for spatial mapping, two aspects make INLA a suitable
+approach. First, the LGCP is driven by a spatial Gaussian process, so the
+latent variables are Gaussian. Second, even though the latent variables are
+expected to exhibit spatial dependence, their full joint distribution is not
+needed. In most situations it suffices to map their predicted values, variance,
+and upper and lower interval bounds pointwise across space.
 
 \subsection{Log-Gaussian Cox Process}
 
@@ -74,7 +118,7 @@ Random continuous function: $Z(\mathbf{s})$ a Gaussian random variable, Mean $\m
 
 Poisson process log-likelihood: $\ell(\lambda) = C - \int \lambda(\mathbf{s}) d\mathbf{s} + \sum \log(\lambda(\mathbf{s_{i}}))$
 
-(Need to add covariate to notation)
+(Need to add covariates to notation)
 
 \subsection{INLA}
 INLA fast approximation for marginals useful for mapping \cite{rueetal}
@@ -85,7 +129,7 @@ Bayesian Hierarchical models, many latent Gaussian variables, few parameters
 
 Laplace approximation in general: $\int \exp[h(x)]\mathrm{d}x$, Taylor expansion of $h(x)$
 
-Example from @rinla
+Example from \cite{rinla}
 
 - $\mathbf{y} = (y_{1}, \dots, y_{n})'$ independent Gaussian observations
 
@@ -110,6 +154,8 @@ Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\the
 
 
 \section{Methodology}
+%  {\bf Methodology or Approach:} Present the method(s) and relevant applications being reviewed in this or more sections.
+
 \subsection{The SPDE Approach}
 
 GP has dense covariance matrix
@@ -146,7 +192,7 @@ Incorporate log-linear model for thinning probability when unknown \cite{yuaneta
 
 
 \section{Applications}
-
+%  {\bf Application of your Methodology:} Present some applications of the reviewed methods to some recent data in this or more sections. Also note: Simulation studies can be presented as a sub-section in this section or in a new standalone section.
 
 \subsection{Simulation Study}
 
@@ -156,6 +202,7 @@ Examples with data, maybe \texttt{bei} dataset or Victorville
 
 
 \section{Conclusion and Discussion}
+%  {\bf Conclusion and Discussion:} In this conclusion and discussion section, provide conclusions of your review and provide anticipated future direction(s) in this area.
 
 
 %\section*{Acknowledgement(s)}
