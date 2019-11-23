@@ -39,7 +39,7 @@
 
 \item Added some keywords.
 
-\item Turned introduction into complete sentences.
+\item Turned \S 1 and \S 1.1 into complete sentences.
 
 \end{itemize}
 
@@ -74,12 +74,14 @@ INLA, spatial prediction, log-Gaussian Cox process, spatial point process
 \section{Introduction}
 %  {\bf Introduction:} Please introduce one or more current statistical research methods that have been widely used by other discipline(s) in the Introduction section or divide the discussion into two or more subsections within this Introduction section.
 
+% More introduction, define point process terms.
+
 Spatial prediction is a high-dimensional inference problem. When the goal of
 statistical modeling is to produce a graphical map of a random variable over
 space, the model ultimately must be able to predict that random variable at
 every pixel of the image. A map image will typically be at least several
 hundred by several hundred pixels, so in total there can easily be hundreds of
-thoudands of pixels requiring predictions. Thus, even when a model has only
+thousands of pixels requiring predictions. Thus, even when a model has only
 half a dozen parameters, it may include hundreds of thousands of latent
 variables.
 
@@ -108,19 +110,44 @@ expected to exhibit spatial dependence, their full joint distribution is not
 needed. In most situations it suffices to map their predicted values, variance,
 and upper and lower interval bounds pointwise across space.
 
+This article provides a review of recent advances in the fitting of LGCP models
+via INLA, including dimension reduction by triangulation, a likelihood
+factorization that avoids gridding, and incorporation of sampling or false
+negatives.
+
+
 \subsection{Log-Gaussian Cox Process}
 
-Poisson process intensity $\lambda(\mathbf{s})$ events per unit area
+The LGCP is a Poisson process driven by a latent Gaussian
+process~\cite{moelleretal}. A Poisson process is characterized entirely by its
+intensity function \(\lambda(\mathbf{s})\), which gives the mean number of events
+per unit area, and the process satisfies the following two properties
+{\it (find a good citation)}.
+\begin{enumerate}
+\item The number of events in a region \(\mathcal{S}\) follows a Poisson
+distribution with mean
+\(\int_{\mathcal{S}} \lambda(\mathbf{s})\mathrm{d}\mathbf{s}\).
+\item The numbers of events in disjoint regions are independent.
+\end{enumerate}
 
-Model $\log\lambda(\mathbf{s}) = Z(\mathbf{s})$, $Z(\mathbf{s})$ spatial Gaussian process
+Commonly, covariates are incorporated via a log-linear model for the intensity,
+\begin{displaymath}
+\log\lambda(\mathbf{s}) = \mathbf{X}(\mathbf{s}) \boldsymbol{\beta}.
+\end{displaymath}
+The LGCP adds another stochastic layer,
+\begin{displaymath}
+\log\lambda(\mathbf{s}) = \mathbf{X}(\mathbf{s}) \boldsymbol{\beta}
++ Z(\mathbf{s}),
+\end{displaymath}
+where \(Z(\mathbf{s})\) is a Gaussian process.
 
-Random continuous function: $Z(\mathbf{s})$ a Gaussian random variable, Mean $\mu$ Matern covariance function
+Where the spatial Poisson process has a (stochastically) fixed intensity to be
+estimated from data, the spatial LGCP induces a hierarchical model where the
+intensity function is itself a random process to be predicted.
 
-Poisson process log-likelihood: $\ell(\lambda) = C - \int \lambda(\mathbf{s}) d\mathbf{s} + \sum \log(\lambda(\mathbf{s_{i}}))$
 
-(Need to add covariates to notation)
+\subsection{Integrated Nested Laplace Approximation}
 
-\subsection{INLA}
 INLA fast approximation for marginals useful for mapping \cite{rueetal}
 
 Integrated Nested Laplace Approximation
@@ -152,11 +179,14 @@ Repeat for $\theta$, will depend on $\psi$
 Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\theta}$
 
 
-
 \section{Methodology}
 %  {\bf Methodology or Approach:} Present the method(s) and relevant applications being reviewed in this or more sections.
 
+
 \subsection{The SPDE Approach}
+
+Because the LGCP includes a Gaussian process, efficient computation for
+Gaussian processes is critical when working with LGCP models.
 
 GP has dense covariance matrix
 
@@ -168,11 +198,24 @@ Choose nodes $\mathbf{s}_{i}$ to model $Z(\mathbf{s}_{i})$, build a triangular m
 
 Change of basis: barycentric coordinates allow sparse matrices and simple linear inerpolation
 
+Computationally doable when \(Z(\mathbf{s})\) has a Mat\'{e}rn covariance with
+certain values of the smoothness parameter.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{figures/surface.png}
+\caption{A realization of a spatial Gaussian process (left) and an
+approximation of the process over a triangular mesh (right).}
+\label{surface}
+\end{figure}
+
 
 \subsection{Going Off the Grid}
 
 Log-likelihood:
-$$\ell(Z) = C - \int \exp\left[Z(\mathbf{s})\right] d\mathbf{s} + \sum Z(\mathbf{s_{i}})$$
+\begin{displaymath}
+\ell(Z) = C - \int \lambda(\mathbf{s}) d\mathbf{s}
++ \sum \log\left(\lambda(\mathbf{s_{i}})\right)
+\end{displaymath}
 
 \cite{simpsonetal}:
 $$\ell(Z) \approx C - \sum_{i} \tilde{\alpha}_{i} \exp\left[\sum_{j} z_{j}\phi_{j}(\tilde{\mathbf{s}}_{i})\right] + \sum_{i} \sum_{j} z_{j}\phi_{j}(\mathbf{s_{i}})$$
@@ -180,7 +223,7 @@ $$\ell(Z) \approx C - \sum_{i} \tilde{\alpha}_{i} \exp\left[\sum_{j} z_{j}\phi_{
 (Poisson distribution)
 
 
-\subsection{Variable Sampling Effort -- Delete this subsection?}
+\subsection{Variable Sampling Effort}
 
 Observed a thinned process
 
@@ -194,7 +237,9 @@ Incorporate log-linear model for thinning probability when unknown \cite{yuaneta
 \section{Applications}
 %  {\bf Application of your Methodology:} Present some applications of the reviewed methods to some recent data in this or more sections. Also note: Simulation studies can be presented as a sub-section in this section or in a new standalone section.
 
+
 \subsection{Simulation Study}
+
 
 \subsection{Data Application}
 
