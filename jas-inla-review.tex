@@ -41,13 +41,21 @@
 
 \item Turned \S 1 and \S 1.1 into complete sentences.
 
+\item Added some orientation text to \S 2.
+
+\item Turned \S 2.1 into complete sentences.
+
+\item Added Figure 1 illustrating the triangular mesh representation.
+
+\item Added Figure 2 illustrating the barycentric change-of-basis.
+
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} --- \hfill \textbf{Current word count:}
+\textbf{Previous word count:} --- \hfill \textbf{Current word count: 1032}
 
-\textbf{Previous page count:} --- \hfill \textbf{Current page count:}
+\textbf{Previous page count:} --- \hfill \textbf{Current page count: 3}
 
 \pagebreak
 
@@ -101,10 +109,10 @@ Bayesian hierarchical models with many latent Gaussian
 variables~\cite{rueetal}. A key part of INLA's computational simplicity is that
 it calculates the posterior distribution of each latent Gaussian variable one
 at a time; that is, it provides only the posterior marginal distributions
-rather that the full joint distribution.
+rather than the full joint distribution.
 
 When using a LGCP for spatial mapping, two aspects make INLA a suitable
-approach. First, the LGCP is driven by a spatial Gaussian process, so the
+approach. First, the LGCP is driven by a spatial Gaussian process (GP), so the
 latent variables are Gaussian. Second, even though the latent variables are
 expected to exhibit spatial dependence, their full joint distribution is not
 needed. In most situations it suffices to map their predicted values, variance,
@@ -139,11 +147,14 @@ The LGCP adds another stochastic layer,
 \log\lambda(\mathbf{s}) = \mathbf{X}(\mathbf{s}) \boldsymbol{\beta}
 + Z(\mathbf{s}),
 \end{displaymath}
-where \(Z(\mathbf{s})\) is a Gaussian process.
+where \(Z\) is a Gaussian process.
 
 Where the spatial Poisson process has a (stochastically) fixed intensity to be
 estimated from data, the spatial LGCP induces a hierarchical model where the
 intensity function is itself a random process to be predicted.
+
+% Need to better explain the hierarchical setup. Separate Poisson process from
+% GP and write out likelihoods separately?
 
 
 \subsection{Integrated Nested Laplace Approximation}
@@ -178,35 +189,95 @@ Repeat for $\theta$, will depend on $\psi$
 
 Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\theta}$
 
+Available in R through the \texttt{R-INLA} package~\cite{inlar}.
+
 
 \section{Methodology}
 %  {\bf Methodology or Approach:} Present the method(s) and relevant applications being reviewed in this or more sections.
 
+INLA provides an efficient computational framework for fitting Bayesian models
+with latent Gaussian variables. On top of this framework are built several
+tools to further simplify the fitting of spatial LGCP models. The stochastic
+partial differential equation (SPDE) approach provides dimension reduction for
+the spatial GP~\cite{lindgrenetal}. The SPDE approach employs a numerical
+integration scheme which can also be used to approximate the LGCP likelihood
+and negate the need to grid the events into Poisson counts~\cite{simpsonetal}.
+With these computational improvements, researchers are now able to efficiently
+fit LGCP models to incompletely-observed point patterns~\cite{yuanetal}.  
+
 
 \subsection{The SPDE Approach}
 
-Because the LGCP includes a Gaussian process, efficient computation for
+Because the LGCP includes a Gaussian process (GP), efficient computation for
 Gaussian processes is critical when working with LGCP models.
 
-GP has dense covariance matrix
+The GP imposes a dense covariance matrix on the latent variables~\cite{rinla}.
+For GPs with a Mat\'{e}rn covariance function, a Gaussian Markov random field
+(GMRF) approximation can simplify computation, requiring only a sparse
+covariance structure.
 
-SPDE result approximates GP with CAR and sparse covariance matrix \cite{lindgrenetal}
+The GMRF approximation is motivated by the fact that Gaussian fields with
+Mat\'{e}rn covariances are solutions to the below stochastic partial
+differential equation (SPDE)~\cite{lindgrenetal}.
+\begin{displaymath}
+(\kappa^{2} - \Delta)^{\alpha / 2} Z(\mathbf{s}) = \mathcal{W}(\mathbf{s}),
+\quad \mathbf{s} \in \mathbb{R}^d, \kappa > 0, \alpha = \nu + d/2, \nu > 0
+\end{displaymath}
+Here, \(\mathcal{W}\) is a Gaussian white noise process with variance 1, and
+\(\Delta\) is the Laplacian operator. The stationary solution \(Z\) is a
+Gaussian field with a Mat\'{e}rn covariance function with scaling parameter
+\(\kappa\) (approximately inversly proportional to the range) and smoothness
+parameter \(\nu\). The variance is a function of \(\kappa\), \(\nu\), and
+\(d\).
 
-$$(\kappa^{2} - \Delta)^{\alpha / 2} (\tau Z(\mathbf{s})) = W(\mathbf{s})$$
+Lindgren, Rue, and Lindstr\"{o}m investigate the limit as \(\nu \to 0\) for
+\(d = 2\), finding that the solution is a GMRF on a unit
+lattice~\cite{lindgrenetal}. They then construct approximations for positive
+integer values of \(\nu\) by \(\nu\)-fold convolution of \(Z\) with itself.
+Finally, they use a finite element method to genrealize the approximation
+to arbitrary triangulations of the support. This approximation has considerable
+computational benefits because the GMRF has a sparse covariance structure; the
+only nodes with nonzero covariances are those directly connected by edges in
+the triangulation.
 
-Choose nodes $\mathbf{s}_{i}$ to model $Z(\mathbf{s}_{i})$, build a triangular mesh, autoregressive model on the nodes
+In practice, the SPDE approach goes as follows. Choose nodes \(\mathbf{s}_{i}\)
+at which to model \(Z(\mathbf{s}_{i})\), then build a triangular mesh using these
+nodes. Typically the nodes will include locations where data or covariates are
+available, then the rest will be filled in with a Delaunay triangulation under
+some edge length constraints. The \(Z(\mathbf{s}_{i})\) are be modeled as a
+GMRF where the distribution of each \(Z(\mathbf{s}_{i})\) depends only on the
+\(Z(\mathbf{s}_{j})\) where \(\mathbf{s}_{i}\) and \(\mathbf{s}_{j}\) are
+connected by an edge. The GMRF representation is assumed to be a piecwise
+linear approximation of the continuous Gaussian field; values of
+\(Z(\mathbf{s})\) for \(\mathbf{s}\) not in the set of nodes are predicted
+using linear interpolation using the barycentric coordinates of
+\(\mathbf{s}\).
 
-Change of basis: barycentric coordinates allow sparse matrices and simple linear inerpolation
+% Add some of the linear algebraic notation and basis function discussion.
 
-Computationally doable when \(Z(\mathbf{s})\) has a Mat\'{e}rn covariance with
-certain values of the smoothness parameter.
+% Add comments about coursenes/fineness of mesh.
 
-\begin{figure}
+%Computationally doable when \(Z(\mathbf{s})\) has a Mat\'{e}rn covariance with
+%certain values of the smoothness parameter. Check newer references.
+
+\begin{figure}[p]
 \includegraphics[width=\textwidth]{figures/surface.png}
 \caption{A realization of a spatial Gaussian process (left) and an
-approximation of the process over a triangular mesh (right).}
+approximation of that realization over a triangular mesh (right).}
 \label{surface}
 \end{figure}
+
+\begin{figure}[p]
+\includegraphics[width=0.5\textwidth]{figures/triangle.png}
+\includegraphics[width=0.5\textwidth]{figures/simplex.png}
+\caption{An illustration of the transformation from a mesh triangle to the
+simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
+\(\mathbf{s}\)}
+\label{surface}
+\end{figure}
+
+The SPDE approach is implemented in the \texttt{R-INLA} package along with
+tools for constructing triangulation meshes.
 
 
 \subsection{Going Off the Grid}
@@ -228,6 +299,9 @@ $$\ell(Z) \approx C - \sum_{i} \tilde{\alpha}_{i} \exp\left[\sum_{j} z_{j}\phi_{
 Observed a thinned process
 
 Thinning process can be known or unknown
+
+Idea has been around a while but most applications have used
+gridding~\cite{chakrabortyetal}.
 
 Scale SPDE node integration weights by thinning probabilities when known
 
