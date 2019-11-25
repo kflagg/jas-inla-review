@@ -33,29 +33,19 @@
 
 {\Large\bf Progress this week}
 
-{\large\bf\today}
+{\large\bf December 1, 2019}
 
 \begin{itemize}
 
-\item Added some keywords.
-
-\item Turned \S 1 and \S 1.1 into complete sentences.
-
-\item Added some orientation text to \S 2.
-
-\item Turned \S 2.1 into complete sentences.
-
-\item Added Figure 1 illustrating the triangular mesh representation.
-
-\item Added Figure 2 illustrating the barycentric change-of-basis.
+\item 
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} --- \hfill \textbf{Current word count: 1032}
+\textbf{Previous word count: 1032} --- \hfill \textbf{Current word count: }
 
-\textbf{Previous page count:} --- \hfill \textbf{Current page count: 3}
+\textbf{Previous page count: 3} --- \hfill \textbf{Current page count: }
 
 \pagebreak
 
@@ -221,7 +211,8 @@ Mat\'{e}rn covariances are solutions to the below stochastic partial
 differential equation (SPDE)~\cite{lindgrenetal}.
 \begin{displaymath}
 (\kappa^{2} - \Delta)^{\alpha / 2} Z(\mathbf{s}) = \mathcal{W}(\mathbf{s}),
-\quad \mathbf{s} \in \mathbb{R}^d, \kappa > 0, \alpha = \nu + d/2, \nu > 0
+\qquad \mathbf{s} \in \mathbb{R}^d, \quad \kappa > 0,
+\quad \alpha = \nu + d/2, \quad \nu > 0
 \end{displaymath}
 Here, \(\mathcal{W}\) is a Gaussian white noise process with variance 1, and
 \(\Delta\) is the Laplacian operator. The stationary solution \(Z\) is a
@@ -273,7 +264,7 @@ approximation of that realization over a triangular mesh (right).}
 \caption{An illustration of the transformation from a mesh triangle to the
 simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
 \(\mathbf{s}\)}
-\label{surface}
+\label{triangle}
 \end{figure}
 
 The SPDE approach is implemented in the \texttt{R-INLA} package along with
@@ -281,6 +272,24 @@ tools for constructing triangulation meshes.
 
 
 \subsection{Going Off the Grid}
+
+Point pattern data are sometimes known as presence-only data, underscoring
+the fact that information about where events did \emph{not} occur is both
+important and often overlooked. There have been many proposed methods to
+account for regions that were observed to contain no events (in contrast to
+unobserved regions where it is unknown if any events are present). Many of
+these methods include imputation of dummy points and often involve
+discretization. In the world of maximum likelihood, perhaps the most
+well-developed of these use approximations based on logistic regression on
+presence/absence information in small disjoint regions {\it (cite a bunch of
+Baddely etc papers)}.
+
+Another alternative, which is probably the most popular approach to Bayesian
+fitting of LGCP models but is also common in frequentist analyses, is to grid
+the domain and model the induced Poisson counts. It has long been understood
+that results are sensitive to the discretization scheme~\cite{brixmoeller}.
+Simpson et. al. explain that this is also computationally
+wasteful~\cite{simpsonetal}.
 
 Log-likelihood:
 \begin{displaymath}
@@ -302,6 +311,12 @@ Thinning process can be known or unknown
 
 Idea has been around a while but most applications have used
 gridding~\cite{chakrabortyetal}.
+
+% Brix and M\"{o}ller \cite{brixmoeller} fit an LGCP to weed data observed in
+% rectangular frames and used a Metropolis-adjusted Langevin algorthim
+% (from~\cite{moellerwaagepetersen}) to predict the intensity outside of the
+% observed frames (but not across the full study area due to computational
+% limitations). {\it (This does not involve gridding?)}
 
 Scale SPDE node integration weights by thinning probabilities when known
 
