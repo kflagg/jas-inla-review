@@ -37,7 +37,11 @@
 
 \begin{itemize}
 
-\item 
+\item TODO: Turn \S 1.2 into complete sentences.
+
+\item Expanded \S 2.2.
+
+\item TODO: Expand \S 2.3.
 
 \end{itemize}
 
@@ -181,6 +185,8 @@ Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\the
 
 Available in R through the \texttt{R-INLA} package~\cite{inlar}.
 
+Established usefulness for LGCP~\cite{illianetal}.
+
 
 \section{Methodology}
 %  {\bf Methodology or Approach:} Present the method(s) and relevant applications being reviewed in this or more sections.
@@ -278,29 +284,69 @@ the fact that information about where events did \emph{not} occur is both
 important and often overlooked. There have been many proposed methods to
 account for regions that were observed to contain no events (in contrast to
 unobserved regions where it is unknown if any events are present). Many of
-these methods include imputation of dummy points and often involve
-discretization. In the world of maximum likelihood, perhaps the most
-well-developed of these use approximations based on logistic regression on
-presence/absence information in small disjoint regions {\it (cite a bunch of
-Baddely etc papers)}.
+these methods involve imputation of dummy points or discretization. In the
+world of maximum likelihood, perhaps the most well-developed of these use
+approximations based on logistic regression on presence/absence information in
+small disjoint regions {\it (cite a bunch of Baddely etc papers)}.
+% What is the state-of-the-art for dummy point selection? The papers I'm
+% familiar with use lattices or SRSs.
 
 Another alternative, which is probably the most popular approach to Bayesian
 fitting of LGCP models but is also common in frequentist analyses, is to grid
 the domain and model the induced Poisson counts. It has long been understood
 that results are sensitive to the discretization scheme~\cite{brixmoeller}.
-Simpson et. al. explain that this is also computationally
+Simpson et. al. (2016) explain that this is also computationally
 wasteful~\cite{simpsonetal}.
+% Tradeoff: small grid cells for spatial precision vs small number of zeros
+% for computational speed.
 
-Log-likelihood:
+Simpson et. al. took LGCP inference ``off the grid'' by intoducing a
+computationally-efficient approximation to the Poisson process likelihood that
+requires the intensity function only to be evaluated at the locations of
+observed events and at the nodes of a mesh. Thus, the SPDE approach can be
+employed to model the intensity surface and the same nodes reused in
+evaluation of the Poisson process likelihood. The result is a substantial
+improvement in both computing time and accuracy of the approximation compared
+to gridding.
+
+% Thought on efficiency: fine grid is needed for precision regarding event
+% locations? Are there efficient adaptive grid methods?
+
+The approximation arises from a factorization of the Poisson processes
+likelihood. The exact log-likelihood is
 \begin{displaymath}
-\ell(Z) = C - \int \lambda(\mathbf{s}) d\mathbf{s}
-+ \sum \log\left(\lambda(\mathbf{s_{i}})\right)
+\ell(\lambda) = C - \int \lambda(\mathbf{s}) d\mathbf{s}
++ \sum \log\left[\lambda(\mathbf{s_{i}})\right]
 \end{displaymath}
+where \(C\) is a normalizing constant. The log-intensity is projected into the
+space spanned by a finite set of basis function
+representation is used for \(\log[\lambda(\mathbf{s})]\), namely
+\begin{displaymath}
+\log\left[\lambda(\mathbf{s})\right]
+\approx \sum_{j} z_{j} \phi_{j}(\mathbf{s})
+\end{displaymath}
+with \(\mathbf{z} = (z_{1}, \dots, z_{m})'\) a multivariate normal random
+vector and \(\{\phi_{1}, \dots, \phi_{m}\}\) a set of linearly independant
+basis functions.
+% The basis function representation is actually the SPDE representation.
+% Say so and move this to the previous section.
+This defines a numerical integration scheme at nodes \(\tilde{\mathbf{s}}_{i}\)
+with weights \(\tilde{\alpha}_{j}\) and yields the approximation,
+\begin{align*}
+\ell(\lambda) &\approx C - \sum_{i} \tilde{\alpha}_{i}
+\exp\left[\sum_{j} z_{j}\phi_{j}(\tilde{\mathbf{s}}_{i})\right]
++ \sum_{i} \sum_{j} z_{j}\phi_{j}(\mathbf{s}_{i}) \\
+& = C - \tilde{\boldsymbol{\alpha}}'
+\exp\left[\mathbf{A}_{1} \mathbf{z}\right]
++ \mathbf{1}' \mathbf{A}_{2} \mathbf{z}.
+\end{align*}
+This is equivalent to the likelihood of independent Poisson random variables
+with means {\it (translate the confusing algebra from the appendix)}. Thus,
+the SPDE approach, which can be easily fit in R-INLA, can be combined with a
+Poisson GLMM to rapidly fit an LGCP model. There is no need to compute grid
+counts, only to define dummy points at the mesh nodes.
 
-\cite{simpsonetal}:
-$$\ell(Z) \approx C - \sum_{i} \tilde{\alpha}_{i} \exp\left[\sum_{j} z_{j}\phi_{j}(\tilde{\mathbf{s}}_{i})\right] + \sum_{i} \sum_{j} z_{j}\phi_{j}(\mathbf{s_{i}})$$
-
-(Poisson distribution)
+% Include a figure showing a dual mesh and explain the alphas.
 
 
 \subsection{Variable Sampling Effort}
