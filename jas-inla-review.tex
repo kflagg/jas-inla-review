@@ -37,19 +37,19 @@
 
 \begin{itemize}
 
-\item TODO: Turn \S 1.2 into complete sentences.
+\item Turned \S 1.2 into complete sentences.
 
 \item Expanded \S 2.2.
 
-\item TODO: Expand \S 2.3.
+\item Expanded \S 2.3.
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count: 1032} --- \hfill \textbf{Current word count: }
+\textbf{Previous word count:} 1032 \hfill \textbf{Current word count:} 2086
 
-\textbf{Previous page count: 3} --- \hfill \textbf{Current page count: }
+\textbf{Previous page count:} 3 \hfill \textbf{Current page count:} 5.5
 
 \pagebreak
 
@@ -153,39 +153,40 @@ intensity function is itself a random process to be predicted.
 
 \subsection{Integrated Nested Laplace Approximation}
 
-INLA fast approximation for marginals useful for mapping \cite{rueetal}
+INLA was developed with the goal of providing fast, accurate, deterministic
+approximations for posterior marginal distributions of the parameters in
+latent Gaussian models~\cite{rueetal}. The setting is Bayesian generalized
+additive models but is kept very general; this includes linear models, models
+with nonlinear (spline, random walk, etc.) functions of predictors, and models
+with temporal and/or spatial dependence. Such models commonly have a large
+number of Gaussian latent variables or parameters with Gaussian priors and
+relatively few non-Gaussian parameters. The INLA approach makes repeated use
+of Laplace expansion, numerical integration, and numerical search. The method
+has established usefulness for LGCP~\cite{illianetal}. It is readily
+implemented using the standalone INLA software or in R via the
+R-INLA package~\cite{inlar}.
 
-Integrated Nested Laplace Approximation
+% Define some coherent notation, then come back and spell out the algorithm.
 
-Bayesian Hierarchical models, many latent Gaussian variables, few parameters
+%- $\mathbf{y} = (y_{1}, \dots, y_{n})'$ independent Gaussian observations
 
-Laplace approximation in general: $\int \exp[h(x)]\mathrm{d}x$, Taylor expansion of $h(x)$
+%- $y_{i} \sim \mathrm{N}(\theta, \sigma^{2})$
 
-Example from \cite{rinla}
+%- $\theta \sim \mathrm{N}(\mu_{0}, \sigma_{0}^{2})$
 
-- $\mathbf{y} = (y_{1}, \dots, y_{n})'$ independent Gaussian observations
+%- $\psi = 1/\sigma^{2}$, $\psi \sim \mathrm{Gamma}(a, b)$
 
-- $y_{i} \sim \mathrm{N}(\theta, \sigma^{2})$
+%- The posterior distribution of $\psi$:
+%$$p(\psi|\mathbf{y}) \propto \frac{p(\mathbf{y} | \theta, \psi) p(\theta) p(\psi)}
+%{p(\theta | \psi, \mathbf{y})}$$
 
-- $\theta \sim \mathrm{N}(\mu_{0}, \sigma_{0}^{2})$
+%- Laplace approximation:
+%$$\tilde{p}(\psi|\mathbf{y}) \propto \frac{p(\mathbf{y} | \theta, \psi) p(\theta) p(\psi)}
+%{\tilde{p}_{G}(\theta^{*} | \psi, \mathbf{y})}$$
 
-- $\psi = 1/\sigma^{2}$, $\psi \sim \mathrm{Gamma}(a, b)$
+%Repeat for $\theta$, will depend on $\psi$
 
-- The posterior distribution of $\psi$:
-$$p(\psi|\mathbf{y}) \propto \frac{p(\mathbf{y} | \theta, \psi) p(\theta) p(\psi)}
-{p(\theta | \psi, \mathbf{y})}$$
-
-- Laplace approximation:
-$$\tilde{p}(\psi|\mathbf{y}) \propto \frac{p(\mathbf{y} | \theta, \psi) p(\theta) p(\psi)}
-{\tilde{p}_{G}(\theta^{*} | \psi, \mathbf{y})}$$
-
-Repeat for $\theta$, will depend on $\psi$
-
-Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\theta}$
-
-Available in R through the \texttt{R-INLA} package~\cite{inlar}.
-
-Established usefulness for LGCP~\cite{illianetal}.
+%Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\theta}$
 
 
 \section{Methodology}
@@ -300,7 +301,7 @@ wasteful~\cite{simpsonetal}.
 % Tradeoff: small grid cells for spatial precision vs small number of zeros
 % for computational speed.
 
-Simpson et. al. took LGCP inference ``off the grid'' by intoducing a
+Simpson et. al. took LGCP inference ``off grid'' by intoducing a
 computationally-efficient approximation to the Poisson process likelihood that
 requires the intensity function only to be evaluated at the locations of
 observed events and at the nodes of a mesh. Thus, the SPDE approach can be
@@ -343,7 +344,7 @@ with weights \(\tilde{\alpha}_{j}\) and yields the approximation,
 This is equivalent to the likelihood of independent Poisson random variables
 with means {\it (translate the confusing algebra from the appendix)}. Thus,
 the SPDE approach, which can be easily fit in R-INLA, can be combined with a
-Poisson GLMM to rapidly fit an LGCP model. There is no need to compute grid
+Poisson GLM to rapidly fit a LGCP model. There is no need to compute grid
 counts, only to define dummy points at the mesh nodes.
 
 % Include a figure showing a dual mesh and explain the alphas.
@@ -351,22 +352,57 @@ counts, only to define dummy points at the mesh nodes.
 
 \subsection{Variable Sampling Effort}
 
-Observed a thinned process
+There has long been a gap between point process modeling theory and practice,
+where point process models are only fit to data from completely-observed
+domains under the assumption that every event was detected perfectly. In
+practice, this is not the case as it may be impossible or impractical to census
+the entire region of interest. For example, line-transect surveys routinely
+generate point pattern data but are analyzed after aggregation rather than
+using a point process model. Another issue is that of false negatives, in other
+words events which exist but are not detected during the survey. False
+negatives are an accepted part of species abundance surveys, where the species
+of interest may be camouflaged or hidden in thick plant cover.
 
-Thinning process can be known or unknown
+The idea of the incompletely-observed domain has been around for some time.
+Brix and M\"{o}ller (2001) fit an LGCP model to weed data observed in
+rectangular frames and used a Metropolis-adjusted Langevin algorthim
+to predict the intensity outside of the observed frames~\cite{brixmoeller}.
+Chakraborty et. al (2011) discuss nonhomogeneous Poisson process modeling as
+a richer alternative to ecological presence/absence models and describe their
+data as ``degraded'' in the sense that sampling bias prevented the entire
+region from being fully observed; they fit their model by aggregating the
+point pattern to counts in grid cells and using MCMC~\cite{chakrabortyetal}.
 
-Idea has been around a while but most applications have used
-gridding~\cite{chakrabortyetal}.
+With INLA, the SPDE approach, and the ``off grid'' approximation
+facilitating the routine fitting of LGCP models, there is now renewed interest
+in accounting for variable sampling effort in spatial point process
+models~\cite{simpsonetal,yuanetal}.
 
-% Brix and M\"{o}ller \cite{brixmoeller} fit an LGCP to weed data observed in
-% rectangular frames and used a Metropolis-adjusted Langevin algorthim
-% (from~\cite{moellerwaagepetersen}) to predict the intensity outside of the
-% observed frames (but not across the full study area due to computational
-% limitations). {\it (This does not involve gridding?)}
-
-Scale SPDE node integration weights by thinning probabilities when known
-
-Incorporate log-linear model for thinning probability when unknown \cite{yuanetal}
+Sampling effort is accounted for using the theory of thinned point processes.
+Thinning refers to the events of one point process being kept or discarded
+probabilistically. Let \(\lambda(\mathbf{s})\) be the intensity of the parent
+process, and let an event at \(\mathbf{s}\) be observed with probability
+\(p(\mathbf{s})\). The observed point process is a thinned point process with
+intensity
+\begin{displaymath}
+\lambda_{p}(\mathbf{s}) = p(\mathbf{s}) \lambda(\mathbf{s}).
+\end{displaymath}
+We seek to make posterior inferences about the parent intensity,
+ \(\lambda(\mathbf{s})\). If \(p(\mathbf{s})\) is known, its value at each node
+is used to adjusts the SPDE integration weights. Most usefully, if it is known
+that \(p(\mathbf{s}) = 0\) at certain nodes \(\mathbf{s}\) because they were
+outside the sruveyed domain, the weights become zero so those nodes do not
+contribute to the integral. If \(p(\mathbf{s})\) is unknown, it can be modeled.
+Taking the logarithm of the above and substituting in the basis function
+representation, we have the log-linear model
+\begin{displaymath}
+\log\left[\lambda_{p}(\mathbf{s})\right]
+= \log\left[p(\mathbf{s})\right] + \sum_{j} z_{j} \phi_{j}(\mathbf{s}).
+\end{displaymath}
+Thus, any log-linear model for \(p(\mathbf{s})\) that can be fit by INLA and
+the SPDE approach can be incorporated into the LGCP model. For example, Yuan
+et. al (2017) fit such a model to data from a line-transect survey using a
+spline model to acocunt for the unknown detection function~\cite{yuanetal}
 
 
 \section{Applications}
