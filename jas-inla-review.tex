@@ -272,15 +272,15 @@ simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
 
 \begin{figure}[p]\centering
 \includegraphics[width=0.5\textwidth]{figures/dual.pdf}
-\caption{An illustration of the nodes and the weighting scheme for one node.
-The node in the center represents the shaded region, so its weight is
-proportional to the shaded area. The region is constructed by connecting the
-midpoints of the edges.}
+\caption{An illustration of the nodes (dots) and the weighting scheme for one
+node (large dot). This node represents the shaded region, so its weight is
+proportional to the shaded area. The shaded region is constructed by connecting
+the midpoints of the node's edges.}
 \label{dual}
 \end{figure}
 
 The SPDE approach is implemented in the \texttt{R-INLA} package along with
-tools for constructing triangulation meshes.
+tools for constructing meshes.
 
 
 \subsection{Going Off the Grid}
@@ -419,8 +419,25 @@ spline model to acocunt for the unknown detection function~\cite{yuanetal}
 
 \subsection{Data Application}
 
-{\it Examples with data, maybe \texttt{bei} dataset or Victorville. Show read
-like a tutorial because there aren't many good resource yet.}
+{\it Examples with data, maybe \texttt{bei} dataset or Victorville. Should read
+like a tutorial because there aren't many good resources yet.}
+
+\subsection{Data and Model}
+
+
+\subsection{Fitting in R-INLA}
+
+explain the mesh
+
+explain the weight calculations
+
+walk through the spatial predictions
+
+
+\subsection{Results}
+
+
+\subsection{Model Checking}
 
 
 \section{Conclusion and Discussion}
