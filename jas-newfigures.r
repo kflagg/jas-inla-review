@@ -32,9 +32,18 @@ edge_x <- ex_mesh$loc[t(vert_idx), 1]
 edge_y <- ex_mesh$loc[t(vert_idx), 2]
 edge_z <- sim_grf$data[t(vert_idx)]
 
-# Create a plot of the mesh.
+# Create a plot of the mesh, hightlighting one node's dual region.
+pdf('figures/dual.pdf', width = 6, height = 6)
+par(mar = c(0, 0, 2, 0))
+neighbors <- c(110, 226, 250, 129, 235, 115, 209)
+midpoints <- t(apply(ex_mesh$loc[neighbors, 1:2], 1,
+  function(x){return(c(
+    mean(c(x[1], ex_mesh$loc[9, 1])),
+    mean(c(x[2], ex_mesh$loc[9, 2]))
+  ))}))
 plot(ex_mesh, main = '', asp = 1)
-points(ex_mesh$loc[,1:2], pch = 16)
-points(0.5, 0.5, pch = 19, cex = 1.5)
+polygon(midpoints, col = '#00000080', border = NA)
+points(ex_mesh$loc[,1:2], pch = 16, cex = 0.75)
+points(ex_mesh$loc[9,1], ex_mesh$loc[9,2], pch = 16, cex = 1.25)
 title('Example Mesh')
-# TODO: Highlight node 9 (at (0.5, 0.5)) and shade its dual cell.
+dev.off()

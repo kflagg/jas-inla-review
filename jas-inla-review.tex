@@ -37,7 +37,7 @@
 
 \begin{itemize}
 
-\item
+\item Added a figure 3 illustrating SPDE weighting.
 
 \end{itemize}
 
@@ -268,6 +268,15 @@ approximation of that realization over a triangular mesh (right).}
 simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
 \(\mathbf{s}\)}
 \label{triangle}
+\end{figure}
+
+\begin{figure}[p]\centering
+\includegraphics[width=0.5\textwidth]{figures/dual.pdf}
+\caption{An illustration of the nodes and the weighting scheme for one node.
+The node in the center represents the shaded region, so its weight is
+proportional to the shaded area. The region is constructed by connecting the
+midpoints of the edges.}
+\label{dual}
 \end{figure}
 
 The SPDE approach is implemented in the \texttt{R-INLA} package along with
