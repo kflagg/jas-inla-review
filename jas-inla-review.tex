@@ -43,7 +43,9 @@
 
 \item Added an outline of the example analysis in \S 3.2.
 
-\item Began writing code for \S 3.2.
+\item Wrote code for \S 3.2.
+
+\item Added figures 4-7 illustrating the real data analysis.
 
 \end{itemize}
 
@@ -276,7 +278,7 @@ simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
 \label{triangle}
 \end{figure}
 
-\begin{figure}[p]\centering
+\begin{figure}[h]\centering
 \includegraphics[width=0.5\textwidth]{figures/dual.pdf}
 \caption{An illustration of the nodes (dots) and the weighting scheme for one
 node (large dot). This node represents the shaded region, so its weight is
@@ -443,14 +445,38 @@ like a tutorial because there aren't many good resources yet.}
 
 \subsubsection{Data and Model}
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei.pdf}
+\caption{Locations of trees (events).}
+\label{bei}
+\end{figure}
+
 
 \subsubsection{Fitting in R-INLA}
 
 explain the mesh
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beimesh.pdf}
+\caption{Triangular mesh with events overlaid.}
+\label{beimesh}
+\end{figure}
+
 explain the weight calculations
 
 walk through the spatial predictions
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beimean.pdf}
+\caption{Posterior mean prediction surface.}
+\label{beimean}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beisd.pdf}
+\caption{Pointwise posterior standard deviation of predictions.}
+\label{beisd}
+\end{figure}
 
 
 \subsubsection{Results}
