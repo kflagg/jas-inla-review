@@ -13,6 +13,20 @@ par(mar = c(0, 0, 2, 0))
 plot(bei)
 dev.off()
 
+# Plot the elevation surface.
+# TODO: add an informative plot title.
+pdf('figures/beielev.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 0))
+plot(bei.extra$elev)
+dev.off()
+
+# Plot the gradient surface.
+# TODO: add an informative plot title.
+pdf('figures/beigrad.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 0))
+plot(bei.extra$grad)
+dev.off()
+
 
 #######################
 ## MESH CONSTRUCTION ##
