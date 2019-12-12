@@ -33,27 +33,19 @@
 
 {\Large\bf Progress this week}
 
-{\large\bf December 8, 2019}
+{\large\bf December 15, 2019}
 
 \begin{itemize}
 
-\item Added a figure 3 illustrating SPDE weighting.
-
-\item Added an outline of simulation ideas in \S 3.1.
-
-\item Added an outline of the example analysis in \S 3.2.
-
-\item Started code for \S 3.2.
-
-\item Added figures 4-9 illustrating the real data analysis.
+\item 
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 2068 \hfill \textbf{Current word count:} 2314
+\textbf{Previous word count:} 2314 \hfill \textbf{Current word count:} 
 
-\textbf{Previous page count:} 5.5 \hfill \textbf{Current page count:} 9.5
+\textbf{Previous page count:} 9.5 \hfill \textbf{Current page count:} 
 
 \pagebreak
 
@@ -116,13 +108,81 @@ expected to exhibit spatial dependence, their full joint distribution is not
 needed. In most situations it suffices to map their predicted values, variance,
 and upper and lower interval bounds pointwise across space.
 
-This article provides a review of recent advances in the fitting of LGCP models
-via INLA, including dimension reduction by triangulation, a likelihood
-factorization that avoids gridding, and incorporation of sampling or false
-negatives.
+Much recent work in point process modeling involves spatiotemporal models,
+which are easily implemented in INLA by allowing the parameters of a spatial
+point process model to vary over time. To keep the focus on the spatial
+aspects, we do not discuss spatiotemporal models. This article provides a
+review of recent advances in the fitting of spatial LGCP models via INLA,
+including dimension reduction by triangulation, a likelihood factorization that
+avoids gridding, and incorporation of sampling or false negatives.
 
 
 \subsection{Log-Gaussian Cox Process}
+
+Notes from \cite{moellerwaagepetersen}:
+
+\begin{itemize}
+
+\item applications mentioned: seismology, ecology, forestry, geography, spatial
+epidemiology and materials science
+
+\item modern computing (e.g. McMC) allows for model-based inference without a
+stationarity assumption
+
+\item Minke whale distance sampling data used as an example of incomplete
+observation (they used a shot noise Cox process model)
+
+\item distribution of point process is the joint distrubition of \(n\) and
+the \(n\) events, or equivalently the distribution of the number of events in
+any arbitrary region
+
+\item in their presentation of the two Poisson process postulates, the second
+one is given the number of events in a region they are iid proportional to the
+intensity function
+
+\item Cox process is driven by a non-negative random process such that
+conditional on the driving process the Cox process is a Poisson process
+
+\item LGCP has no edge effects because the point process in the window is
+fully specified by the GP restricted to the window
+
+\item quite a bit about Gibbs processes, densities wrt stationary Poisson
+processes, and Papangelou conditional intensities (comments: The density was
+traditionally used to facilitate McMC simulation and ML fitting when the
+likelihood was not explicitly available. The conditional intensity of a
+Poisson process is the intensity function because of independence among the
+points. The hierarchical setup of the LGCP lets us work directly with a
+Poisson process so the density and conditional intensity are not needed. LGCP
+models with constructed covariate can model Gibbs processes.)
+
+\item more things about infinite Gibbs and Markov processes that go over my
+head but we don't need because we deal with bounded and finite processes
+
+\end{itemize}
+
+Notation and terminology:
+
+\begin{itemize}
+
+\item process defined on \(\mathcal{R} \subset \mathbb{R}^{2}\), domain of the
+intensity function, define \(d = \mathrm{dim}(\mathcal{R})\)
+
+\item observation window \(\mathcal{S} \subset \mathcal{S}\)
+
+\item \emph{(note: when thinking about sampling, we need to define three
+regions: the domain over which the process mathematically operates, the window
+over which inferences are desired, and the observed/sampled observation window)}
+
+\item \(\mathbf{X}\) point process on \(\mathcal{R}\),
+\(\mathbf{x} = \{\mathbf{s}_{1}, \dots, \mathbf{s}_{n}\}\) realized point
+pattern
+
+\item point \(\mathbf{s} \in \mathbf{x}\) called an event
+
+\item intensity function \(\lambda(\mathbf{s})\)
+
+\end{itemize}
+
 
 The LGCP is a Poisson process driven by a latent Gaussian
 process~\cite{moelleretal}. A Poisson process is characterized entirely by its
@@ -402,8 +462,11 @@ process, and let an event at \(\mathbf{s}\) be observed with probability
 \(p(\mathbf{s})\). The observed point process is a thinned point process with
 intensity
 \begin{displaymath}
-\lambda_{p}(\mathbf{s}) = p(\mathbf{s}) \lambda(\mathbf{s}).
+\lambda_{p}(\mathbf{s}) = p(\mathbf{s}) \lambda(\mathbf{s}),
 \end{displaymath}
+and if the parent process is a Poisson process then the observed process is
+also a Poisson process~\cite{moellerwaagepetersen}.
+
 We seek to make posterior inferences about the parent intensity,
  \(\lambda(\mathbf{s})\). If \(p(\mathbf{s})\) is known, its value at each node
 is used to adjusts the SPDE integration weights. Most usefully, if it is known
