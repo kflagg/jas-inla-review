@@ -37,7 +37,7 @@
 
 \begin{itemize}
 
-\item 
+\item Updated notation.
 
 \end{itemize}
 
@@ -108,6 +108,13 @@ expected to exhibit spatial dependence, their full joint distribution is not
 needed. In most situations it suffices to map their predicted values, variance,
 and upper and lower interval bounds pointwise across space.
 
+We focus on spatial mapping using a hierarchical construction of the LGCP, and
+do so without discussing many classic spatial point process concepts such as
+Gibbs processes, Markov processes, point process densities, or the Papangelou
+conditional intensity function. For readers interested in the general spatial
+point process context in which the LGCP originates, we recommend other
+references~\cite{moellerwaagepetersen, digglepoint, cressie}.
+
 Much recent work in point process modeling involves spatiotemporal models,
 which are easily implemented in INLA by allowing the parameters of a spatial
 point process model to vary over time. To keep the focus on the spatial
@@ -164,48 +171,63 @@ Notation and terminology:
 
 \begin{itemize}
 
-\item process defined on \(\mathcal{R} \subset \mathbb{R}^{2}\), domain of the
-intensity function, define \(d = \mathrm{dim}(\mathcal{R})\)
+\item process defined on \(\mathcal{D} \subset \mathbb{R}^{2}\), domain of the
+intensity function, define \(d = \mathrm{dim}(\mathcal{D})\)
 
-\item observation window \(\mathcal{S} \subset \mathcal{S}\)
+\item observation window \(\mathcal{S} \subset \mathcal{D}\)
 
-\item \emph{(note: when thinking about sampling, we need to define three
-regions: the domain over which the process mathematically operates, the window
-over which inferences are desired, and the observed/sampled observation window)}
+\item \emph{(Note: When thinking about sampling, we need to define three
+regions: the domain \(\mathcal{D}\) over which the process mathematically
+operates, the region \(\mathcal{R}\) over which inferences are desired, and
+the observed/sampled observation window \(\mathcal{S}\). The general
+relationship is \(\mathcal{S} \subset \mathcal{R} \subset \mathcal{D}
+\subset \mathbb{R}^{d}\), where all of the subset symbols taken to mean
+``subset or equal''. The ``fully surveyed'' situation is \(\mathcal{S}
+= \mathcal{R}\).)}
 
 \item \(\mathbf{X}\) point process on \(\mathcal{R}\),
-\(\mathbf{x} = \{\mathbf{s}_{1}, \dots, \mathbf{s}_{n}\}\) realized point
-pattern
+\(\mathbf{x} = \{x_{1}, \dots, x_{n}\}\) realized point pattern
 
-\item point \(\mathbf{s} \in \mathbf{x}\) called an event
+\item point \(x \in \mathbf{x}\) called an event
 
-\item intensity function \(\lambda(\mathbf{s})\)
+\item intensity function \(\lambda(u)\)
+
+\item \(x\) event, \(s\) numerical integration node, \(u\)
+arbitrary location in \(\mathcal{D}\)
+
+\item \(z(u)\) a column vector of covariates/predictors at \(u\)
+
+\item ``point'' refers to a \(u\) unless clearly stated otherwise
+
+\item bold for sets and spatial processes, normal italics for spatial vectors
+
+\item \(y\) and variations will be used for objects derived from the point
+pattern, e.g. pseudodata
 
 \end{itemize}
 
 
 The LGCP is a Poisson process driven by a latent Gaussian
 process~\cite{moelleretal}. A Poisson process is characterized entirely by its
-intensity function \(\lambda(\mathbf{s})\), which gives the mean number of events
+intensity function \(\lambda(u)\), which gives the mean number of events
 per unit area, and the process satisfies the following two properties
 {\it (find a good citation)}.
 \begin{enumerate}
-\item The number of events in a region \(\mathcal{S}\) follows a Poisson
+\item The number of events in any region \(\mathcal{B}\) follows a Poisson
 distribution with mean
-\(\int_{\mathcal{S}} \lambda(\mathbf{s})\mathrm{d}\mathbf{s}\).
+\(\int_{\mathcal{B}} \lambda(u)\mathrm{d}u\).
 \item The numbers of events in disjoint regions are independent.
 \end{enumerate}
 
 Commonly, covariates are incorporated via a log-linear model for the intensity,
 \begin{displaymath}
-\log\lambda(\mathbf{s}) = \mathbf{X}(\mathbf{s}) \boldsymbol{\beta}.
+\log\lambda(u) = \mathbf{z}'(u) \boldsymbol{\beta}.
 \end{displaymath}
 The LGCP adds another stochastic layer,
 \begin{displaymath}
-\log\lambda(\mathbf{s}) = \mathbf{X}(\mathbf{s}) \boldsymbol{\beta}
-+ Z(\mathbf{s}),
+\log\lambda(u) = \mathbf{z}(u)' \boldsymbol{\beta} + \boldsymbol{\Psi}(u),
 \end{displaymath}
-where \(Z\) is a Gaussian process.
+where \(\boldsymbol{\Psi}\) is a Gaussian process.
 
 Where the spatial Poisson process has a (stochastically) fixed intensity to be
 estimated from data, the spatial LGCP induces a hierarchical model where the
@@ -284,39 +306,39 @@ The GMRF approximation is motivated by the fact that Gaussian fields with
 Mat\'{e}rn covariances are solutions to the below stochastic partial
 differential equation (SPDE)~\cite{lindgrenetal}.
 \begin{displaymath}
-(\kappa^{2} - \Delta)^{\alpha / 2} Z(\mathbf{s}) = \mathcal{W}(\mathbf{s}),
-\qquad \mathbf{s} \in \mathbb{R}^d, \quad \kappa > 0,
+(\kappa^{2} - \Delta)^{\alpha / 2} \boldsymbol{\Psi}(u) = \mathbf{W}(u),
+\qquad u \in \mathbb{R}^d, \quad \kappa > 0,
 \quad \alpha = \nu + d/2, \quad \nu > 0
 \end{displaymath}
-Here, \(\mathcal{W}\) is a Gaussian white noise process with variance 1, and
-\(\Delta\) is the Laplacian operator. The stationary solution \(Z\) is a
-Gaussian field with a Mat\'{e}rn covariance function with scaling parameter
-\(\kappa\) (approximately inversly proportional to the range) and smoothness
-parameter \(\nu\). The variance is a function of \(\kappa\), \(\nu\), and
-\(d\).
+Here, \(\mathbf{W}\) is a Gaussian white noise process with variance 1, and
+\(\Delta\) is the Laplacian operator. The stationary solution
+\(\boldsymbol{\Psi}\) is a Gaussian field with a Mat\'{e}rn covariance function
+with scaling parameter \(\kappa\) (approximately inversly proportional to the
+range) and smoothness parameter \(\nu\). The variance is a function of
+\(\kappa\), \(\nu\), and \(d\).
 
 Lindgren, Rue, and Lindstr\"{o}m investigate the limit as \(\nu \to 0\) for
 \(d = 2\), finding that the solution is a GMRF on a unit
 lattice~\cite{lindgrenetal}. They then construct approximations for positive
-integer values of \(\nu\) by \(\nu\)-fold convolution of \(Z\) with itself.
-Finally, they use a finite element method to genrealize the approximation
-to arbitrary triangulations of the support. This approximation has considerable
-computational benefits because the GMRF has a sparse covariance structure; the
-only nodes with nonzero covariances are those directly connected by edges in
-the triangulation.
+integer values of \(\nu\) by \(\nu\)-fold convolution of \(\boldsymbol{\Psi}\)
+with itself. Finally, they use a finite element method to genrealize the
+approximation to arbitrary triangulations of the support. This approximation
+has considerable computational benefits because the GMRF has a sparse
+covariance structure; the only nodes with nonzero covariances are those
+ directly connected by edges in the triangulation.
 
-In practice, the SPDE approach goes as follows. Choose nodes \(\mathbf{s}_{i}\)
-at which to model \(Z(\mathbf{s}_{i})\), then build a triangular mesh using these
-nodes. Typically the nodes will include locations where data or covariates are
-available, then the rest will be filled in with a Delaunay triangulation under
-some edge length constraints. The \(Z(\mathbf{s}_{i})\) are be modeled as a
-GMRF where the distribution of each \(Z(\mathbf{s}_{i})\) depends only on the
-\(Z(\mathbf{s}_{j})\) where \(\mathbf{s}_{i}\) and \(\mathbf{s}_{j}\) are
-connected by an edge. The GMRF representation is assumed to be a piecwise
-linear approximation of the continuous Gaussian field; values of
-\(Z(\mathbf{s})\) for \(\mathbf{s}\) not in the set of nodes are predicted
-using linear interpolation using the barycentric coordinates of
-\(\mathbf{s}\).
+In practice, the SPDE approach goes as follows. Choose nodes \(s_{i}\)
+at which to model \(\boldsymbol{\Psi}(s_{i})\), then build a triangular mesh
+using these nodes. Typically the nodes will include locations where data or
+covariates are available, then the rest will be filled in with a Delaunay
+triangulation under some edge length constraints. The
+\(\boldsymbol{\Psi}(s_{i})\) are modeled as a GMRF where the distribution of
+each \(\boldsymbol{\Psi}(s_{i})\) depends only on the
+\(\boldsymbol{\Psi}(s_{j})\) where \(s_{i}\) and \(s_{j}\) are connected by an
+edge. The GMRF representation is assumed to be a piecwise linear approximation
+of the continuous Gaussian field; values of \(\boldsymbol{\Psi}(s)\) for
+\(s\) not in the set of nodes are predicted by linear interpolation using
+the barycentric coordinates of \(s\).
 
 % Add some of the linear algebraic notation and basis function discussion.
 
