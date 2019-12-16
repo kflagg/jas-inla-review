@@ -39,13 +39,15 @@
 
 \item Updated notation.
 
+\item Fit model with covariates.
+
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 2314 \hfill \textbf{Current word count:} 
+\textbf{Previous word count:} 2314 \hfill \textbf{Current word count:} 2342
 
-\textbf{Previous page count:} 9.5 \hfill \textbf{Current page count:} 
+\textbf{Previous page count:} 9.5 \hfill \textbf{Current page count:} 9.5
 
 \pagebreak
 
@@ -357,9 +359,9 @@ approximation of that realization over a triangular mesh (right).}
 \begin{figure}[p]
 \includegraphics[width=0.5\textwidth]{figures/triangle.png}
 \includegraphics[width=0.5\textwidth]{figures/simplex.png}
-\caption{An illustration of the transformation from a mesh triangle to the
-simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
-\(\mathbf{s}\)}
+\caption{An illustration of the linear transformation from a mesh triangle to
+the simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
+\(u\).}
 \label{triangle}
 \end{figure}
 
@@ -389,7 +391,7 @@ world of maximum likelihood, perhaps the most well-developed of these use
 approximations based on logistic regression on presence/absence information in
 small disjoint regions {\it (cite a bunch of Baddely etc papers)}.
 % What is the state-of-the-art for dummy point selection? The papers I'm
-% familiar with use lattices or SRSs.
+% familiar with use lattices or SRSs. Space-filling approaches?
 
 Another alternative, which is probably the most popular approach to Bayesian
 fitting of LGCP models but is also common in frequentist analyses, is to grid
@@ -415,30 +417,30 @@ to gridding.
 The approximation arises from a factorization of the Poisson processes
 likelihood. The exact log-likelihood is
 \begin{displaymath}
-\ell(\lambda) = C - \int \lambda(\mathbf{s}) d\mathbf{s}
-+ \sum \log\left[\lambda(\mathbf{s_{i}})\right]
+\ell(\lambda) = C - \int \lambda(u) \mathrm{d}u
++ \sum_{i = 1}^{n} \log\left[\lambda(x_{i})\right]
 \end{displaymath}
 where \(C\) is a normalizing constant. The log-intensity is projected into the
 space spanned by a finite set of basis function
-representation is used for \(\log[\lambda(\mathbf{s})]\), namely
+representation is used for \(\log[\lambda(u)]\), namely
 \begin{displaymath}
-\log\left[\lambda(\mathbf{s})\right]
-\approx \sum_{j} z_{j} \phi_{j}(\mathbf{s})
+\log\left[\lambda(u)\right]
+\approx \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u)
 \end{displaymath}
-with \(\mathbf{z} = (z_{1}, \dots, z_{m})'\) a multivariate normal random
-vector and \(\{\phi_{1}, \dots, \phi_{m}\}\) a set of linearly independant
-basis functions.
+with \(\boldsymbol{\psi} = (\psi_{1}, \dots, \psi_{m})'\) a multivariate
+normal random vector and \(\{\phi_{1}, \dots, \phi_{m}\}\) a set of linearly
+independant basis functions.
 % The basis function representation is actually the SPDE representation.
 % Say so and move this to the previous section.
-This defines a numerical integration scheme at nodes \(\tilde{\mathbf{s}}_{i}\)
-with weights \(\tilde{\alpha}_{j}\) and yields the approximation,
+This defines a numerical integration scheme at nodes \(s_{i}\)
+with weights \(\alpha_{i}\) and yields the approximation,
 \begin{align*}
-\ell(\lambda) &\approx C - \sum_{i} \tilde{\alpha}_{i}
-\exp\left[\sum_{j} z_{j}\phi_{j}(\tilde{\mathbf{s}}_{i})\right]
-+ \sum_{i} \sum_{j} z_{j}\phi_{j}(\mathbf{s}_{i}) \\
-& = C - \tilde{\boldsymbol{\alpha}}'
-\exp\left[\mathbf{A}_{1} \mathbf{z}\right]
-+ \mathbf{1}' \mathbf{A}_{2} \mathbf{z}.
+\ell(\lambda) &\approx C - \sum_{i = 1}^{m} \tilde{\alpha}_{i}
+\exp\left[\sum_{j = 1}^{m} \psi_{j}\phi_{j}(s_{i})\right]
++ \sum_{i = 1}^{n} \sum_{j = 1}^{m} \psi_{j}\phi_{j}(x_{i}) \\
+& = C - \boldsymbol{\alpha}'
+\exp\left[\mathbf{A}_{1} \boldsymbol{\psi}\right]
++ \mathbf{1}' \mathbf{A}_{2} \boldsymbol{\psi}.
 \end{align*}
 This is equivalent to the likelihood of independent Poisson random variables
 with means {\it (translate the confusing algebra from the appendix)}. Thus,
@@ -479,32 +481,32 @@ models~\cite{simpsonetal,yuanetal}.
 
 Sampling effort is accounted for using the theory of thinned point processes.
 Thinning refers to the events of one point process being kept or discarded
-probabilistically. Let \(\lambda(\mathbf{s})\) be the intensity of the parent
-process, and let an event at \(\mathbf{s}\) be observed with probability
-\(p(\mathbf{s})\). The observed point process is a thinned point process with
+probabilistically. Let \(\lambda(u)\) be the intensity of the parent process,
+and let an event at \(u\) (if it exists) be observed with probability
+\(p(u)\). The observed point process is a thinned point process with
 intensity
 \begin{displaymath}
-\lambda_{p}(\mathbf{s}) = p(\mathbf{s}) \lambda(\mathbf{s}),
+\lambda_{p}(u) = p(u) \lambda(u),
 \end{displaymath}
 and if the parent process is a Poisson process then the observed process is
 also a Poisson process~\cite{moellerwaagepetersen}.
 
 We seek to make posterior inferences about the parent intensity,
- \(\lambda(\mathbf{s})\). If \(p(\mathbf{s})\) is known, its value at each node
-is used to adjusts the SPDE integration weights. Most usefully, if it is known
-that \(p(\mathbf{s}) = 0\) at certain nodes \(\mathbf{s}\) because they were
-outside the sruveyed domain, the weights become zero so those nodes do not
-contribute to the integral. If \(p(\mathbf{s})\) is unknown, it can be modeled.
-Taking the logarithm of the above and substituting in the basis function
-representation, we have the log-linear model
+\(\lambda(u)\). If \(p(u)\) is known, its value at each node is used to
+adjust the SPDE integration weights. Most usefully, if it is known that
+\(p(s) = 0\) at certain nodes \(s\) because they were outside the sruveyed
+domain, the weights become zero so those nodes do not contribute to the
+integral. If \(p(u)\) is unknown, it can be modeled. Taking the logarithm of
+the above and substituting in the basis function representation, we have the
+log-linear model
 \begin{displaymath}
-\log\left[\lambda_{p}(\mathbf{s})\right]
-= \log\left[p(\mathbf{s})\right] + \sum_{j} z_{j} \phi_{j}(\mathbf{s}).
+\log\left[\lambda_{p}(u)\right]
+= \log\left[p(u)\right] + \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u).
 \end{displaymath}
-Thus, any log-linear model for \(p(\mathbf{s})\) that can be fit by INLA and
-the SPDE approach can be incorporated into the LGCP model. For example, Yuan
-et. al (2017) fit such a model to data from a line-transect survey using a
-spline model to acocunt for the unknown detection function~\cite{yuanetal}
+Thus, any log-linear model for \(p(u)\) that can be fit by INLA and the SPDE
+approach can be incorporated into the LGCP model. For example, Yuan et. al
+(2017) fit such a model to data from a line-transect survey using a spline
+model to account for the unknown detection function~\cite{yuanetal}.
 
 
 \section{Applications}
@@ -520,6 +522,8 @@ simulate LGCPs
 fit via Simpson method
 
 vary mesh coarseness
+
+explore complexity of predictors vs latent GP
 
 explore bias/variability in parameter posteriors
 

@@ -18,6 +18,7 @@ dev.off()
 pdf('figures/beielev.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$elev)
+points(bei, pch = '.', col = 'white')
 dev.off()
 
 # Plot the gradient surface.
@@ -25,6 +26,7 @@ dev.off()
 pdf('figures/beigrad.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$grad)
+points(bei, pch = '.', col = 'white')
 dev.off()
 
 
@@ -57,6 +59,41 @@ plot(bei_mesh, asp = 1, main = '')
 points(bei, pch = 19, cex = 0.25, col = 'red')
 title('Mesh Over Bei Data')
 dev.off()
+
+
+################################
+## PROJECT COVARIATES TO MESH ##
+################################
+
+# The covariates are measured on a lattice which does not match up to the mesh
+# we'll use for the intensity function. There isn't a well-developed way to
+# handle the change-of-support within the model fit in INLA (e.g. by adding a
+# level to the model hierarchy to predict the covariates a the nodes).
+# However, these covariate surfaces are smooth enough that little will be lost
+# by using piecewise linear interpolation to find values at the nodes.
+# (Using an overly coarse mesh would be a bigger problem than interpolation).
+
+# Convert the covariate images to data frames.
+bei_elev <- as.data.frame(bei.extra$elev)
+bei_grad <- as.data.frame(bei.extra$grad)
+
+# Create a temporary mesh with nodes at the observation locations.
+bei_covariate_locs <- inla.mesh.create(
+  boundary = bei_boundary,
+  loc = cbind(bei_elev$x, bei_elev$y)
+)
+
+# Compute the barycentric coordinates of the nodes with respect to the
+# temporary mesh. This will be the projection matrix that does the
+# change-of-support.
+bei_change_of_support <- inla.mesh.project(
+  bei_covariate_locs,
+  bei_mesh$loc[,1:2]
+)$A
+
+# Project elevation and gradient onto the nodes.
+bei_mesh_elev <- as.vector(bei_change_of_support %*% bei_elev$value)
+bei_mesh_grad <- as.vector(bei_change_of_support %*% bei_grad$value)
 
 
 ######################################
@@ -110,12 +147,14 @@ bei_pseudodata <- c(rep(0, bei_mesh_size), rep(1, bei_n_events))
 # inla() requires a vector of 1s in the data argument for the intercept.
 # The f() term specifies the GP with observations indexed by a variable called
 # idx. The indices correspond to the indixes of the mesh nodes.
-bei_formula <- y ~ -1 + intercept + f(idx, model = bei_spde)
+bei_formula <- y ~ -1 + intercept + elev + grad + f(idx, model = bei_spde)
 
 # Create the data list to pass to inla().
 # Indices and intercepts are only needed for the nodes.
 bei_inla_data <- list(
   y = bei_pseudodata, # The whole pseudodata vector.
+  elev = bei_mesh_elev, # Elevation at nodes.
+  grad = bei_mesh_grad, # Gradient at nodes.
   idx = seq_len(bei_mesh_size), # Indices of the nodes.
   intercept = rep(1, bei_mesh_size) # Intercept column.
 )
@@ -152,3 +191,5 @@ plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
 plot(Window(bei), border = 'white', add = TRUE)
 points(bei, pch = '.', col = 'white')
 dev.off()
+
+# TODO: Plot posterior distributions of parameters and coefficients.
