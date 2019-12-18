@@ -42,7 +42,7 @@ bei_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices.owin(Window(bei)
 # as the mesh.
 bei_mesh <- inla.mesh.create(
   boundary = bei_boundary,
-  refine = list(max.edge = 50)
+  refine = list(max.edge = 25)
 )
 
 # Define a SPDE representation of a GP with Matern covariance.
@@ -95,6 +95,31 @@ bei_change_of_support <- inla.mesh.project(
 bei_mesh_elev <- as.vector(bei_change_of_support %*% bei_elev$value)
 bei_mesh_grad <- as.vector(bei_change_of_support %*% bei_grad$value)
 
+# Plot the piecewise linear approximation of the elevation surface.
+pdf('figures/beielevmesh.pdf', width = 12, height = 6)
+par(mar = c(0.5, 0, 2, 2))
+plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
+        xrange = Frame(bei)$x,
+        yrange = Frame(bei)$y,
+        unitname = c('meter', 'meters')),
+        main = 'Piecewise Linear Approximation of Elevation')
+plot(Window(bei), border = 'white', add = TRUE)
+points(bei, pch = '.', col = 'white')
+dev.off()
+
+# Plot the piecewise linear approximation of the gradient surface.
+pdf('figures/beigradmesh.pdf', width = 12, height = 6)
+par(mar = c(0.5, 0, 2, 2))
+plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
+        xrange = Frame(bei)$x,
+        yrange = Frame(bei)$y,
+        unitname = c('meter', 'meters')),
+        main = 'Piecewise Linear Approximation of Gradient')
+plot(Window(bei), border = 'white', add = TRUE)
+points(bei, pch = '.', col = 'white')
+dev.off()
+
+
 
 ######################################
 ## SET UP SIMPSON METHOD PSEUDODATA ##
@@ -120,8 +145,8 @@ bei_int_matrix <- sparseMatrix(
   x = rep(1, bei_mesh_size)
 )
 
-# Bind the node and event coordinates into a single matrix of pseudodata locations
-# in barycentric coordinates.
+# Bind the node and event coordinates into a single matrix of pseudodata
+# locations in barycentric coordinates.
 bei_pseudopoints <- rbind(bei_int_matrix, bei_bary)
 
 # Get the numerical integration weights for the SPDE approach.
@@ -192,4 +217,107 @@ plot(Window(bei), border = 'white', add = TRUE)
 points(bei, pch = '.', col = 'white')
 dev.off()
 
-# TODO: Plot posterior distributions of parameters and coefficients.
+# Plot the backtransformed posterior mean of the intensity surface.
+pdf('figures/beiintensity.pdf', width = 12, height = 6)
+par(mar = c(0.5, 0, 2, 2))
+plot(im(t(exp(
+          bei_result$summary.fixed['intercept', 'mean'] +
+          bei_result$summary.fixed['elev', 'mean'] *
+            inla.mesh.project(bei_proj, bei_mesh_elev) +
+          bei_result$summary.fixed['grad', 'mean'] *
+            inla.mesh.project(bei_proj, bei_mesh_grad) +
+          inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)
+        )),
+        xrange = Frame(bei)$x,
+        yrange = Frame(bei)$y,
+        unitname = c('meter', 'meters')),
+        main = 'Posterior Intensity Function')
+plot(Window(bei), border = 'white', add = TRUE)
+points(bei, pch = '.', col = 'white')
+dev.off()
+
+
+# Plot posterior marginals of the covariance parameters and intercept.
+pdf('figures/beipost.pdf', width = 18, height = 6)
+par(mfrow = c(1, 3))
+plot(inla.smarginal(bei_result$marginals.hyperpar$Theta1), type = 'l',
+     main = 'Posterior Distribution of Theta1')
+plot(inla.smarginal(bei_result$marginals.hyperpar$Theta2), type = 'l',
+     main = 'Posterior Distribution of Theta2')
+plot(inla.smarginal(bei_result$marginals.fixed$intercept), type = 'l',
+     main = 'Posterior Distribution of Intercerpt')
+dev.off()
+
+# Plot posterior marginals of the coefficients.
+pdf('figures/beipostcoefs.pdf', width = 12, height = 6)
+par(mfrow = c(1, 2))
+plot(inla.smarginal(bei_result$marginals.fixed$elev), type = 'l',
+     main = 'Posterior Distribution of Elevation Coefficient')
+plot(inla.smarginal(bei_result$marginals.fixed$grad), type = 'l',
+     main = 'Posterior Distribution of Gradient Coefficient')
+dev.off()
+
+
+####################
+## MODEL CHECKING ##
+####################
+
+# Create grid counts for residual calculation.
+
+# Number of grid cells.
+NGRID_X <- 40
+NGRID_Y <- 20
+
+# Have spatstat find centers for the grid cells.
+centers <- gridcenters(
+  owin(range(bei_boundary$loc[,1]), range(bei_boundary$loc[,2])),
+  NGRID_X, NGRID_Y)
+
+# Compute the grid cell size.
+dx <- sum(unique(centers$x)[1:2] * c(-1, 1)) / 2
+dy <- sum(unique(centers$y)[1:2] * c(-1, 1)) / 2
+
+# Initialize a data frame to store the counts.
+bei_resid_df <- data.frame(x = centers$x, y = centers$y,
+                           count = NA_integer_, area = NA_real_)
+
+# Loop through the cells, finding the event count and cell area.
+for(r in seq_len(nrow(bei_resid_df))){
+  bei_resid_df$count[r] <- sum(bei$x >= bei_resid_df$x[r] - dx &
+                               bei$x < bei_resid_df$x[r] + dx &
+                               bei$y >= bei_resid_df$y[r] - dy &
+                               bei$y < bei_resid_df$y[r] + dy)
+  bei_resid_df$area[r] <- area(Window(bei)[owin(c(bei_resid_df$x[r] - dx,
+                                                  bei_resid_df$x[r] + dx),
+                                                c(bei_resid_df$y[r] - dy,
+                                                  bei_resid_df$y[r] + dy))])
+}
+
+# Set up a projection from the SPDE representation to the residual grid.
+bei_resid_proj <- inla.mesh.projector(bei_mesh,
+  loc = as.matrix(as.data.frame(centers)))
+
+# Project the intensity surface to the residual grid.
+bei_resid_df$intensity <- as.vector(exp(
+  bei_result$summary.fixed['intercept', 'mean'] +
+    bei_result$summary.fixed['elev', 'mean'] *
+  inla.mesh.project(bei_resid_proj, bei_mesh_elev) +
+    bei_result$summary.fixed['grad', 'mean'] *
+  inla.mesh.project(bei_resid_proj, bei_mesh_grad) +
+  inla.mesh.project(bei_resid_proj, bei_result$summary.random$idx$mean)
+))
+
+# Calculate the (approximate) expected counts and the Pearson residuals.
+bei_resid_df$expected <- bei_resid_df$intensity * bei_resid_df$area
+bei_resid_df$pearson <- (bei_resid_df$count - bei_resid_df$expected) /
+  sqrt(bei_resid_df$expected)
+
+pdf('figures/beiresiduals.pdf', width = 12, height = 6)
+par(mar = c(0.5, 0, 2, 2))
+plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
+        unique(bei_resid_df$x), unique(bei_resid_df$y),
+        unitname = c('meter', 'meters')),
+     main = 'Gridded Pearson Residuals')
+plot(Window(bei), border = 'white', add = TRUE)
+points(bei, pch = '.', col = 'white')
+dev.off()

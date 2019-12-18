@@ -572,6 +572,18 @@ explain the mesh
 \label{beimesh}
 \end{figure}
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beielevmesh.pdf}
+\caption{Piecewise linear approximation of the elevation surface.}
+\label{beielevmesh}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beigradmesh.pdf}
+\caption{Piecewise linear approximation of the gradient surface.}
+\label{beigradmesh}
+\end{figure}
+
 explain the weight calculations
 
 walk through the spatial predictions
@@ -588,11 +600,32 @@ walk through the spatial predictions
 \label{beisd}
 \end{figure}
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beiintensity.pdf}
+\caption{Posterior intensity surface in events per square meter, calculated
+using the piecewise linear approximate covariate surfaces and the posterior
+means of the intercept, coefficients, and GP.}
+\label{beiintensity}
+\end{figure}
+
 
 \subsubsection{Results}
 
 
 \subsubsection{Model Checking}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beiresiduals.pdf}
+\caption{Pearson residuals calculated on a grid.}
+\label{beiresiduals}
+\end{figure}
+
+Pearson residuals: small magnitude in the region with no observed events and low
+posterior intensity (not possible to see much variation), the model
+overestimates the intensity in the canyon (too small to be accurately
+represented on the mesh), random with no obvious spatial patterns elsewhere, a
+few large-magnitude positive residuals (maybe there is some clustering?), tried
+a few different grids (not shown) and saw the same patterns
 
 
 \section{Conclusion and Discussion}
