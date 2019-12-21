@@ -41,7 +41,7 @@ midpoints <- t(apply(ex_mesh$loc[neighbors, 1:2], 1,
     mean(c(x[1], ex_mesh$loc[9, 1])),
     mean(c(x[2], ex_mesh$loc[9, 2]))
   ))}))
-plot(ex_mesh, main = '', asp = 1)
+plot(ex_mesh, main = '', asp = 1, xlim = c(0.3, 0.7), ylim = c(0.3, 0.7))
 polygon(midpoints, col = '#00000080', border = NA)
 points(ex_mesh$loc[,1:2], pch = 16, cex = 0.75)
 points(ex_mesh$loc[9,1], ex_mesh$loc[9,2], pch = 16, cex = 1.25)

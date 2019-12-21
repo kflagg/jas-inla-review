@@ -33,21 +33,26 @@
 
 {\Large\bf Progress this week}
 
-{\large\bf December 15, 2019}
+{\large\bf December 22, 2019}
 
 \begin{itemize}
 
-\item Updated notation.
+\item Filled in \S 3.2.1-3.2.4.
 
-\item Fit model with covariates.
+\item Added plots of the piecewise linear approximations of the covariates.
+
+\item Added plots of the posterior mean of the linear predictor and the
+backtransformed intensity function.
+
+\item Added a plot of gridded Pearson residuals.
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 2314 \hfill \textbf{Current word count:} 2342
+\textbf{Previous word count:} 2342 \hfill \textbf{Current word count:} 3257
 
-\textbf{Previous page count:} 9.5 \hfill \textbf{Current page count:} 9.5
+\textbf{Previous page count:} 9.5 \hfill \textbf{Current page count:} 13.5
 
 \pagebreak
 
@@ -227,9 +232,10 @@ Commonly, covariates are incorporated via a log-linear model for the intensity,
 \end{displaymath}
 The LGCP adds another stochastic layer,
 \begin{displaymath}
-\log\lambda(u) = \mathbf{z}(u)' \boldsymbol{\beta} + \boldsymbol{\Psi}(u),
+\log\lambda(u) = \boldsymbol{\Psi}(u)
+= \mathbf{z}(u)' \boldsymbol{\beta} + \mathbf{e}(u),
 \end{displaymath}
-where \(\boldsymbol{\Psi}\) is a Gaussian process.
+where \(\mathbf{e}\) is a Gaussian process with mean 0.
 
 Where the spatial Poisson process has a (stochastically) fixed intensity to be
 estimated from data, the spatial LGCP induces a hierarchical model where the
@@ -308,37 +314,38 @@ The GMRF approximation is motivated by the fact that Gaussian fields with
 Mat\'{e}rn covariances are solutions to the below stochastic partial
 differential equation (SPDE)~\cite{lindgrenetal}.
 \begin{displaymath}
-(\kappa^{2} - \Delta)^{\alpha / 2} \boldsymbol{\Psi}(u) = \mathbf{W}(u),
+\tau(\kappa^{2} - \Delta)^{\alpha / 2} \mathbf{e}(u) = \mathbf{W}(u),
 \qquad u \in \mathbb{R}^d, \quad \kappa > 0,
 \quad \alpha = \nu + d/2, \quad \nu > 0
 \end{displaymath}
 Here, \(\mathbf{W}\) is a Gaussian white noise process with variance 1, and
 \(\Delta\) is the Laplacian operator. The stationary solution
-\(\boldsymbol{\Psi}\) is a Gaussian field with a Mat\'{e}rn covariance function
-with scaling parameter \(\kappa\) (approximately inversly proportional to the
-range) and smoothness parameter \(\nu\). The variance is a function of
-\(\kappa\), \(\nu\), and \(d\).
+\(\mathbf{e}\) is a Gaussian field having a Mat\'{e}rn covariance
+function with precision (inverse variance) \(\tau\),  scaling parameter
+\(\kappa\) (approximately inversly proportional to the range), and smoothness
+parameter \(\nu\).
 
 Lindgren, Rue, and Lindstr\"{o}m investigate the limit as \(\nu \to 0\) for
 \(d = 2\), finding that the solution is a GMRF on a unit
 lattice~\cite{lindgrenetal}. They then construct approximations for positive
-integer values of \(\nu\) by \(\nu\)-fold convolution of \(\boldsymbol{\Psi}\)
-with itself. Finally, they use a finite element method to genrealize the
+integer values of \(\nu\) by \(\nu\)-fold convolution of \(\mathbf{e}\)
+with itself. Finally, they use a finite element method to generalize the
 approximation to arbitrary triangulations of the support. This approximation
 has considerable computational benefits because the GMRF has a sparse
 covariance structure; the only nodes with nonzero covariances are those
  directly connected by edges in the triangulation.
 
 In practice, the SPDE approach goes as follows. Choose nodes \(s_{i}\)
-at which to model \(\boldsymbol{\Psi}(s_{i})\), then build a triangular mesh
-using these nodes. Typically the nodes will include locations where data or
-covariates are available, then the rest will be filled in with a Delaunay
-triangulation under some edge length constraints. The
-\(\boldsymbol{\Psi}(s_{i})\) are modeled as a GMRF where the distribution of
-each \(\boldsymbol{\Psi}(s_{i})\) depends only on the
-\(\boldsymbol{\Psi}(s_{j})\) where \(s_{i}\) and \(s_{j}\) are connected by an
-edge. The GMRF representation is assumed to be a piecwise linear approximation
-of the continuous Gaussian field; values of \(\boldsymbol{\Psi}(s)\) for
+at which to model \(\boldsymbol{\Psi}(s_{i})
+= \mathbf{z}(s_{i})' \boldsymbol{\beta} + \mathbf{e}(s_{i})\), then build a
+triangular mesh using these nodes. Typically the nodes will include locations
+where data or covariates are available, then the rest will be filled in with a
+Delaunay triangulation under some edge length constraints. The
+\(\mathbf{e}(s_{i})\) are modeled as a GMRF where the distribution of
+each \(\mathbf{e}(s_{i})\) depends only on the
+\(\mathbf{e}(s_{j})\) where \(s_{i}\) and \(s_{j}\) are connected by an
+edge. The GMRF representation is assumed to be a piecewise linear approximation
+of the continuous Gaussian field; values of \(\mathbf{e}(s)\) for
 \(s\) not in the set of nodes are predicted by linear interpolation using
 the barycentric coordinates of \(s\).
 
@@ -415,7 +422,8 @@ to gridding.
 % locations? Are there efficient adaptive grid methods?
 
 The approximation arises from a factorization of the Poisson processes
-likelihood. The exact log-likelihood is
+likelihood. For notational clarity, assume \(\log[\lambda(u)]
+= \boldsymbol{\Psi}(u)\). The exact log-likelihood is
 \begin{displaymath}
 \ell(\lambda) = C - \int \lambda(u) \mathrm{d}u
 + \sum_{i = 1}^{n} \log\left[\lambda(x_{i})\right]
@@ -435,18 +443,20 @@ independant basis functions.
 This defines a numerical integration scheme at nodes \(s_{i}\)
 with weights \(\alpha_{i}\) and yields the approximation,
 \begin{align*}
-\ell(\lambda) &\approx C - \sum_{i = 1}^{m} \tilde{\alpha}_{i}
+\ell(\lambda) &\approx C - \sum_{i = 1}^{m} \alpha_{i}
 \exp\left[\sum_{j = 1}^{m} \psi_{j}\phi_{j}(s_{i})\right]
 + \sum_{i = 1}^{n} \sum_{j = 1}^{m} \psi_{j}\phi_{j}(x_{i}) \\
 & = C - \boldsymbol{\alpha}'
-\exp\left[\mathbf{A}_{1} \boldsymbol{\psi}\right]
-+ \mathbf{1}' \mathbf{A}_{2} \boldsymbol{\psi}.
+\exp\left[\mathbf{A} \boldsymbol{\psi}\right]
++ \mathbf{y}' \mathbf{A}_{2} \boldsymbol{\psi}.
 \end{align*}
 This is equivalent to the likelihood of independent Poisson random variables
-with means {\it (translate the confusing algebra from the appendix)}. Thus,
-the SPDE approach, which can be easily fit in R-INLA, can be combined with a
-Poisson GLM to rapidly fit a LGCP model. There is no need to compute grid
-counts, only to define dummy points at the mesh nodes.
+with means \(\alpha_{i} \eta_{i}\) {\it (translate the confusing algebra from
+the appendix)} observations \(y_{i} = 0\) at the nodes \(s_{i}\) and
+\(y_{i} = 1\) at the events \(x_{i}\). Thus, the SPDE approach, which can be
+easily fit in R-INLA, can be combined with a Poisson GLM to rapidly fit a LGCP
+model. There is no need to compute grid counts, only to define dummy points at
+the mesh nodes and construct a pseudodata vector \(\mathbf{y}\).
 
 % Include a figure showing a dual mesh and explain the alphas.
 
@@ -532,18 +542,34 @@ explore spatial prediction error in latent GP
 
 \subsection{Data Application}
 
-{\it Examples with data, maybe \texttt{bei} dataset or Victorville. Should read
-like a tutorial because there aren't many good resources yet.}
+{\it Examples with data, maybe \texttt{bei} dataset or Victorville. The Minke
+whale data or one of the Gabriel et. al. datasets could also be good if the
+data are available (they are partially-observed with irregular windows). Should
+read like a tutorial because there aren't many good resources yet.}
 
 \subsubsection{Data and Model}
 
 For an example analysis of real-world data, we consider the locations of
-3605 \emph{Beilschmiedia pendula Lauraceae} trees in a tropical
-rainforest~\cite{moellerwaagepetersen}. The data are available as the
-\texttt{bei} dataset in the \texttt{spatstat} R package~\cite{spatstat}.
-The point pattern exhibits inhomogeneity~(Figure~\ref{bei}) which appears
-to be associated with elevation~(Figure~\ref{beielev}) and the magnitude of
-the gradient~(Figure~\ref{beigrad}).
+\(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in 1000~m by 500~m
+plot in a tropical rainforest~\cite{moellerwaagepetersen}. The data are
+available as the \texttt{bei} dataset in the \texttt{spatstat} R
+package~\cite{spatstat}. The point pattern is acconaied by elevation and
+gradient covariates measured on a square lattice with 5 m spacing. The point
+pattern exhibits inhomogeneity~(Figure~\ref{bei}) which appears to be
+associated with elevation~(Figure~\ref{beielev}) and the the elevation
+gradient~(Figure~\ref{beigrad}).
+
+We use the log-Gaussian Cox process model with intensity
+\begin{displaymath}
+\log\left[\lambda(u)\right] = \beta_{0} + \beta_{1} z_{1}(u)
++ \beta_{2} z_{2}(u) + \mathbf{e}(u)
+\end{displaymath}
+where \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the magnitude of
+the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a zero-mean Gaussian
+process with Mat\'{e}rn covariance and \(\alpha = 2\).
+
+{\it State priors --- using INLA's defaults which (I think) are uniform but I
+need to confirm than or adjust them to something reasonable.}
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/bei.pdf}
@@ -553,20 +579,29 @@ the gradient~(Figure~\ref{beigrad}).
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/beielev.pdf}
-\caption{Elevation data.}
+\caption{Elevation in meters, with events overlaid.}
 \label{beielev}
 \end{figure}
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/beigrad.pdf}
-\caption{Gradient data.}
+\caption{Magnitude of the elevation gradient, with events overlaid.}
 \label{beigrad}
 \end{figure}
 
 
 \subsubsection{Fitting in R-INLA}
 
-explain the mesh
+We fit the model in R using the \texttt{INLA} package, the SPDE approach, and
+the Poisson factorization. The first task is to construct a mesh for the
+piecewise linear approximations. A 25 meter resolution appears adequate to
+accurately represent the covariate surfaces. We used tools in the \texttt{INLA}
+package to create a Delaunay triangulation with a maximum edge length of 25~m.
+The resulting mesh has \(m = 2145\) nodes \(s_{1},  \dots, s_{2145}\) and 4096
+triangles~(Figure~\ref{beimesh}). We used linear interpolation to approximate
+the covariates \(z_{1}(s_{i})\) and \(z_{2}(s_{i})\) at each node. After
+creating the mesh, \texttt{INLA} can initialize an object to represent the
+covariance structure on the mesh.
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/beimesh.pdf}
@@ -574,13 +609,65 @@ explain the mesh
 \label{beimesh}
 \end{figure}
 
-explain the weight calculations
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beielevmesh.pdf}
+\caption{Piecewise linear approximation of the elevation surface.}
+\label{beielevmesh}
+\end{figure}
 
-walk through the spatial predictions
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beigradmesh.pdf}
+\caption{Piecewise linear approximation of the gradient surface.}
+\label{beigradmesh}
+\end{figure}
+
+The next step is to define the pseudodata and calculate the numerical
+integration weights. The pseudodata vector is
+\begin{displaymath}
+\mathbf{y} = (0, \dots, 0, 1, \dots, 1)'
+\end{displaymath}
+consisting of 2145 zeros corresponding to the mesh nodes and 3604 ones
+representing the events. The weight vector is
+\begin{displaymath}
+\boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{2145}, 0, \dots, 0)'.
+\end{displaymath}
+The alphas equal one-third of the area of the triangles of which each node is
+a vertex, calculated by the \texttt{INLA} package. The zeros correspond to the
+events, which do not contribute to the numerical integration.
+
+{\it Talk about the \(\mathbf{A}\) matrix.}
+
+The final bit of setup is to combine the pseudodata, covariates at the nodes,
+and a node index variable into a data list for the \texttt{inla()} function.
+This function is then called with arguments specifying a formula for the
+linear predictor, a Poisson family model (which defaults to a log link), the
+data list, the \(\mathbf{A}\) matrix, and the \(\boldsymbol{\alpha}\) vector as
+the exposure parameter.
+
+
+\subsubsection{Results}
+
+{\it insert intervals for betas and covariance parameters}
+
+The posterior mean of the fixed effect component of the linear predictor,
+\begin{displaymath}
+E(\beta_{0} | \mathbf{x}) + E(\beta_{1} | \mathbf{x}) z_{1}(u)
++ E(\beta_{2} | \mathbf{x}) z_{2}(u),
+\end{displaymath}
+appears as an average of the elevation and gradient
+surfaces~(Figure~\ref{beibetas}). The fixed effects do not explain all of the
+heterogeneity of the point pattern; some spatial structure remains to be
+described by the posterior predicted GP~(Figure~\ref{beimean}).
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beibetas.pdf}
+\caption{Posterior mean surface for the fixed effects.}
+\label{beibetas}
+\end{figure}
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/beimean.pdf}
-\caption{Posterior mean prediction surface.}
+\caption{Posterior mean of prediction surface.}
 \label{beimean}
 \end{figure}
 
@@ -590,15 +677,54 @@ walk through the spatial predictions
 \label{beisd}
 \end{figure}
 
-
-\subsubsection{Results}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beiintensity.pdf}
+\caption{Posterior intensity surface in events per square meter, calculated
+using the piecewise linear approximate covariate surfaces and the posterior
+means of the intercept, coefficients, and GP.}
+\label{beiintensity}
+\end{figure}
 
 
 \subsubsection{Model Checking}
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/beiresiduals.pdf}
+\caption{Pearson residuals calculated on a grid.}
+\label{beiresiduals}
+\end{figure}
+
+For a more general discussion of residuals, see \cite{baddeleyresiduals}. The
+classic Pearson residual,
+\begin{displaymath}
+\frac{\text{Observed count} - \text{Expected count}}
+{\sqrt{\text{Expected count}}},
+\end{displaymath}
+is a special case.
+
+{\it Should make the whole four-panel plot if citing Baddeley et. al.}
+
+Pearson residuals: small magnitude in the region with no observed events and low
+posterior intensity (not possible to see much variation), the model
+overestimates the intensity in the canyon (too small to be accurately
+represented on the mesh), random with no obvious spatial patterns elsewhere, a
+few large-magnitude positive residuals (maybe there is some clustering?), tried
+a few different grids (not shown) and saw the same patterns
+
 
 \section{Conclusion and Discussion}
 %  {\bf Conclusion and Discussion:} In this conclusion and discussion section, provide conclusions of your review and provide anticipated future direction(s) in this area.
+
+not really possible to get a posterior distribution of the intensity function
+because it is a nonlinear transformation of several parameters and we do not
+have their joint posterior
+
+the mesh for is finer than needed to describe the GP --- think about coarsening
+and refining based on the detail needed to represent the covariates (is there
+literature on this?)
+
+shows that mapping based on Bayesian LGCP models is now practical with
+useful accuracy in short amount of time
 
 
 %\section*{Acknowledgement(s)}
