@@ -4,7 +4,6 @@
 
 library(spatstat) # For bei dataset
 library(INLA) # For model fitting.
-#library(maptools) # Provides as.SpatialPolygons method for owin.
 
 # Plot the observed point pattern and its window.
 pdf('figures/bei.pdf', width = 12, height = 6)

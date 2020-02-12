@@ -33,23 +33,25 @@
 
 {\Large\bf Progress this week}
 
-{\large\bf January 26, 2020}
+{\large\bf February 9, 2020}
 
 \begin{itemize}
 
 \item Proofread.
 
-\item Incorporated many on Andy's comments.
+\item Incorporated many of Andy's comments.
 
 \item Consolidated raw data figures into a single multipanel figure.
+
+\item Added figures for a distance sampling example.
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 3257 \hfill \textbf{Current word count:} 
+\textbf{Previous word count:} 3257 \hfill \textbf{Current word count:} 3510
 
-\textbf{Previous page count:} 13.5 \hfill \textbf{Current page count:} 
+\textbf{Previous page count:} 13.5 \hfill \textbf{Current page count:} 20
 
 \pagebreak
 
@@ -737,6 +739,84 @@ elsewhere, a few large-magnitude positive residuals (maybe there is some
 clustering?), tried a few different grids (not shown) and saw the same patterns
 
 
+\section{Dubbo Weed Data}
+
+Devil's claw locations in a 1.2 km by 1.2 km plot in New South Wales. Available
+in the \texttt{DSpat} package for R \cite{dspat}. Partially simulated, based upon
+data used in Melville and Welsh \cite{melvillewelsh}. Events observed via
+distance sampling from 8 transects. Covariate for sheep grazing, should
+interact with detection function because the weeds are present but harder to
+detect when their leaves have been eaten.
+
+\begin{figure}[p]
+
+\subfloat[Locations of weeds (events).]
+{\includegraphics[width=0.9\textwidth]{figures/weeds.pdf}}
+
+\subfloat[Indicator of sheep grazing, with events overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/weedssheep.pdf}}
+
+\caption{Plots of the event and covariate data.}
+\label{weeds}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsmesh.pdf}
+\caption{Triangular mesh with events overlaid.}
+\label{weedsmesh}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedssheepmesh.pdf}
+\caption{Piecewise linear approximation of the elevation surface.}
+\label{weedssheepmesh}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsdistmesh.pdf}
+\caption{Piecewise linear approximation of the distance-to-transect surface.}
+\label{weedsdistmesh}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsbetas.pdf}
+\caption{Posterior mean surface for the fixed effects.}
+\label{weedsbetas}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsmean.pdf}
+\caption{Posterior mean of prediction surface.}
+\label{weedsmean}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedssd.pdf}
+\caption{Pointwise posterior standard deviation of predictions.}
+\label{weedssd}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsintensity.pdf}
+\caption{Posterior intensity surface in events per square meter, calculated
+using the piecewise linear approximate covariate surfaces and the posterior
+means of the intercept, coefficients, and GP.}
+\label{weedsintensity}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsdetection.pdf}
+\caption{Posterior detection probability over space.}
+\label{weedsdetection}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsresiduals.pdf}
+\caption{Pearson residuals calculated on a grid.}
+\label{weedsresiduals}
+\end{figure}
+
+
 \section{Conclusion and Discussion}
 \label{conclusion}
 %  {\bf Conclusion and Discussion:} In this conclusion and discussion section, provide conclusions of your review and provide anticipated future direction(s) in this area.
@@ -745,9 +825,9 @@ not really possible to get a posterior distribution of the intensity function
 because it is a nonlinear transformation of several parameters and we do not
 have their joint posterior
 
-the mesh for is finer than needed to describe the GP --- think about coarsening
-and refining based on the detail needed to represent the covariates (is there
-literature on this?)
+the mesh used for \texttt{bei} for is finer than needed to describe the
+GP --- think about coarsening and refining based on the detail needed to
+represent the covariates (is there literature on this?)
 
 shows that mapping based on Bayesian LGCP models is now practical with
 useful accuracy in short amount of time
