@@ -33,26 +33,25 @@
 
 {\Large\bf Progress this week}
 
-{\large\bf December 22, 2019}
+{\large\bf February 9, 2020}
 
 \begin{itemize}
 
-\item Filled in \S 3.2.1-3.2.4.
+\item Proofread.
 
-\item Added plots of the piecewise linear approximations of the covariates.
+\item Incorporated many of Andy's comments.
 
-\item Added plots of the posterior mean of the linear predictor and the
-backtransformed intensity function.
+\item Consolidated raw data figures into a single multipanel figure.
 
-\item Added a plot of gridded Pearson residuals.
+\item Added figures for a distance sampling example.
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 2342 \hfill \textbf{Current word count:} 3257
+\textbf{Previous word count:} 3257 \hfill \textbf{Current word count:} 3510
 
-\textbf{Previous page count:} 9.5 \hfill \textbf{Current page count:} 13.5
+\textbf{Previous page count:} 13.5 \hfill \textbf{Current page count:} 20
 
 \pagebreak
 
@@ -77,27 +76,39 @@ INLA, spatial prediction, log-Gaussian Cox process, spatial point process
 
 
 \section{Introduction}
+\label{intro}
 %  {\bf Introduction:} Please introduce one or more current statistical research methods that have been widely used by other discipline(s) in the Introduction section or divide the discussion into two or more subsections within this Introduction section.
 
 % More introduction, define point process terms.
 
-Spatial prediction is a high-dimensional inference problem. When the goal of
-statistical modeling is to produce a graphical map of a random variable over
-space, the model ultimately must be able to predict that random variable at
-every pixel of the image. A map image will typically be at least several
-hundred by several hundred pixels, so in total there can easily be hundreds of
-thousands of pixels requiring predictions. Thus, even when a model has only
-half a dozen parameters, it may include hundreds of thousands of latent
-variables.
+Statistical methods for spatial prediction result in a high-dimensional
+inference problem that can present computational challenges, particularly for
+large datasets. For instance, when the goal of statistical modeling is to
+produce a graphical map of a random variable over space, the model ultimately
+must be able to predict that random variable at every pixel of the image. A map
+image will typically be at least several hundred by several hundred pixels, so
+in total there can easily be hundreds of thousands of pixels requiring
+predictions. Thus, even when a model has only half a dozen parameters, spatial
+prediction may require hundreds of thousands of latent variables.
 
-Spatial point process models further complicate the situation with difficult
-likelihoods. {\it (Cite some computational papers --- Baddely?)} Both maximum
+Spatial point process models further complicate the situation; in addition to
+computational challenges due to a large number of latent variables and
+parameters, point process models also require evaluating difficult likelihoods.
+{\it (Cite some computational papers --- Baddely?)} Both maximum
 likelihood and Bayesian model fitting require integrating the intensity
 function over space, but the integral is generally not available in closed
-form. Many methods have been introduced including quadrature-based
-approximations {\it (cite Baddeley)}, pseudodata approaches
-{\it (cite Baddeley/Berman/Turner etc)}, and Markov chain Monte
-Carlo~\cite{moellerwaagepetersen}.
+form and, unlike a probability distribution, the integral over the entire
+domain does not necessarily equal one.
+
+Many methods have been introduced for modeling spatial point patterns,
+including quadrature-based approximations {\it (cite Baddeley)}, pseudodata
+approaches {\it (cite Baddeley/Berman/Turner etc)}, and Markov chain Monte
+Carlo~\cite{moellerwaagepetersen}. The number of parameters and latent
+variables in these models still poses a major computational challenge. This
+computational challenge led to the development of INLA~\cite{rueetal}.
+
+{\it (Add a paragraph about computational challenges. This is really the point
+of INLA (fast albeit approximate solutions). ---Andy)}
 
 Development of the integrated nested Laplace approximation (INLA) has made
 accurate approximate model fitting considerably more feasible for a particular
@@ -122,18 +133,29 @@ conditional intensity function. For readers interested in the general spatial
 point process context in which the LGCP originates, we recommend other
 references~\cite{moellerwaagepetersen, digglepoint, cressie}.
 
-Much recent work in point process modeling involves spatiotemporal models,
-which are easily implemented in INLA by allowing the parameters of a spatial
-point process model to vary over time. To keep the focus on the spatial
-aspects, we do not discuss spatiotemporal models. This article provides a
-review of recent advances in the fitting of spatial LGCP models via INLA,
-including dimension reduction by triangulation, a likelihood factorization that
-avoids gridding, and incorporation of sampling or false negatives.
+{\it (paragraph about partially observed point processes)}
+
+%Much recent work in point process modeling involves spatiotemporal models,
+%which are easily implemented in INLA by allowing the parameters of a spatial
+%point process model to vary over time. To keep the focus on the spatial
+%aspects, we do not discuss spatiotemporal models.
+
+This article provides a review of recent advances in the fitting of spatial
+LGCP models via INLA, including dimension reduction by triangulation, a
+likelihood factorization that avoids gridding, and incorporation of sampling
+effort or false negatives.
+
+The remainder of Section~\ref{intro} provides an overview of spatial LGCP
+models and INLA. Section~\ref{methods} describes the methodology developed to
+fit LGCP models in INLA, and Section~\ref{application} presents example
+analyses of real-world data. Finally, Section~\ref{conclusion} presents
+concluding remarks.
 
 
 \subsection{Log-Gaussian Cox Process}
 
-Notes from \cite{moellerwaagepetersen}:
+Notes from \cite{moellerwaagepetersen}
+{\it (delete once fully integrated into text)}:
 
 \begin{itemize}
 
@@ -214,6 +236,8 @@ pattern, e.g. pseudodata
 \end{itemize}
 
 
+{\it (insert paragraph giving overview of Cox process)}
+
 The LGCP is a Poisson process driven by a latent Gaussian
 process~\cite{moelleretal}. A Poisson process is characterized entirely by its
 intensity function \(\lambda(u)\), which gives the mean number of events
@@ -246,6 +270,8 @@ intensity function is itself a random process to be predicted.
 
 M\"{o}ller and Waagepetersen (2007) present model checking tools for LGCP
 models~\cite{moellerwaagepetersen}.
+
+{\it (insert paragraph reviewing applications and uses of LGCP)}
 
 
 \subsection{Integrated Nested Laplace Approximation}
@@ -287,28 +313,29 @@ R-INLA package~\cite{inlar}.
 
 
 \section{Methodology}
+\label{methods}
 %  {\bf Methodology or Approach:} Present the method(s) and relevant applications being reviewed in this or more sections.
 
 INLA provides an efficient computational framework for fitting Bayesian models
-with latent Gaussian variables. On top of this framework are built several
-tools to further simplify the fitting of spatial LGCP models. The stochastic
+with latent Gaussian variables. On top of this framework, several tools are
+built to further simplify the fitting of spatial LGCP models. The stochastic
 partial differential equation (SPDE) approach provides dimension reduction for
 the spatial GP~\cite{lindgrenetal}. The SPDE approach employs a numerical
 integration scheme which can also be used to approximate the LGCP likelihood
 and negate the need to grid the events into Poisson counts~\cite{simpsonetal}.
 With these computational improvements, researchers are now able to efficiently
-fit LGCP models to incompletely-observed point patterns~\cite{yuanetal}.  
+fit LGCP models to large spatial point pattern datasets and even
+incompletely-observed point patterns~\cite{yuanetal}.  
 
 
 \subsection{The SPDE Approach}
 
 Because the LGCP includes a Gaussian process (GP), efficient computation for
-Gaussian processes is critical when working with LGCP models.
-
-The GP imposes a dense covariance matrix on the latent variables~\cite{rinla}.
-For GPs with a Mat\'{e}rn covariance function, a Gaussian Markov random field
-(GMRF) approximation can simplify computation, requiring only a sparse
-covariance structure.
+Gaussian processes is critical when working with LGCP models. The GP imposes a
+dense covariance matrix on the latent variables~\cite{rinla}. For GPs with a
+Mat\'{e}rn covariance function, a Gaussian Markov random field (GMRF)
+approximation can simplify computation, requiring only a sparse covariance
+structure.
 
 The GMRF approximation is motivated by the fact that Gaussian fields with
 Mat\'{e}rn covariances are solutions to the below stochastic partial
@@ -520,44 +547,40 @@ model to account for the unknown detection function~\cite{yuanetal}.
 
 
 \section{Applications}
+\label{application}
 %  {\bf Application of your Methodology:} Present some applications of the reviewed methods to some recent data in this or more sections. Also note: Simulation studies can be presented as a sub-section in this section or in a new standalone section.
 
 
-\subsection{Simulation Study}
+%\subsection{Simulation Study}
 
-ideas:
+%ideas:
 
-simulate LGCPs
+%simulate LGCPs
 
-fit via Simpson method
+%fit via Simpson method
 
-vary mesh coarseness
+%vary mesh coarseness
 
-explore complexity of predictors vs latent GP
+%explore complexity of predictors vs latent GP
 
-explore bias/variability in parameter posteriors
+%explore bias/variability in parameter posteriors
 
-explore spatial prediction error in latent GP
+%explore spatial prediction error in latent GP
 
 
-\subsection{Data Application}
-
-{\it Examples with data, maybe \texttt{bei} dataset or Victorville. The Minke
-whale data or one of the Gabriel et. al. datasets could also be good if the
-data are available (they are partially-observed with irregular windows). Should
-read like a tutorial because there aren't many good resources yet.}
-
-\subsubsection{Data and Model}
+\subsection{Beilschmiedia Pendula Lauraceae Dataset}
 
 For an example analysis of real-world data, we consider the locations of
 \(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in 1000~m by 500~m
 plot in a tropical rainforest~\cite{moellerwaagepetersen}. The data are
 available as the \texttt{bei} dataset in the \texttt{spatstat} R
-package~\cite{spatstat}. The point pattern is acconaied by elevation and
+package~\cite{spatstat}. The point pattern is accompanied by elevation and
 gradient covariates measured on a square lattice with 5 m spacing. The point
-pattern exhibits inhomogeneity~(Figure~\ref{bei}) which appears to be
-associated with elevation~(Figure~\ref{beielev}) and the the elevation
-gradient~(Figure~\ref{beigrad}).
+pattern exhibits inhomogeneity which appears to be associated with elevation
+and the the elevation~(Figure~\ref{bei}).
+
+
+\subsubsection{Model Specification}
 
 We use the log-Gaussian Cox process model with intensity
 \begin{displaymath}
@@ -571,29 +594,30 @@ process with Mat\'{e}rn covariance and \(\alpha = 2\).
 {\it State priors --- using INLA's defaults which (I think) are uniform but I
 need to confirm than or adjust them to something reasonable.}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei.pdf}
-\caption{Locations of trees (events).}
+\begin{figure}[p]
+
+\subfloat[Locations of trees (events).]
+{\includegraphics[width=0.9\textwidth]{figures/bei.pdf}}
+
+\subfloat[Elevation in meters, with events overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/beielev.pdf}}
+
+\subfloat[Magnitude of the elevation gradient, with events overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/beigrad.pdf}}
+
+\caption{Plots of the event and covariate data.}
 \label{bei}
-\end{figure}
-
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beielev.pdf}
-\caption{Elevation in meters, with events overlaid.}
-\label{beielev}
-\end{figure}
-
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beigrad.pdf}
-\caption{Magnitude of the elevation gradient, with events overlaid.}
-\label{beigrad}
 \end{figure}
 
 
 \subsubsection{Fitting in R-INLA}
 
-We fit the model in R using the \texttt{INLA} package, the SPDE approach, and
-the Poisson factorization. The first task is to construct a mesh for the
+We fit the model in R using the \texttt{INLA} package and its implementation of
+the SPDE approach. Some manual preprocessing was needed to employ the Poisson
+factorization. Our R code can be found in the supplementary materials. This
+section provides a conceptual explanation of the model-fitting process.
+
+The first task is to construct a mesh for the
 piecewise linear approximations. A 25 meter resolution appears adequate to
 accurately represent the covariate surfaces. We used tools in the \texttt{INLA}
 package to create a Delaunay triangulation with a maximum edge length of 25~m.
@@ -648,6 +672,9 @@ the exposure parameter.
 \subsubsection{Results}
 
 {\it insert intervals for betas and covariance parameters}
+
+{\it decide which of figures \ref{beibetas}, \ref{beimean}, \ref{beisd},
+\ref{beiintensity} are needed, then combine into a single multi-panel figure.}
 
 The posterior mean of the fixed effect component of the linear predictor,
 \begin{displaymath}
@@ -704,24 +731,103 @@ is a special case.
 
 {\it Should make the whole four-panel plot if citing Baddeley et. al.}
 
-Pearson residuals: small magnitude in the region with no observed events and low
-posterior intensity (not possible to see much variation), the model
-overestimates the intensity in the canyon (too small to be accurately
-represented on the mesh), random with no obvious spatial patterns elsewhere, a
-few large-magnitude positive residuals (maybe there is some clustering?), tried
-a few different grids (not shown) and saw the same patterns
+Pearson residuals~(Figure~\ref{beiresiduals}): small magnitude in the region
+with no observed events and low posterior intensity (not possible to see much
+variation), the model overestimates the intensity in the canyon (too small to
+be accurately represented on the mesh), random with no obvious spatial patterns
+elsewhere, a few large-magnitude positive residuals (maybe there is some
+clustering?), tried a few different grids (not shown) and saw the same patterns
+
+
+\section{Dubbo Weed Data}
+
+Devil's claw locations in a 1.2 km by 1.2 km plot in New South Wales. Available
+in the \texttt{DSpat} package for R \cite{dspat}. Partially simulated, based upon
+data used in Melville and Welsh \cite{melvillewelsh}. Events observed via
+distance sampling from 8 transects. Covariate for sheep grazing, should
+interact with detection function because the weeds are present but harder to
+detect when their leaves have been eaten.
+
+\begin{figure}[p]
+
+\subfloat[Locations of weeds (events).]
+{\includegraphics[width=0.9\textwidth]{figures/weeds.pdf}}
+
+\subfloat[Indicator of sheep grazing, with events overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/weedssheep.pdf}}
+
+\caption{Plots of the event and covariate data.}
+\label{weeds}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsmesh.pdf}
+\caption{Triangular mesh with events overlaid.}
+\label{weedsmesh}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedssheepmesh.pdf}
+\caption{Piecewise linear approximation of the elevation surface.}
+\label{weedssheepmesh}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsdistmesh.pdf}
+\caption{Piecewise linear approximation of the distance-to-transect surface.}
+\label{weedsdistmesh}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsbetas.pdf}
+\caption{Posterior mean surface for the fixed effects.}
+\label{weedsbetas}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsmean.pdf}
+\caption{Posterior mean of prediction surface.}
+\label{weedsmean}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedssd.pdf}
+\caption{Pointwise posterior standard deviation of predictions.}
+\label{weedssd}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsintensity.pdf}
+\caption{Posterior intensity surface in events per square meter, calculated
+using the piecewise linear approximate covariate surfaces and the posterior
+means of the intercept, coefficients, and GP.}
+\label{weedsintensity}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsdetection.pdf}
+\caption{Posterior detection probability over space.}
+\label{weedsdetection}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/weedsresiduals.pdf}
+\caption{Pearson residuals calculated on a grid.}
+\label{weedsresiduals}
+\end{figure}
 
 
 \section{Conclusion and Discussion}
+\label{conclusion}
 %  {\bf Conclusion and Discussion:} In this conclusion and discussion section, provide conclusions of your review and provide anticipated future direction(s) in this area.
 
 not really possible to get a posterior distribution of the intensity function
 because it is a nonlinear transformation of several parameters and we do not
 have their joint posterior
 
-the mesh for is finer than needed to describe the GP --- think about coarsening
-and refining based on the detail needed to represent the covariates (is there
-literature on this?)
+the mesh used for \texttt{bei} for is finer than needed to describe the
+GP --- think about coarsening and refining based on the detail needed to
+represent the covariates (is there literature on this?)
 
 shows that mapping based on Bayesian LGCP models is now practical with
 useful accuracy in short amount of time

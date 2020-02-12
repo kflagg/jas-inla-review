@@ -4,7 +4,6 @@
 
 library(spatstat) # For bei dataset
 library(INLA) # For model fitting.
-#library(maptools) # Provides as.SpatialPolygons method for owin.
 
 # Plot the observed point pattern and its window.
 pdf('figures/bei.pdf', width = 12, height = 6)
@@ -209,6 +208,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
+     riblab = expression(SD(bold(e)(u)*'|'*bold(x))),
      main = 'Posterior Prediction SD of Latent GP')
 plot(Window(bei), border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
@@ -223,16 +223,15 @@ plot(im(t(
             inla.mesh.project(bei_proj, bei_mesh_elev) +
           bei_result$summary.fixed['grad', 'mean'] *
             inla.mesh.project(bei_proj, bei_mesh_grad)
-        )),
+        ),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
-        unitname = c('meter', 'meters'),
+        unitname = c('meter', 'meters')),
      riblab = expression(E(beta[0]*'|'*bold(x)) +
                          E(beta[1]*'|'*bold(x)) * z[1](u) +
                          E(beta[2]*'|'*bold(x)) * z[2](u)),
      main = 'Posterior Mean of Fixed Effects')
 plot(Window(bei), border = 'white', add = TRUE)
-# TODO: figure out why the dots are in the wrong places.
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
