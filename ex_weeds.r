@@ -6,27 +6,27 @@ library(spatstat) # For bei dataset
 library(INLA) # For model fitting.
 library(DSpat) # For dataset.
 
-data(weeds.obs) # Incompletely observed (distance sampling) dataset.
+data(weeds.all) # Fully observed (ground truth) dataset.
 data(weeds.lines) # Transect lines used for distance sampling.
 data(weeds.covariates) # Lattice of predictor variables.
 
 weeds_win <- owin(c(0, 1200), c(0, 1200), unitname = c('meter', 'meters'))
 weeds_psp <- psp(weeds.lines$x0, weeds.lines$y0, weeds.lines$x1, weeds.lines$y1, weeds_win)
-weeds_ppp <- ppp(weeds.obs$x, weeds.obs$y, window = weeds_win)
+weeds_ppp <- ppp(weeds.all$x, weeds.all$y, window = weeds_win)
 weeds_sheep_im <- im(
   matrix(weeds.covariates$sheep, ncol = length(unique(weeds.covariates$x))),
   xcol = unique(weeds.covariates$x), yrow = unique(weeds.covariates$y)
 )
 
 # Plot the observed point pattern, its window, and the transects.
-pdf('figures/weeds.pdf', width = 6, height = 6)
+pdf('figures/weedsall.pdf', width = 6, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(weeds_ppp, main = 'Devil\'s Claw Locations', border = 'grey')
 plot(weeds_psp, add = TRUE)
 dev.off()
 
 # Plot the sheep covariate and the transects.
-pdf('figures/weedssheep.pdf', width = 6, height = 6)
+pdf('figures/weedsallsheep.pdf', width = 6, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(weeds_sheep_im, main = 'Presence of Sheep', border = 'grey')
 plot(weeds_psp, add = TRUE)
@@ -57,7 +57,7 @@ weeds_proj <- inla.mesh.projector(weeds_mesh, dims = c(400, 400))
 
 
 # Plot the mesh and point pattern.
-pdf('figures/weedsmesh.pdf', width = 6, height = 6)
+pdf('figures/weedsallmesh.pdf', width = 6, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(weeds_mesh, asp = 1, main = '')
 plot(weeds_psp, add = TRUE, col = 'red')
@@ -78,13 +78,8 @@ weeds_mesh_ppp <- as.ppp(weeds_mesh$loc[,1:2], weeds_win)
 # instead of interpolating or modeling.
 weeds_mesh_sheep <- as.numeric(weeds_mesh_ppp$x > 600)
 
-# Get the distance from each node to the nearest transect.
-weeds_mesh_dist <- apply(sapply(unique(weeds.covariates$strip), function(l){
-  return(dist2line(weeds_mesh_ppp, weeds.lines[l, c('x0', 'y0', 'x1', 'y1')])$distance)
-}), 1, min)
-
 # Plot the piecewise linear approximation of the sheep presence surface.
-pdf('figures/weedssheepmesh.pdf', width = 6, height = 6)
+pdf('figures/weedsallsheepmesh.pdf', width = 6, height = 6)
 par(mar = c(0.5, 0, 2, 2))
 plot(im(t(inla.mesh.project(weeds_proj, weeds_mesh_sheep)),
         xrange = weeds_win$x,
@@ -96,26 +91,13 @@ plot(weeds_psp, add = TRUE)
 points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
-# Plot the piecewise linear approximation of the distance surface.
-pdf('figures/weedsdistmesh.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
-plot(im(t(inla.mesh.project(weeds_proj, weeds_mesh_dist)),
-        xrange = weeds_win$x,
-        yrange = weeds_win$y,
-        unitname = c('meter', 'meters')), riblab = 'Meters',
-        main = 'Piecewise Linear Approximation of Distance to Transect')
-plot(weeds_win, border = '#80808080', add = TRUE)
-plot(weeds_psp, add = TRUE)
-points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
-dev.off()
-
 
 ######################################
 ## SET UP SIMPSON METHOD PSEUDODATA ##
 ######################################
 
 # Observed event locations.
-weeds_pts <- cbind(weeds.obs$x, weeds.obs$y)
+weeds_pts <- cbind(weeds.all$x, weeds.all$y)
 
 # Get the numbers of mesh nodes and real events.
 # The sum of these will be the number of pseudodata points.
@@ -161,14 +143,13 @@ weeds_pseudopoints <- rbind(weeds_int_matrix, weeds_bary)
 # inla() requires a vector of 1s in the data argument for the intercept.
 # The f() term specifies the GP with observations indexed by a variable called
 # idx. The indices correspond to the indixes of the mesh nodes.
-weeds_formula <- y ~ -1 + intercept + sheep * dist + f(idx, model = weeds_spde)
+weeds_formula <- y ~ -1 + intercept + sheep + f(idx, model = weeds_spde)
 
 # Create the data list to pass to inla().
 # Indices and intercepts are only needed for the nodes.
 weeds_inla_data <- list(
   y = weeds_pseudodata, # The whole pseudodata vector.
   sheep = weeds_mesh_sheep, # Sheep presence at nodes.
-  dist = weeds_mesh_dist, # Distance at nodes.
   idx = seq_len(weeds_mesh_size), # Indices of the nodes.
   intercept = rep(1, weeds_mesh_size) # Intercept column.
 )
@@ -183,7 +164,7 @@ weeds_result <- inla(
 )
 
 # Plot the posterior mean of the latent surface.
-pdf('figures/weedsmean.pdf', width = 6, height = 6)
+pdf('figures/weedsallmean.pdf', width = 6, height = 6)
 par(mar = c(0.5, 0, 2, 2))
 plot(im(t(inla.mesh.project(weeds_proj, weeds_result$summary.random$idx$mean)),
         xrange = weeds_win$x,
@@ -196,7 +177,7 @@ plot(weeds_win, border = 'white', add = TRUE)
 dev.off()
 
 # Plot the posterior standard deviation of the latent surface.
-pdf('figures/weedssd.pdf', width = 6, height = 6)
+pdf('figures/weedsallsd.pdf', width = 6, height = 6)
 par(mar = c(0.5, 0, 2, 2))
 plot(im(t(inla.mesh.project(weeds_proj, weeds_result$summary.random$idx$sd)),
         xrange = weeds_win$x,
@@ -209,7 +190,7 @@ plot(weeds_win, border = 'white', add = TRUE)
 dev.off()
 
 # Plot the posterior mean of the linear predictor.
-pdf('figures/weedsbetas.pdf', width = 6, height = 6)
+pdf('figures/weedsallbetas.pdf', width = 6, height = 6)
 par(mar = c(0.5, 0, 2, 2))
 plot(im(t(
           weeds_result$summary.fixed['intercept', 'mean'] +
@@ -226,25 +207,8 @@ plot(weeds_win, border = 'white', add = TRUE)
 #points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
-# Plot the backtransformed posterior mean of the detection surface.
-pdf('figures/weedsdetection.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
-plot(im(t(exp(
-          weeds_result$summary.fixed['dist', 'mean'] *
-            inla.mesh.project(weeds_proj, weeds_mesh_dist) +
-          weeds_result$summary.fixed['sheep:dist', 'mean'] *
-            inla.mesh.project(weeds_proj, weeds_mesh_sheep * weeds_mesh_dist)
-        )),
-        xrange = weeds_win$x,
-        yrange = weeds_win$y,
-        unitname = c('meter', 'meters')), riblab = 'Detection Probability',
-     main = 'Posterior Detection Surface')
-plot(weeds_win, border = 'white', add = TRUE)
-points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
-dev.off()
-
 # Plot the backtransformed posterior mean of the intensity surface.
-pdf('figures/weedsintensity.pdf', width = 6, height = 6)
+pdf('figures/weedsallintensity.pdf', width = 6, height = 6)
 par(mar = c(0.5, 0, 2, 2))
 plot(im(t(exp(
           weeds_result$summary.fixed['intercept', 'mean'] +
@@ -261,33 +225,9 @@ plot(weeds_win, border = 'white', add = TRUE)
 #points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
-# Plot the backtransformed posterior mean of the intensity surface
-# for the thinned process.
-pdf('figures/weedsthinnedintensity.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
-plot(im(t(exp(
-          weeds_result$summary.fixed['intercept', 'mean'] +
-          weeds_result$summary.fixed['sheep', 'mean'] *
-            inla.mesh.project(weeds_proj, weeds_mesh_sheep) +
-          weeds_result$summary.fixed['dist', 'mean'] *
-            inla.mesh.project(weeds_proj, weeds_mesh_dist) +
-          weeds_result$summary.fixed['sheep:dist', 'mean'] *
-            inla.mesh.project(weeds_proj, weeds_mesh_sheep * weeds_mesh_dist) +
-          inla.mesh.project(weeds_proj, weeds_result$summary.random$idx$mean)
-        )),
-        xrange = weeds_win$x,
-        yrange = weeds_win$y,
-        unitname = c('meter', 'meters')) * 1000000,
-     riblab = 'Observed Events per Square Kilometer',
-     main = 'Posterior Thinned Intensity Function')
-plot(weeds_win, border = 'white', add = TRUE)
-points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
-dev.off()
-
-
-# Plot posterior marginals of the covariance parameters and intercept.
-pdf('figures/weedspost.pdf', width = 18, height = 6)
-par(mfrow = c(1, 3), bty = 'n')
+# Plot posterior marginals of the covariance parameters and coefficients.
+pdf('figures/weedsallpost.pdf', width = 12, height = 12)
+par(mfrow = c(2, 2), bty = 'n')
 plot(inla.smarginal(weeds_result$marginals.hyperpar$Theta1), type = 'l',
      yaxt = 'n', xlab = expression(tau),
      main = expression(paste(bold('Posterior Distribution of '), tau)))
@@ -297,20 +237,9 @@ plot(inla.smarginal(weeds_result$marginals.hyperpar$Theta2), type = 'l',
 plot(inla.smarginal(weeds_result$marginals.fixed$intercept), type = 'l',
      yaxt = 'n', xlab = expression(beta[0]),
      main = 'Posterior Distribution of the Intercept')
-dev.off()
-
-# Plot posterior marginals of the coefficients.
-pdf('figures/weedspostcoefs.pdf', width = 18, height = 6)
-par(mfrow = c(1, 3), bty = 'n')
 plot(inla.smarginal(weeds_result$marginals.fixed$sheep), type = 'l',
      yaxt = 'n', xlab = expression(beta[1]),
      main = 'Posterior Distribution of Sheep Coefficient')
-plot(inla.smarginal(weeds_result$marginals.fixed$dist), type = 'l',
-     yaxt = 'n', xlab = expression(beta[2]),
-     main = 'Posterior Distribution of Distance Coefficient')
-plot(inla.smarginal(weeds_result$marginals.fixed$`sheep:dist`), type = 'l',
-     yaxt = 'n', xlab = expression(beta[2]),
-     main = 'Posterior Distribution of Sheep x Distance Coefficient')
 dev.off()
 
 
@@ -358,10 +287,6 @@ weeds_resid_df$intensity <- as.vector(exp(
   weeds_result$summary.fixed['intercept', 'mean'] +
     weeds_result$summary.fixed['sheep', 'mean'] *
   inla.mesh.project(weeds_resid_proj, weeds_mesh_sheep) +
-    weeds_result$summary.fixed['dist', 'mean'] *
-  inla.mesh.project(weeds_resid_proj, weeds_mesh_dist) +
-    weeds_result$summary.fixed['sheep:dist', 'mean'] *
-  inla.mesh.project(weeds_resid_proj, weeds_mesh_sheep * weeds_mesh_dist) +
   inla.mesh.project(weeds_resid_proj, weeds_result$summary.random$idx$mean)
 ))
 
@@ -371,7 +296,7 @@ weeds_resid_df$pearson <- (weeds_resid_df$count - weeds_resid_df$expected) /
   sqrt(weeds_resid_df$expected)
 
 # Gridded Pearson residual plot.
-pdf('figures/weedsresiduals.pdf', width = 6, height = 6)
+pdf('figures/weedsallresiduals.pdf', width = 6, height = 6)
 par(mar = c(0.5, 0, 2, 2))
 plot(im(t(matrix(weeds_resid_df$pearson, nrow = length(unique(weeds_resid_df$x)))),
         unique(weeds_resid_df$x), unique(weeds_resid_df$y),
@@ -391,24 +316,16 @@ marks(weeds_marked) <- as.vector(1/sqrt(exp(
   weeds_result$summary.fixed['intercept', 'mean'] +
     weeds_result$summary.fixed['sheep', 'mean'] *
   inla.mesh.project(weeds_event_proj, weeds_mesh_sheep) +
-    weeds_result$summary.fixed['dist', 'mean'] *
-  inla.mesh.project(weeds_event_proj, weeds_mesh_dist) +
-    weeds_result$summary.fixed['sheep:dist', 'mean'] *
-  inla.mesh.project(weeds_event_proj, weeds_mesh_sheep * weeds_mesh_dist) +
   inla.mesh.project(weeds_event_proj, weeds_result$summary.random$idx$mean)
 )))
 
 # Mark plot.
-pdf('figures/weedsmarkplot.pdf', width = 6, height = 6)
+pdf('figures/weedsallmarkplot.pdf', width = 6, height = 6)
 par(mar = c(0.5, 0, 2, 2))
 plot(im(t(sqrt(exp(
           weeds_result$summary.fixed['intercept', 'mean'] +
           weeds_result$summary.fixed['sheep', 'mean'] *
             inla.mesh.project(weeds_proj, weeds_mesh_sheep) +
-          weeds_result$summary.fixed['dist', 'mean'] *
-            inla.mesh.project(weeds_proj, weeds_mesh_dist) +
-          weeds_result$summary.fixed['sheep:dist', 'mean'] *
-            inla.mesh.project(weeds_proj, weeds_mesh_sheep * weeds_mesh_dist) +
           inla.mesh.project(weeds_proj, weeds_result$summary.random$idx$mean)
         ))),
         xrange = weeds_win$x,
