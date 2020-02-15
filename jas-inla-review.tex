@@ -742,70 +742,95 @@ distance sampling from 8 transects. Covariate for sheep grazing, should
 interact with detection function because the weeds are present but harder to
 detect when their leaves have been eaten.
 
-\begin{figure}[p]
+\begin{figure}[p]\centering
 
 \subfloat[Locations of weeds (events).]
-{\includegraphics[width=0.9\textwidth]{figures/weeds.pdf}}
+{\includegraphics[width=0.6\textwidth]{figures/weeds.pdf}}
 
 \subfloat[Indicator of sheep grazing, with events overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/weedssheep.pdf}}
+{\includegraphics[width=0.7\textwidth]{figures/weedssheep.pdf}}
 
 \caption{Plots of the event and covariate data.}
 \label{weeds}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsmesh.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsdist.pdf}
+\caption{Plot of the distance-to-transect surface.}
+\label{weedsdist}
+\end{figure}
+
+
+\begin{figure}[h]\centering
+\includegraphics[width=0.6\textwidth]{figures/weedsmesh.pdf}
 \caption{Triangular mesh with events overlaid.}
 \label{weedsmesh}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedssheepmesh.pdf}
-\caption{Piecewise linear approximation of the elevation surface.}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedssheepmesh.pdf}
+\caption{Piecewise linear approximation of the sheep indicator. The indicator
+has a running vertically through the center of the study region, but the
+approximation is continuous.}
 \label{weedssheepmesh}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsdistmesh.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsdistmesh.pdf}
 \caption{Piecewise linear approximation of the distance-to-transect surface.}
 \label{weedsdistmesh}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsbetas.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsbetas.pdf}
 \caption{Posterior mean surface for the fixed effects.}
 \label{weedsbetas}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsmean.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsmean.pdf}
 \caption{Posterior mean of prediction surface.}
 \label{weedsmean}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedssd.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedssd.pdf}
 \caption{Pointwise posterior standard deviation of predictions.}
 \label{weedssd}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsintensity.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsthinnedintensity.pdf}
+\caption{Posterior intensity surface of the thinned (observeable) process in
+events per square meter, calculated using the piecewise linear approximate
+covariate surfaces and the posterior means of the intercept, coefficients, and
+GP.}
+\label{weedsthinnedintensity}
+\end{figure}
+
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsintensity.pdf}
 \caption{Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
-means of the intercept, coefficients, and GP.}
+means of the intercept, sheep main effect, and GP.}
 \label{weedsintensity}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsdetection.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsdetection.pdf}
 \caption{Posterior detection probability over space.}
 \label{weedsdetection}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsresiduals.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsdetectcurves.pdf}
+\caption{Posterior detection probability as a function of distance from the
+transect.}
+\label{weedsdetectcurves}
+\end{figure}
+
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsresiduals.pdf}
 \caption{Pearson residuals calculated on a grid.}
 \label{weedsresiduals}
 \end{figure}

@@ -10,6 +10,7 @@ data(weeds.all) # Fully observed (ground truth) dataset.
 data(weeds.lines) # Transect lines used for distance sampling.
 data(weeds.covariates) # Lattice of predictor variables.
 
+# Create spatstat objects for plotting.
 weeds_win <- owin(c(0, 1200), c(0, 1200), unitname = c('meter', 'meters'))
 weeds_psp <- psp(weeds.lines$x0, weeds.lines$y0, weeds.lines$x1, weeds.lines$y1, weeds_win)
 weeds_ppp <- ppp(weeds.all$x, weeds.all$y, window = weeds_win)
@@ -20,17 +21,23 @@ weeds_sheep_im <- im(
 
 # Plot the observed point pattern, its window, and the transects.
 pdf('figures/weedsall.pdf', width = 6, height = 6)
-par(mar = c(0, 0, 2, 0))
+par(mar = c(3, 3, 2, 0))
 plot(weeds_ppp, main = 'Devil\'s Claw Locations', border = 'grey')
 plot(weeds_psp, add = TRUE)
+axis(1, at = seq(0, 1200, 300))
+mtext('Horizontal Coordinate', 1, 2)
+axis(2, at = seq(0, 1200, 300))
+mtext('Vertical Coordinate', 2, 2)
 dev.off()
 
 # Plot the sheep covariate and the transects.
-pdf('figures/weedsallsheep.pdf', width = 6, height = 6)
-par(mar = c(0, 0, 2, 0))
-plot(weeds_sheep_im, main = 'Presence of Sheep', border = 'grey')
+pdf('figures/weedsallsheep.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
+plot(weeds_sheep_im, main = 'Presence of Sheep', border = 'grey',
+     riblab = 'Sheep Indicator', ribsep = 0.05, ribn = 2,
+     ribargs = list(at = c(300, 900), labels = 0:1))
 plot(weeds_psp, add = TRUE)
-points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(weeds_ppp, pch = 21, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 
@@ -42,9 +49,21 @@ dev.off()
 # and define mesh edge segments for INLA.
 weeds_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices.owin(weeds_win)))
 
+# Define edges for a finer mesh over the discontinuity in sheep presence.
+weeds_refine <- inla.mesh.segment(loc = cbind(
+  c(590, 610, 610, 590), c(0, 0, 1200, 1200)
+))
+
+# Create the finer mesh.
+weeds_refine_mesh <- inla.mesh.create(
+  boundary = weeds_refine,
+  refine = list(max.edge = 50)
+)
+
 # Create a Delaunay triangulation with maximum edge length of 50 meters to use
-# as the mesh.
+# as the mesh. Include the nodes from the finer mesh
 weeds_mesh <- inla.mesh.create(
+  loc = weeds_refine_mesh$loc[,1:2],
   boundary = weeds_boundary,
   refine = list(max.edge = 50)
 )
@@ -58,10 +77,10 @@ weeds_proj <- inla.mesh.projector(weeds_mesh, dims = c(400, 400))
 
 # Plot the mesh and point pattern.
 pdf('figures/weedsallmesh.pdf', width = 6, height = 6)
-par(mar = c(0, 0, 2, 0))
+par(mar = c(0, 0, 2, 2))
 plot(weeds_mesh, asp = 1, main = '')
 plot(weeds_psp, add = TRUE, col = 'red')
-points(weeds_ppp, pch = 20, cex = 0.5, col = 'red')
+points(weeds_ppp, pch = 20, col = 'red')
 title('Mesh Over Devil\'s Claw Data')
 dev.off()
 
@@ -79,16 +98,17 @@ weeds_mesh_ppp <- as.ppp(weeds_mesh$loc[,1:2], weeds_win)
 weeds_mesh_sheep <- as.numeric(weeds_mesh_ppp$x > 600)
 
 # Plot the piecewise linear approximation of the sheep presence surface.
-pdf('figures/weedsallsheepmesh.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/weedsallsheepmesh.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(weeds_proj, weeds_mesh_sheep)),
         xrange = weeds_win$x,
         yrange = weeds_win$y,
         unitname = c('meter', 'meters')),
+        riblab = 'Sheep Indicator', ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Sheep Presence')
 plot(weeds_win, border = '#80808080', add = TRUE)
 plot(weeds_psp, add = TRUE)
-points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(weeds_ppp, pch = 21, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 
@@ -164,34 +184,34 @@ weeds_result <- inla(
 )
 
 # Plot the posterior mean of the latent surface.
-pdf('figures/weedsallmean.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/weedsallmean.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(weeds_proj, weeds_result$summary.random$idx$mean)),
         xrange = weeds_win$x,
         yrange = weeds_win$y,
         unitname = c('meter', 'meters')),
-     riblab = expression(E(bold(e)(u)*'|'*bold(x))),
+     riblab = expression(E(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Predicted Mean of Latent GP')
 plot(weeds_win, border = 'white', add = TRUE)
-#points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(weeds_ppp, pch = 21, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot the posterior standard deviation of the latent surface.
-pdf('figures/weedsallsd.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/weedsallsd.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(weeds_proj, weeds_result$summary.random$idx$sd)),
         xrange = weeds_win$x,
         yrange = weeds_win$y,
         unitname = c('meter', 'meters')),
-     riblab = expression(SD(bold(e)(u)*'|'*bold(x))),
+     riblab = expression(SD(bold(e)(u)*'|'*bold(x))), 0.05,
      main = 'Posterior Prediction SD of Latent GP')
 plot(weeds_win, border = 'white', add = TRUE)
-#points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(weeds_ppp, pch = 21, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot the posterior mean of the linear predictor.
-pdf('figures/weedsallbetas.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/weedsallbetas.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(
           weeds_result$summary.fixed['intercept', 'mean'] +
           weeds_result$summary.fixed['sheep', 'mean'] *
@@ -201,15 +221,15 @@ plot(im(t(
         yrange = weeds_win$y,
         unitname = c('meter', 'meters')),
      riblab = expression(E(beta[0]*'|'*bold(x)) +
-                         E(beta[1]*'|'*bold(x)) * z[1](u)),
+                         E(beta[1]*'|'*bold(x)) * z[1](u)), ribsep = 0.05,
      main = 'Posterior Mean of Fixed Effects')
 plot(weeds_win, border = 'white', add = TRUE)
-#points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(weeds_ppp, pch = 21, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot the backtransformed posterior mean of the intensity surface.
-pdf('figures/weedsallintensity.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/weedsallintensity.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(exp(
           weeds_result$summary.fixed['intercept', 'mean'] +
           weeds_result$summary.fixed['sheep', 'mean'] *
@@ -219,10 +239,10 @@ plot(im(t(exp(
         xrange = weeds_win$x,
         yrange = weeds_win$y,
         unitname = c('meter', 'meters')) * 1000000,
-     riblab = 'Events per Square Kilometer',
+     riblab = 'Events per Square Kilometer', ribsep = 0.05,
      main = 'Posterior Intensity Function')
 plot(weeds_win, border = 'white', add = TRUE)
-#points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(weeds_ppp, pch = 21, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot posterior marginals of the covariance parameters and coefficients.
@@ -296,14 +316,14 @@ weeds_resid_df$pearson <- (weeds_resid_df$count - weeds_resid_df$expected) /
   sqrt(weeds_resid_df$expected)
 
 # Gridded Pearson residual plot.
-pdf('figures/weedsallresiduals.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/weedsallresiduals.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(matrix(weeds_resid_df$pearson, nrow = length(unique(weeds_resid_df$x)))),
         unique(weeds_resid_df$x), unique(weeds_resid_df$y),
         unitname = c('meter', 'meters')),
      main = 'Gridded Pearson Residuals')
 plot(weeds_win, border = 'white', add = TRUE)
-#points(weeds_ppp, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(weeds_ppp, pch = 21, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Set up a projection from the SPDE representation to the event locations.
@@ -320,8 +340,8 @@ marks(weeds_marked) <- as.vector(1/sqrt(exp(
 )))
 
 # Mark plot.
-pdf('figures/weedsallmarkplot.pdf', width = 6, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/weedsallmarkplot.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(sqrt(exp(
           weeds_result$summary.fixed['intercept', 'mean'] +
           weeds_result$summary.fixed['sheep', 'mean'] *
@@ -331,8 +351,77 @@ plot(im(t(sqrt(exp(
         xrange = weeds_win$x,
         yrange = weeds_win$y,
         unitname = c('meter', 'meters')),
-        riblab = expression(sqrt(hat(lambda))),
+        riblab = expression(sqrt(hat(lambda))), ribsep = 0.05,
         main = 'Mark Plot')
 plot(weeds_win, border = 'white', add = TRUE)
 plot(weeds_marked, col = '#ffffff80', add = TRUE)
+dev.off()
+
+# Lurking variable plots.
+lambda_im <- im(t(exp(
+    weeds_result$summary.fixed['intercept', 'mean'] +
+    weeds_result$summary.fixed['sheep', 'mean'] *
+      inla.mesh.project(weeds_proj, weeds_mesh_sheep) +
+    inla.mesh.project(weeds_proj, weeds_result$summary.random$idx$mean)
+  )),
+  xrange = weeds_win$x,
+  yrange = weeds_win$y,
+  unitname = c('meter', 'meters'))
+
+h_im <- 1/sqrt(lambda_im)
+
+x_im <- im(matrix(seq(0, 1200, 5), nrow = 241, ncol = 241, byrow = TRUE),
+  xrange = weeds_win$x, yrange = weeds_win$y)
+
+y_im <- im(matrix(seq(0, 1200, 5), nrow = 241, ncol = 241, byrow = FALSE),
+  xrange = weeds_win$x, yrange = weeds_win$y)
+
+cum_pearson_x <- do.call(rbind, c(
+  data.frame(x = 0, observed = 0, expected = 0, pearson = 0, v = 0, upper = 0, lower = 0),
+  lapply(seq(0, 1200, 5), function(x){
+    sub_ppp <- weeds_ppp[x_im <= x]
+    a <- area(sub_ppp)
+    v <- a / area(weeds_ppp)
+    observed <- sub_ppp$n
+    expected <- mean(lambda_im[x_im <= x]) * a
+    pearson <- (observed - expected) / sqrt(expected)
+    upper <- 2 * sqrt(v)
+    lower <- -2 * sqrt(v)
+    return(data.frame(x, observed, expected, pearson, v, upper, lower))
+  })
+))
+
+pdf('figures/weedsalllurkx.pdf', width = 7, height = 6)
+par(bty = 'n')
+plot(pearson ~ x, data = cum_pearson_x, type = 'l', ylim = c(-3.5, 2),
+     xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
+     main = 'Lurking Variable Plot for Horizontal Coordinate')
+abline(h = 0, lty = 2)
+lines(lower ~ x, data = cum_pearson_x, type = 'l', lty = 3)
+lines(upper ~ x, data = cum_pearson_x, type = 'l', lty = 3)
+dev.off()
+
+cum_pearson_y <- do.call(rbind, c(
+  data.frame(y = 0, observed = 0, expected = 0, pearson = 0, v = 0, upper = 0, lower = 0),
+  lapply(seq(0, 1200, 5), function(y){
+    sub_ppp <- weeds_ppp[y_im <= y]
+    a <- area(sub_ppp)
+    v <- a / area(weeds_ppp)
+    observed <- sub_ppp$n
+    expected <- mean(lambda_im[y_im <= y]) * a
+    pearson <- (observed - expected) / sqrt(expected)
+    upper <- 2 * sqrt(v)
+    lower <- -2 * sqrt(v)
+    return(data.frame(y, observed, expected, pearson, v, upper, lower))
+  })
+))
+
+pdf('figures/weedsalllurky.pdf', width = 7, height = 6)
+par(bty = 'n')
+plot(pearson ~ y, data = cum_pearson_y, type = 'l', ylim = c(-2, 2),
+     xlab = 'Vertical Coordinate', ylab = 'Cumulative Pearson Residual',
+     main = 'Lurking Variable Plot for Vertical Coordinate')
+abline(h = 0, lty = 2)
+lines(lower ~ y, data = cum_pearson_y, type = 'l', lty = 3)
+lines(upper ~ y, data = cum_pearson_y, type = 'l', lty = 3)
 dev.off()
