@@ -70,6 +70,9 @@ dev.off()
 weeds_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices.owin(weeds_win)))
 
 # Define edges for a finer mesh over the discontinuity in sheep presence.
+# This is a 20m strip running the vertical length of the site. It should really
+# be narrower, but we are keeping it wide enough so the continuitiy in the
+# approximation is visible in the plots.
 weeds_refine <- inla.mesh.segment(loc = cbind(
   c(590, 610, 610, 590), c(0, 0, 1200, 1200)
 ))
