@@ -33,25 +33,23 @@
 
 {\Large\bf Progress this week}
 
-{\large\bf February 9, 2020}
+{\large\bf February 16, 2020}
 
 \begin{itemize}
 
-\item Proofread.
+\item Further exploration of weeds detection function.
 
-\item Incorporated many of Andy's comments.
+\item Fit model to fully-observed weed data (not included in manuscript).
 
-\item Consolidated raw data figures into a single multipanel figure.
-
-\item Added figures for a distance sampling example.
+\item Expanded \S\ref{lgcp}.
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 3257 \hfill \textbf{Current word count:} 3510
+\textbf{Previous word count:} 3510 \hfill \textbf{Current word count:} 3885
 
-\textbf{Previous page count:} 13.5 \hfill \textbf{Current page count:} 20
+\textbf{Previous page count:} 20 \hfill \textbf{Current page count:} 20.5
 
 \pagebreak
 
@@ -143,7 +141,8 @@ references~\cite{moellerwaagepetersen, digglepoint, cressie}.
 This article provides a review of recent advances in the fitting of spatial
 LGCP models via INLA, including dimension reduction by triangulation, a
 likelihood factorization that avoids gridding, and incorporation of sampling
-effort or false negatives.
+effort or false negatives. The examples use freely-available datasets and the
+R code is provided in the supplementary materials.
 
 The remainder of Section~\ref{intro} provides an overview of spatial LGCP
 models and INLA. Section~\ref{methods} describes the methodology developed to
@@ -153,108 +152,135 @@ concluding remarks.
 
 
 \subsection{Log-Gaussian Cox Process}
+\label{lgcp}
 
-Notes from \cite{moellerwaagepetersen}
-{\it (delete once fully integrated into text)}:
+%Notes from \cite{moellerwaagepetersen}
+%{\it (delete once fully integrated into text)}:
 
-\begin{itemize}
+%\begin{itemize}
 
-\item applications mentioned: seismology, ecology, forestry, geography, spatial
-epidemiology and materials science
+%\item applications mentioned: seismology, ecology, forestry, geography, spatial
+%epidemiology and materials science
 
-\item modern computing (e.g. McMC) allows for model-based inference without a
-stationarity assumption
+%\item modern computing (e.g. McMC) allows for model-based inference without a
+%stationarity assumption
 
-\item Minke whale distance sampling data used as an example of incomplete
-observation (they used a shot noise Cox process model)
+%\item Minke whale distance sampling data used as an example of incomplete
+%observation (they used a shot noise Cox process model)
 
-\item distribution of point process is the joint distrubition of \(n\) and
-the \(n\) events, or equivalently the distribution of the number of events in
-any arbitrary region
+%\item distribution of point process is the joint distrubition of \(n\) and
+%the \(n\) events, or equivalently the distribution of the number of events in
+%any arbitrary region
 
-\item in their presentation of the two Poisson process postulates, the second
-one is given the number of events in a region they are iid proportional to the
-intensity function
+%\item in their presentation of the two Poisson process postulates, the second
+%one is given the number of events in a region they are iid proportional to the
+%intensity function
 
-\item Cox process is driven by a non-negative random process such that
-conditional on the driving process the Cox process is a Poisson process
+%\item Cox process is driven by a non-negative random process such that
+%conditional on the driving process the Cox process is a Poisson process
 
-\item LGCP has no edge effects because the point process in the window is
-fully specified by the GP restricted to the window
+%\item LGCP has no edge effects because the point process in the window is
+%fully specified by the GP restricted to the window
 
-\item quite a bit about Gibbs processes, densities wrt stationary Poisson
-processes, and Papangelou conditional intensities (comments: The density was
-traditionally used to facilitate McMC simulation and ML fitting when the
-likelihood was not explicitly available. The conditional intensity of a
-Poisson process is the intensity function because of independence among the
-points. The hierarchical setup of the LGCP lets us work directly with a
-Poisson process so the density and conditional intensity are not needed. LGCP
-models with constructed covariate can model Gibbs processes.)
+%\item quite a bit about Gibbs processes, densities wrt stationary Poisson
+%processes, and Papangelou conditional intensities \emph{(comments: The density
+%was traditionally used to facilitate McMC simulation and ML fitting when the
+%likelihood was not explicitly available. The conditional intensity of a
+%Poisson process is the intensity function because of independence among the
+%points. The hierarchical setup of the LGCP lets us work directly with a
+%Poisson process so the density and conditional intensity are not needed. LGCP
+%models with constructed covariate can model Gibbs processes.)}
 
-\item more things about infinite Gibbs and Markov processes that go over my
-head but we don't need because we deal with bounded and finite processes
+%\item more things about infinite Gibbs and Markov processes that go over my
+%head but we don't need because we deal with bounded and finite processes
 
-\end{itemize}
+%\end{itemize}
 
-Notation and terminology:
+%Kenny's notation and terminology:
 
-\begin{itemize}
+%\begin{itemize}
 
-\item process defined on \(\mathcal{D} \subset \mathbb{R}^{2}\), domain of the
-intensity function, define \(d = \mathrm{dim}(\mathcal{D})\)
+%\item process defined on \(\mathcal{D} \subset \mathbb{R}^{2}\), domain of the
+%intensity function, define \(d = \mathrm{dim}(\mathcal{D})\)
 
-\item observation window \(\mathcal{S} \subset \mathcal{D}\)
+%\item observation window \(\mathcal{S} \subset \mathcal{D}\)
 
-\item \emph{(Note: When thinking about sampling, we need to define three
-regions: the domain \(\mathcal{D}\) over which the process mathematically
-operates, the region \(\mathcal{R}\) over which inferences are desired, and
-the observed/sampled observation window \(\mathcal{S}\). The general
-relationship is \(\mathcal{S} \subset \mathcal{R} \subset \mathcal{D}
-\subset \mathbb{R}^{d}\), where all of the subset symbols taken to mean
-``subset or equal''. The ``fully surveyed'' situation is \(\mathcal{S}
-= \mathcal{R}\).)}
+%\item \emph{(Note: When thinking about sampling, we need to define three
+%regions: the domain \(\mathcal{D}\) over which the process mathematically
+%operates, the region \(\mathcal{R}\) over which inferences are desired, and
+%the observed/sampled observation window \(\mathcal{S}\). The general
+%relationship is \(\mathcal{S} \subset \mathcal{R} \subset \mathcal{D}
+%\subset \mathbb{R}^{d}\), where all of the subset symbols taken to mean
+%``subset or equal''. The ``fully surveyed'' situation is \(\mathcal{S}
+%= \mathcal{R}\).)}
 
-\item \(\mathbf{X}\) point process on \(\mathcal{R}\),
-\(\mathbf{x} = \{x_{1}, \dots, x_{n}\}\) realized point pattern
+%\item \(\mathbf{X}\) point process on \(\mathcal{R}\),
+%\(\mathbf{x} = \{x_{1}, \dots, x_{n}\}\) realized point pattern
 
-\item point \(x \in \mathbf{x}\) called an event
+%\item point \(x \in \mathbf{x}\) called an event
 
-\item intensity function \(\lambda(u)\)
+%\item intensity function \(\lambda(u)\)
 
-\item \(x\) event, \(s\) numerical integration node, \(u\)
-arbitrary location in \(\mathcal{D}\)
+%\item \(x\) event, \(s\) numerical integration node, \(u\)
+%arbitrary location in \(\mathcal{D}\)
 
-\item \(z(u)\) a column vector of covariates/predictors at \(u\)
+%\item \(z(u)\) a column vector of covariates/predictors at \(u\)
 
-\item ``point'' refers to a \(u\) unless clearly stated otherwise
+%\item ``point'' refers to a \(u\) unless clearly stated otherwise
 
-\item bold for sets and spatial processes, normal italics for spatial vectors
+%\item bold for sets and spatial processes, normal italics for spatial vectors
 
-\item \(y\) and variations will be used for objects derived from the point
-pattern, e.g. pseudodata
+%\item \(y\) and variations will be used for objects derived from the point
+%pattern, e.g. pseudodata
 
-\end{itemize}
+%\end{itemize}
 
+The Log-Gaussian Cox process is a Poisson process driven by a latent Gaussian
+process~\cite{moelleretal}. This section provides a brief overview of the
+spatial Poisson process and then presents the hierarchical construction of the
+spatial LGCP.
 
-{\it (insert paragraph giving overview of Cox process)}
+A spatial point process generates a random set of events (points) in space.
+The process is characterized primarily by its intensity function
+\(\lambda(u)\), which gives the local mean number of events per unit area at
+any point in space. The instensity function is nonnegative and defined on a
+domain \(\mathcal{D} \subset \mathbb{R}^{2}\). The point process is observed
+in a bounded window \(\mathcal{R} \subset \mathcal{D}\). The point process is
+denoted \(\mathbf{X}\), and its realizations are \(\mathbf{x} = \{x_{1},
+\dots, x_{n}\}\). A realized (observed) \(\mathbf{x}\) is called a point
+pattern; the elements of the point pattern are the events.
 
-The LGCP is a Poisson process driven by a latent Gaussian
-process~\cite{moelleretal}. A Poisson process is characterized entirely by its
-intensity function \(\lambda(u)\), which gives the mean number of events
-per unit area, and the process satisfies the following two properties
-{\it (find a good citation)}.
+The Poisson process is fully defined by its intensity function and satisfies
+the following two properties \cite{moellerwaagepetersen}:
 \begin{enumerate}
 \item The number of events in any region \(\mathcal{B}\) follows a Poisson
 distribution with mean
 \(\int_{\mathcal{B}} \lambda(u)\mathrm{d}u\).
-\item The numbers of events in disjoint regions are independent.
+\item Given the number of events in \(\mathcal{B}\), those events are
+independent and identically distributed with probability density
+\(\lambda(u) / \int_{\mathcal{B}} \lambda(u)\mathrm{d}u\).
 \end{enumerate}
 
-Commonly, covariates are incorporated via a log-linear model for the intensity,
-\begin{displaymath}
-\log\lambda(u) = \mathbf{z}'(u) \boldsymbol{\beta}.
-\end{displaymath}
-The LGCP adds another stochastic layer,
+In a Poisson process, the intensity function is a fixed parameter (or a
+deterministic function of fixed parameters and covariates). In applications of
+spatial point process models, this is often too simplistic because spatial
+heterogeneity may be driven by other random processes with their own parameters
+about which inferences are desired. A Cox process is a generalization of the
+Poisson process where the intensity function is a realization of another
+stochastic process. Conditional on the intensity function, a Cox process must
+satisfy the two Poisson process properties, but the intensity function can take
+any form. Cox processes are commonly used to model clustering of events, such
+as in the classic Neyman-Scott process where cluster centers are generated by
+another Poisson process~\cite{neymanscott} or when the intensity is a Dirichlet
+process mixture (for example~\cite{taddy}). In situations where the intensity
+function is less structred but exhibits spatial autocorrelation, the Cox
+process can incorporate a geostatistical process to acheive this.
+
+%Commonly, covariates are incorporated via a log-linear model for the intensity,
+%\begin{displaymath}
+%\log\lambda(u) = \mathbf{z}'(u) \boldsymbol{\beta}.
+%\end{displaymath}
+The LGCP uses a log-linear model for the intensity
 \begin{displaymath}
 \log\lambda(u) = \boldsymbol{\Psi}(u)
 = \mathbf{z}(u)' \boldsymbol{\beta} + \mathbf{e}(u),
@@ -275,6 +301,7 @@ models~\cite{moellerwaagepetersen}.
 
 
 \subsection{Integrated Nested Laplace Approximation}
+\label{inla}
 
 INLA was developed with the goal of providing fast, accurate, deterministic
 approximations for posterior marginal distributions of the parameters in
@@ -402,9 +429,9 @@ the simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
 \begin{figure}[h]\centering
 \includegraphics[width=0.5\textwidth]{figures/dual.pdf}
 \caption{An illustration of the nodes (dots) and the weighting scheme for one
-node (large dot). This node represents the shaded region, so its weight is
-proportional to the shaded area. The shaded region is constructed by connecting
-the midpoints of the node's edges.}
+node (large dot). In the SPDE approach, this node represents the shaded
+region, so its weight is proportional to the shaded area. The shaded region is
+constructed by connecting the midpoints of the node's edges.}
 \label{dual}
 \end{figure}
 
@@ -531,7 +558,7 @@ also a Poisson process~\cite{moellerwaagepetersen}.
 We seek to make posterior inferences about the parent intensity,
 \(\lambda(u)\). If \(p(u)\) is known, its value at each node is used to
 adjust the SPDE integration weights. Most usefully, if it is known that
-\(p(s) = 0\) at certain nodes \(s\) because they were outside the sruveyed
+\(p(s) = 0\) at certain nodes \(s\) because they were outside the surveyed
 domain, the weights become zero so those nodes do not contribute to the
 integral. If \(p(u)\) is unknown, it can be modeled. Taking the logarithm of
 the above and substituting in the basis function representation, we have the
@@ -748,70 +775,95 @@ distance sampling from 8 transects. Covariate for sheep grazing, should
 interact with detection function because the weeds are present but harder to
 detect when their leaves have been eaten.
 
-\begin{figure}[p]
+\begin{figure}[p]\centering
 
 \subfloat[Locations of weeds (events).]
-{\includegraphics[width=0.9\textwidth]{figures/weeds.pdf}}
+{\includegraphics[width=0.6\textwidth]{figures/weeds.pdf}}
 
 \subfloat[Indicator of sheep grazing, with events overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/weedssheep.pdf}}
+{\includegraphics[width=0.7\textwidth]{figures/weedssheep.pdf}}
 
 \caption{Plots of the event and covariate data.}
 \label{weeds}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsmesh.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsdist.pdf}
+\caption{Plot of the distance-to-transect surface.}
+\label{weedsdist}
+\end{figure}
+
+
+\begin{figure}[h]\centering
+\includegraphics[width=0.6\textwidth]{figures/weedsmesh.pdf}
 \caption{Triangular mesh with events overlaid.}
 \label{weedsmesh}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedssheepmesh.pdf}
-\caption{Piecewise linear approximation of the elevation surface.}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedssheepmesh.pdf}
+\caption{Piecewise linear approximation of the sheep indicator. The indicator
+has a running vertically through the center of the study region, but the
+approximation is continuous.}
 \label{weedssheepmesh}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsdistmesh.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsdistmesh.pdf}
 \caption{Piecewise linear approximation of the distance-to-transect surface.}
 \label{weedsdistmesh}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsbetas.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsbetas.pdf}
 \caption{Posterior mean surface for the fixed effects.}
 \label{weedsbetas}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsmean.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsmean.pdf}
 \caption{Posterior mean of prediction surface.}
 \label{weedsmean}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedssd.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedssd.pdf}
 \caption{Pointwise posterior standard deviation of predictions.}
 \label{weedssd}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsintensity.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsthinnedintensity.pdf}
+\caption{Posterior intensity surface of the thinned (observeable) process in
+events per square meter, calculated using the piecewise linear approximate
+covariate surfaces and the posterior means of the intercept, coefficients, and
+GP.}
+\label{weedsthinnedintensity}
+\end{figure}
+
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsintensity.pdf}
 \caption{Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
-means of the intercept, coefficients, and GP.}
+means of the intercept, sheep main effect, and GP.}
 \label{weedsintensity}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsdetection.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsdetection.pdf}
 \caption{Posterior detection probability over space.}
 \label{weedsdetection}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/weedsresiduals.pdf}
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsdetectcurves.pdf}
+\caption{Posterior detection probability as a function of distance from the
+transect.}
+\label{weedsdetectcurves}
+\end{figure}
+
+\begin{figure}[h]\centering
+\includegraphics[width=0.7\textwidth]{figures/weedsresiduals.pdf}
 \caption{Pearson residuals calculated on a grid.}
 \label{weedsresiduals}
 \end{figure}
