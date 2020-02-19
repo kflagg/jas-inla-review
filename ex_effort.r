@@ -80,6 +80,8 @@ dev.off()
 ## MESH CONSTRUCTION ##
 #######################
 
+#TODO: refine mesh near transects.
+
 # Get the boundary polygon for the study region window
 # and define mesh edge segments for INLA.
 dspat_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices.owin(site_win)))
@@ -245,6 +247,7 @@ lines_lengths <- unlist(sapply(lines_subsegs, lengths.psp))
 lines_bary_prop <- as(t(sapply(seq_along(seg_tri_idx),
     function(i){return(lines_bary[i,] / tri_areas[seg_tri_idx[i]] * 3)})),
   'sparseMatrix')
+
 # Multiply by the observed area represented in each triangle.
 mesh_weights <- as.vector(0.4 * lines_lengths %*% lines_bary_prop)
 
@@ -422,9 +425,6 @@ plot(inla.smarginal(dspat_result$marginals.hyperpar$Theta1), type = 'l',
 plot(inla.smarginal(dspat_result$marginals.hyperpar$Theta2), type = 'l',
      yaxt = 'n', xlab = expression(kappa),
      main = expression(paste(bold('Posterior Distribution of '), kappa)))
-plot(inla.smarginal(dspat_result$marginals.fixed$intercept), type = 'l',
-     yaxt = 'n', xlab = expression(beta[0]),
-     main = 'Posterior Distribution of the Intercept')
 plot(inla.smarginal(dspat_result$marginals.fixed$dist), type = 'l',
      yaxt = 'n', xlab = expression(beta[4]),
      main = 'Posterior Distribution of Distance Coefficient')
@@ -460,6 +460,8 @@ dev.off()
 ####################
 ## MODEL CHECKING ##
 ####################
+
+# Residuls mostly positive. It seems lambda is biased low.
 
 # Create grid counts for residual calculation.
 
@@ -584,6 +586,8 @@ lambda_im <- im(t(exp(
   yrange = site_win$y)
 
 h_im <- 1/sqrt(lambda_im)
+
+#TODO: lurking variable plots for river and habitat.
 
 x_im <- im(matrix(seq(0, 100, 0.5), nrow = 201, ncol = 201, byrow = TRUE),
   xrange = site_win$x, yrange = site_win$y)
