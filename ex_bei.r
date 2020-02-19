@@ -2,7 +2,7 @@
 ## PACKAGES AND DATA ##
 #######################
 
-library(spatstat) # For bei dataset
+library(spatstat) # For bei dataset.
 library(INLA) # For model fitting.
 
 # Plot the observed point pattern and its window.
