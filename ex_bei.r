@@ -14,7 +14,7 @@ dev.off()
 # Plot the elevation surface.
 pdf('figures/beielev.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
-plot(bei.extra$elev, main = 'Elevation')
+plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
 points(bei, pch = '.', col = 'white')
 dev.off()
 
@@ -32,9 +32,9 @@ dev.off()
 
 # Get the boundary polygon for the observation window
 # and define mesh edge segments for INLA.
-bei_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices.owin(Window(bei))))
+bei_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices(Window(bei))))
 
-# Create a Delaunay triangulation with maximum edge length of 50 meters to use
+# Create a Delaunay triangulation with maximum edge length of 25 meters to use
 # as the mesh.
 bei_mesh <- inla.mesh.create(
   boundary = bei_boundary,
@@ -52,7 +52,8 @@ bei_proj <- inla.mesh.projector(bei_mesh, dims = c(400, 200))
 pdf('figures/beimesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei_mesh, asp = 1, main = '')
-points(bei, pch = 19, cex = 0.25, col = 'red')
+points(bei_mesh$loc[,1:2], pch = 20, col = 'black')
+points(bei, pch = 20, col = 'red')
 title('Mesh Over Bei Data')
 dev.off()
 
@@ -98,6 +99,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
+        riblab = 'Meters', ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Elevation')
 plot(Window(bei), border = '#80808080', add = TRUE)
 points(bei, pch = '.', col = 'white')
@@ -110,6 +112,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
+        ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
 plot(Window(bei), border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#80808080')
@@ -250,6 +253,7 @@ plot(im(t(exp(
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
+     riblab = 'Events per Square Meter', ribsep = 0.05,
      main = 'Posterior Intensity Function')
 plot(Window(bei), border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#80808080')
