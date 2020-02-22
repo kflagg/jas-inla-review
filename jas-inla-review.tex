@@ -33,23 +33,21 @@
 
 {\Large\bf Progress this week}
 
-{\large\bf February 16, 2020}
+{\large\bf February 23, 2020}
 
 \begin{itemize}
 
-\item Further exploration of weeds detection function.
+\item Simulated sampling \emph{bei} within rectangular windows and fit the model.
 
-\item Fit model to fully-observed weed data (not included in manuscript).
-
-\item Expanded \S\ref{lgcp}.
+\item Created Baddeley et. al. (2005) residual plots (not included in manuscript).
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 3510 \hfill \textbf{Current word count:} 3885
+\textbf{Previous word count:} 3885 \hfill \textbf{Current word count:} 3895
 
-\textbf{Previous page count:} 20 \hfill \textbf{Current page count:} 20.5
+\textbf{Previous page count:} 20.5 \hfill \textbf{Current page count:} 18.5
 
 \pagebreak
 
@@ -131,7 +129,8 @@ conditional intensity function. For readers interested in the general spatial
 point process context in which the LGCP originates, we recommend other
 references~\cite{moellerwaagepetersen, digglepoint, cressie}.
 
-{\it (paragraph about partially observed point processes)}
+{\it (paragraph about partially observed point processes --- describe both
+distance sampling and subwindow observation to set up for \S\ref{veffort})}
 
 %Much recent work in point process modeling involves spatiotemporal models,
 %which are easily implemented in INLA by allowing the parameters of a spatial
@@ -356,6 +355,7 @@ incompletely-observed point patterns~\cite{yuanetal}.
 
 
 \subsection{The SPDE Approach}
+\label{spde}
 
 Because the LGCP includes a Gaussian process (GP), efficient computation for
 Gaussian processes is critical when working with LGCP models. The GP imposes a
@@ -441,6 +441,7 @@ provided in the \texttt{inlabru} package~\cite{inlabru}.
 
 
 \subsection{Going Off the Grid}
+\label{offgrid}
 
 Point pattern data are sometimes known as presence-only data, underscoring
 the fact that information about where events did \emph{not} occur is both
@@ -516,6 +517,7 @@ the mesh nodes and construct a pseudodata vector \(\mathbf{y}\).
 
 
 \subsection{Variable Sampling Effort}
+\label{veffort}
 
 There has long been a gap between point process modeling theory and practice,
 where point process models are only fit to data from completely-observed
@@ -560,7 +562,16 @@ We seek to make posterior inferences about the parent intensity,
 adjust the SPDE integration weights. Most usefully, if it is known that
 \(p(s) = 0\) at certain nodes \(s\) because they were outside the surveyed
 domain, the weights become zero so those nodes do not contribute to the
-integral. If \(p(u)\) is unknown, it can be modeled. Taking the logarithm of
+integral. More generally, when a known subdomain is surveyed, \(p(u)\) is
+an indicator function for \(u\) being in the surveyed region. When \(p(u)\)
+is known, the integration weight for node \(s_{i}\) is multiplied by
+\begin{displaymath}
+\int_{\mathrm{dual}(s_{i})} p(u) \mathrm{d}u
+\end{displaymath}
+which, for indicators functions, is simply the proportion of the dual region
+that is inside the surveyed region.
+
+If \(p(u)\) is unknown, it can be modeled. Taking the logarithm of
 the above and substituting in the basis function representation, we have the
 log-linear model
 \begin{displaymath}
@@ -568,9 +579,12 @@ log-linear model
 = \log\left[p(u)\right] + \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u).
 \end{displaymath}
 Thus, any log-linear model for \(p(u)\) that can be fit by INLA and the SPDE
-approach can be incorporated into the LGCP model. For example, Yuan et. al
-(2017) fit such a model to data from a line-transect survey using a spline
-model to account for the unknown detection function~\cite{yuanetal}.
+approach can be incorporated into the LGCP model. This provides a convenient
+way to estimate the detection function from distance sampling data; the model
+for \(\log(p(u))\) includes the distance to the nearest transect as a
+covariate. For example, Yuan et. al (2017) fit such a model to data from a
+line-transect survey using a spline model to account for the unknown detection
+function~\cite{yuanetal}.
 
 
 \section{Applications}
@@ -596,6 +610,7 @@ model to account for the unknown detection function~\cite{yuanetal}.
 
 
 \subsection{Beilschmiedia Pendula Lauraceae Dataset}
+\label{beianalysis}
 
 For an example analysis of real-world data, we consider the locations of
 \(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in 1000~m by 500~m
@@ -627,10 +642,10 @@ need to confirm than or adjust them to something reasonable.}
 {\includegraphics[width=0.9\textwidth]{figures/bei.pdf}}
 
 \subfloat[Elevation in meters, with events overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/beielev.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei_elev.pdf}}
 
 \subfloat[Magnitude of the elevation gradient, with events overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/beigrad.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei_grad.pdf}}
 
 \caption{Plots of the event and covariate data.}
 \label{bei}
@@ -655,19 +670,19 @@ creating the mesh, \texttt{INLA} can initialize an object to represent the
 covariance structure on the mesh.
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beimesh.pdf}
+\includegraphics[width=\textwidth]{figures/bei_mesh.pdf}
 \caption{Triangular mesh with events overlaid.}
 \label{beimesh}
 \end{figure}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beielevmesh.pdf}
+\includegraphics[width=\textwidth]{figures/bei_elev_mesh.pdf}
 \caption{Piecewise linear approximation of the elevation surface.}
 \label{beielevmesh}
 \end{figure}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beigradmesh.pdf}
+\includegraphics[width=\textwidth]{figures/bei_grad_mesh.pdf}
 \caption{Piecewise linear approximation of the gradient surface.}
 \label{beigradmesh}
 \end{figure}
@@ -714,25 +729,25 @@ heterogeneity of the point pattern; some spatial structure remains to be
 described by the posterior predicted GP~(Figure~\ref{beimean}).
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beibetas.pdf}
+\includegraphics[width=\textwidth]{figures/bei_betas.pdf}
 \caption{Posterior mean surface for the fixed effects.}
 \label{beibetas}
 \end{figure}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beimean.pdf}
+\includegraphics[width=\textwidth]{figures/bei_mean.pdf}
 \caption{Posterior mean of prediction surface.}
 \label{beimean}
 \end{figure}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beisd.pdf}
+\includegraphics[width=\textwidth]{figures/bei_sd.pdf}
 \caption{Pointwise posterior standard deviation of predictions.}
 \label{beisd}
 \end{figure}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beiintensity.pdf}
+\includegraphics[width=\textwidth]{figures/bei_intensity.pdf}
 \caption{Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
 means of the intercept, coefficients, and GP.}
@@ -743,7 +758,7 @@ means of the intercept, coefficients, and GP.}
 \subsubsection{Model Checking}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/beiresiduals.pdf}
+\includegraphics[width=\textwidth]{figures/bei_residuals.pdf}
 \caption{Pearson residuals calculated on a grid.}
 \label{beiresiduals}
 \end{figure}
@@ -766,7 +781,8 @@ elsewhere, a few large-magnitude positive residuals (maybe there is some
 clustering?), tried a few different grids (not shown) and saw the same patterns
 
 
-\section{Transect Sampling Example}
+\subsection{Transect Sampling Example}
+\label{xsectanalysis}
 
 simulate sampling along transects, events within 5 m of transects are recorded
 (saves effort e.g. if mark data are desired and too expensive to collect for
@@ -775,97 +791,69 @@ all events)
 the coding is more involved for the window approach than for distance sampling
 --- mention a distance sampling example is in the online supplement
 
-\begin{figure}[p]\centering
+\begin{figure}[p]
 
-\subfloat[Locations of weeds (events).]
-{\includegraphics[width=0.6\textwidth]{figures/weeds.pdf}}
+\subfloat[Locations of trees (events).]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort.pdf}}
 
-\subfloat[Indicator of sheep grazing, with events overlaid.]
-{\includegraphics[width=0.7\textwidth]{figures/weedssheep.pdf}}
+\subfloat[Elevation in meters, with events overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_elev.pdf}}
+
+\subfloat[Magnitude of the elevation gradient, with events overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_grad.pdf}}
 
 \caption{Plots of the event and covariate data.}
-\label{weeds}
+\label{effort}
 \end{figure}
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsdist.pdf}
-\caption{Plot of the distance-to-transect surface.}
-\label{weedsdist}
-\end{figure}
-
-
-\begin{figure}[h]\centering
-\includegraphics[width=0.6\textwidth]{figures/weedsmesh.pdf}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_mesh.pdf}
 \caption{Triangular mesh with events overlaid.}
-\label{weedsmesh}
+\label{effortmesh}
 \end{figure}
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedssheepmesh.pdf}
-\caption{Piecewise linear approximation of the sheep indicator. The indicator
-has a running vertically through the center of the study region, but the
-approximation is continuous.}
-\label{weedssheepmesh}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_elev_mesh.pdf}
+\caption{Piecewise linear approximation of the elevation surface.}
+\label{effortelevmesh}
 \end{figure}
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsdistmesh.pdf}
-\caption{Piecewise linear approximation of the distance-to-transect surface.}
-\label{weedsdistmesh}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_grad_mesh.pdf}
+\caption{Piecewise linear approximation of the gradient surface.}
+\label{effortgradmesh}
 \end{figure}
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsbetas.pdf}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_betas.pdf}
 \caption{Posterior mean surface for the fixed effects.}
-\label{weedsbetas}
+\label{effortbetas}
 \end{figure}
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsmean.pdf}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_mean.pdf}
 \caption{Posterior mean of prediction surface.}
-\label{weedsmean}
+\label{effortmean}
 \end{figure}
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedssd.pdf}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_sd.pdf}
 \caption{Pointwise posterior standard deviation of predictions.}
-\label{weedssd}
+\label{effortsd}
 \end{figure}
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsthinnedintensity.pdf}
-\caption{Posterior intensity surface of the thinned (observeable) process in
-events per square meter, calculated using the piecewise linear approximate
-covariate surfaces and the posterior means of the intercept, coefficients, and
-GP.}
-\label{weedsthinnedintensity}
-\end{figure}
-
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsintensity.pdf}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_intensity.pdf}
 \caption{Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
-means of the intercept, sheep main effect, and GP.}
-\label{weedsintensity}
+means of the intercept, coefficients, and GP.}
+\label{effortintensity}
 \end{figure}
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsdetection.pdf}
-\caption{Posterior detection probability over space.}
-\label{weedsdetection}
-\end{figure}
-
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsdetectcurves.pdf}
-\caption{Posterior detection probability as a function of distance from the
-transect.}
-\label{weedsdetectcurves}
-\end{figure}
-
-\begin{figure}[h]\centering
-\includegraphics[width=0.7\textwidth]{figures/weedsresiduals.pdf}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_residuals.pdf}
 \caption{Pearson residuals calculated on a grid.}
-\label{weedsresiduals}
+\label{effortresiduals}
 \end{figure}
 
 
