@@ -5,13 +5,13 @@
 library(spatstat) # For bei dataset.
 library(INLA) # For model fitting.
 
-# Simulate sampling along a systematic sample of 15 parallel transects.
-# The transects run north-south with a 68 meter spacing.
+# Simulate sampling along a systematic sample of 20 parallel transects.
+# The transects run north-south with a 50 meter spacing.
 # Events within 5 meters of a transect will be recorded.
 set.seed(-3264)
 bei_win <- Window(bei)
 bei_lines <- data.frame(
-  x0 = runif(1, 0, 34) + 68 * (0:14),
+  x0 = runif(1, 0, 25) + 50 * (0:19),
   y0 = min(bei_win$y),
   y1 = max(bei_win$y)
 )
@@ -19,13 +19,14 @@ bei_lines$x1 <- bei_lines$x0
 bei_psp <- as.psp(bei_lines, window = bei_win)
 
 # Create an window by giving the psp width.
-bei_xsect <- dilation(bei_psp, 5)[bei_win]
+xsect_width <- 10
+bei_xsect <- dilation(bei_psp, xsect_width / 2)[bei_win]
 
 # Subset the point pattern to the observation window.
 bei_obs <- bei[bei_xsect]
 
 # Plot the observed point pattern and its window.
-pdf('figures/beieffort.pdf', width = 12, height = 6)
+pdf('figures/bei-effort.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei_win, border = 'grey', main = expression(paste('Observed ', italic('Beilschmiedia pendula Lauraceae'), ' Locations')))
 plot(bei_xsect, add = TRUE)
@@ -33,7 +34,7 @@ points(bei_obs, col = '#00000040')
 dev.off()
 
 # Plot the elevation surface.
-pdf('figures/beieffortelev.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_elev.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
 plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
@@ -41,7 +42,7 @@ points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot the gradient surface.
-pdf('figures/beieffortgrad.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_grad.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$grad, main = 'Gradient', rib.sep = 0.05)
 plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
@@ -92,7 +93,7 @@ bei_proj <- inla.mesh.projector(bei_mesh, dims = c(400, 200))
 
 
 # Plot the mesh and point pattern.
-pdf('figures/beieffortmesh.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_mesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei_mesh, asp = 1, main = '')
 plot(bei_xsect, add = TRUE, col = '#ff000080', border = NA)
@@ -137,7 +138,7 @@ bei_mesh_elev <- as.vector(bei_change_of_support %*% bei_elev$value)
 bei_mesh_grad <- as.vector(bei_change_of_support %*% bei_grad$value)
 
 # Plot the piecewise linear approximation of the elevation surface.
-pdf('figures/beieffortelevmesh.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_elev_mesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
         xrange = bei_win$x,
@@ -150,7 +151,7 @@ points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot the piecewise linear approximation of the gradient surface.
-pdf('figures/beieffortgradmesh.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_grad_mesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         xrange = bei_win$x,
@@ -215,7 +216,7 @@ lines_bary_prop <- as(t(sapply(seq_along(seg_tri_idx),
   'sparseMatrix')
 
 # Multiply by the observed area represented in each triangle.
-mesh_weights <- as.vector(0.4 * lines_lengths %*% lines_bary_prop)
+mesh_weights <- as.vector(xsect_width * lines_lengths %*% lines_bary_prop)
 
 # Get the unadjusted integration weights
 bei_int_weights <- diag(inla.mesh.fem(bei_mesh)$c0)
@@ -271,7 +272,7 @@ bei_result <- inla(
 )
 
 # Plot the posterior mean of the latent surface.
-pdf('figures/beieffortmean.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_mean.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)),
         xrange = bei_win$x,
@@ -284,7 +285,7 @@ points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot the posterior standard deviation of the latent surface.
-pdf('figures/beieffortsd.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_sd.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
         xrange = bei_win$x,
@@ -297,7 +298,7 @@ points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot the posterior mean of the linear predictor.
-pdf('figures/beieffortbetas.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_betas.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(
           bei_result$summary.fixed['intercept', 'mean'] +
@@ -318,7 +319,7 @@ points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot the backtransformed posterior mean of the intensity surface.
-pdf('figures/beieffortintensity.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_intensity.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(exp(
           bei_result$summary.fixed['intercept', 'mean'] +
@@ -338,7 +339,7 @@ points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
 # Plot posterior marginals of the covariance parameters and intercept.
-pdf('figures/beieffortpost.pdf', width = 18, height = 6)
+pdf('figures/bei-effort_post.pdf', width = 18, height = 6)
 par(mfrow = c(1, 3), bty = 'n')
 plot(inla.smarginal(bei_result$marginals.hyperpar$Theta1), type = 'l',
      yaxt = 'n', xlab = expression(tau),
@@ -352,7 +353,7 @@ plot(inla.smarginal(bei_result$marginals.fixed$intercept), type = 'l',
 dev.off()
 
 # Plot posterior marginals of the coefficients.
-pdf('figures/beieffortpostcoefs.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_post_coefs.pdf', width = 12, height = 6)
 par(mfrow = c(1, 2), bty = 'n')
 plot(inla.smarginal(bei_result$marginals.fixed$elev), type = 'l',
      yaxt = 'n', xlab = expression(beta[1]),
@@ -388,14 +389,14 @@ bei_resid_df <- data.frame(x = centers$x, y = centers$y,
 
 # Loop through the cells, finding the event count and cell area.
 for(r in seq_len(nrow(bei_resid_df))){
-  bei_resid_df$count[r] <- sum(bei$x >= bei_resid_df$x[r] - dx &
-                               bei$x < bei_resid_df$x[r] + dx &
-                               bei$y >= bei_resid_df$y[r] - dy &
-                               bei$y < bei_resid_df$y[r] + dy)
-  bei_resid_df$area[r] <- area(bei_win[owin(c(bei_resid_df$x[r] - dx,
-                                              bei_resid_df$x[r] + dx),
-                                            c(bei_resid_df$y[r] - dy,
-                                              bei_resid_df$y[r] + dy))])
+  bei_resid_df$count[r] <- sum(bei_obs$x >= bei_resid_df$x[r] - dx &
+                               bei_obs$x < bei_resid_df$x[r] + dx &
+                               bei_obs$y >= bei_resid_df$y[r] - dy &
+                               bei_obs$y < bei_resid_df$y[r] + dy)
+  bei_resid_df$area[r] <- area(bei_xsect[owin(c(bei_resid_df$x[r] - dx,
+                                                bei_resid_df$x[r] + dx),
+                                              c(bei_resid_df$y[r] - dy,
+                                                bei_resid_df$y[r] + dy))])
 }
 
 # Set up a projection from the SPDE representation to the residual grid.
@@ -418,7 +419,7 @@ bei_resid_df$pearson <- (bei_resid_df$count - bei_resid_df$expected) /
   sqrt(bei_resid_df$expected)
 
 # Gridded Pearson residual plot.
-pdf('figures/beieffortresiduals.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_residuals.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
         unique(bei_resid_df$x), unique(bei_resid_df$y),
@@ -444,7 +445,7 @@ marks(bei_marked) <- as.vector(1/sqrt(exp(
 )))
 
 # Mark plot.
-pdf('figures/beieffortmarkplot.pdf', width = 12, height = 6)
+pdf('figures/bei-effort_markplot.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(sqrt(exp(
           bei_result$summary.fixed['intercept', 'mean'] +
@@ -503,7 +504,7 @@ cum_pearson_x <- do.call(rbind, c(
   })
 ))
 
-pdf('figures/beieffortlurkx.pdf', width = 7, height = 6)
+pdf('figures/bei-effort_lurk_x.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ x, data = cum_pearson_x, type = 'l',
      xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
@@ -534,7 +535,7 @@ cum_pearson_y <- do.call(rbind, c(
   })
 ))
 
-pdf('figures/beieffortlurky.pdf', width = 7, height = 6)
+pdf('figures/bei-effort_lurk_y.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ y, data = cum_pearson_y, type = 'l',
      xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
@@ -564,7 +565,7 @@ cum_pearson_elev <- do.call(rbind,
   })
 )
 
-pdf('figures/beieffortlurkelev.pdf', width = 7, height = 6)
+pdf('figures/bei-effort_lurk_elev.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ elev, data = cum_pearson_elev, type = 'l',
      xlab = 'Elevation', ylab = 'Cumulative Pearson Residual',
@@ -594,7 +595,7 @@ cum_pearson_grad <- do.call(rbind,
   })
 )
 
-pdf('figures/beieffortlurkgrad.pdf', width = 7, height = 6)
+pdf('figures/bei-effort_lurk_grad.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ grad, data = cum_pearson_grad, type = 'l',
      xlab = 'Gradient', ylab = 'Cumulative Pearson Residual',

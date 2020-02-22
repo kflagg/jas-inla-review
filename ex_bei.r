@@ -5,6 +5,8 @@
 library(spatstat) # For bei dataset.
 library(INLA) # For model fitting.
 
+bei_win <- Window(bei)
+
 # Plot the observed point pattern and its window.
 pdf('figures/bei.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
@@ -12,16 +14,16 @@ plot(bei, main = expression(paste(italic('Beilschmiedia pendula Lauraceae'), ' L
 dev.off()
 
 # Plot the elevation surface.
-pdf('figures/beielev.pdf', width = 12, height = 6)
+pdf('figures/bei_elev.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
 points(bei, pch = '.', col = 'white')
 dev.off()
 
 # Plot the gradient surface.
-pdf('figures/beigrad.pdf', width = 12, height = 6)
+pdf('figures/bei_grad.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
-plot(bei.extra$grad, main = 'Gradient')
+plot(bei.extra$grad, main = 'Gradient', ribsep = 0.05)
 points(bei, pch = '.', col = 'white')
 dev.off()
 
@@ -32,7 +34,7 @@ dev.off()
 
 # Get the boundary polygon for the observation window
 # and define mesh edge segments for INLA.
-bei_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices(Window(bei))))
+bei_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices(bei_win)))
 
 # Create a Delaunay triangulation with maximum edge length of 25 meters to use
 # as the mesh.
@@ -49,7 +51,7 @@ bei_proj <- inla.mesh.projector(bei_mesh, dims = c(400, 200))
 
 
 # Plot the mesh and point pattern.
-pdf('figures/beimesh.pdf', width = 12, height = 6)
+pdf('figures/bei_mesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei_mesh, asp = 1, main = '')
 points(bei_mesh$loc[,1:2], pch = 20, col = 'black')
@@ -93,29 +95,29 @@ bei_mesh_elev <- as.vector(bei_change_of_support %*% bei_elev$value)
 bei_mesh_grad <- as.vector(bei_change_of_support %*% bei_grad$value)
 
 # Plot the piecewise linear approximation of the elevation surface.
-pdf('figures/beielevmesh.pdf', width = 12, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/bei_elev_mesh.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
         riblab = 'Meters', ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Elevation')
-plot(Window(bei), border = '#80808080', add = TRUE)
+plot(bei_win, border = '#80808080', add = TRUE)
 points(bei, pch = '.', col = 'white')
 dev.off()
 
 # Plot the piecewise linear approximation of the gradient surface.
-pdf('figures/beigradmesh.pdf', width = 12, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/bei_grad_mesh.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
         ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
-plot(Window(bei), border = 'white', add = TRUE)
-points(bei, pch = '.', col = '#80808080')
+plot(bei_win, border = 'white', add = TRUE)
+points(bei, pch = '.', col = 'white')
 dev.off()
 
 
@@ -192,34 +194,34 @@ bei_result <- inla(
 )
 
 # Plot the posterior mean of the latent surface.
-pdf('figures/beimean.pdf', width = 12, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/bei_mean.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
-     riblab = expression(E(bold(e)(u)*'|'*bold(x))),
+     riblab = expression(E(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Predicted Mean of Latent GP')
-plot(Window(bei), border = 'white', add = TRUE)
+plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the posterior standard deviation of the latent surface.
-pdf('figures/beisd.pdf', width = 12, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/bei_sd.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
-     riblab = expression(SD(bold(e)(u)*'|'*bold(x))),
+     riblab = expression(SD(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Prediction SD of Latent GP')
-plot(Window(bei), border = 'white', add = TRUE)
+plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the posterior mean of the linear predictor.
-pdf('figures/beibetas.pdf', width = 12, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/bei_betas.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(
           bei_result$summary.fixed['intercept', 'mean'] +
           bei_result$summary.fixed['elev', 'mean'] *
@@ -232,16 +234,16 @@ plot(im(t(
         unitname = c('meter', 'meters')),
      riblab = expression(E(beta[0]*'|'*bold(x)) +
                          E(beta[1]*'|'*bold(x)) * z[1](u) +
-                         E(beta[2]*'|'*bold(x)) * z[2](u)),
+                         E(beta[2]*'|'*bold(x)) * z[2](u)), ribsep = 0.05,
      main = 'Posterior Mean of Fixed Effects')
-plot(Window(bei), border = 'white', add = TRUE)
+plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 
 # Plot the backtransformed posterior mean of the intensity surface.
-pdf('figures/beiintensity.pdf', width = 12, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/bei_intensity.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(exp(
           bei_result$summary.fixed['intercept', 'mean'] +
           bei_result$summary.fixed['elev', 'mean'] *
@@ -255,13 +257,13 @@ plot(im(t(exp(
         unitname = c('meter', 'meters')),
      riblab = 'Events per Square Meter', ribsep = 0.05,
      main = 'Posterior Intensity Function')
-plot(Window(bei), border = 'white', add = TRUE)
-points(bei, pch = '.', col = '#80808080')
+plot(bei_win, border = 'white', add = TRUE)
+points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 
 # Plot posterior marginals of the covariance parameters and intercept.
-pdf('figures/beipost.pdf', width = 18, height = 6)
+pdf('figures/bei_post.pdf', width = 18, height = 6)
 par(mfrow = c(1, 3), bty = 'n')
 plot(inla.smarginal(bei_result$marginals.hyperpar$Theta1), type = 'l',
      yaxt = 'n', xlab = expression(tau),
@@ -275,7 +277,7 @@ plot(inla.smarginal(bei_result$marginals.fixed$intercept), type = 'l',
 dev.off()
 
 # Plot posterior marginals of the coefficients.
-pdf('figures/beipostcoefs.pdf', width = 12, height = 6)
+pdf('figures/bei_post_coefs.pdf', width = 12, height = 6)
 par(mfrow = c(1, 2), bty = 'n')
 plot(inla.smarginal(bei_result$marginals.fixed$elev), type = 'l',
      yaxt = 'n', xlab = expression(beta[1]),
@@ -315,10 +317,10 @@ for(r in seq_len(nrow(bei_resid_df))){
                                bei$x < bei_resid_df$x[r] + dx &
                                bei$y >= bei_resid_df$y[r] - dy &
                                bei$y < bei_resid_df$y[r] + dy)
-  bei_resid_df$area[r] <- area(Window(bei)[owin(c(bei_resid_df$x[r] - dx,
-                                                  bei_resid_df$x[r] + dx),
-                                                c(bei_resid_df$y[r] - dy,
-                                                  bei_resid_df$y[r] + dy))])
+  bei_resid_df$area[r] <- area(bei_win[owin(c(bei_resid_df$x[r] - dx,
+                                              bei_resid_df$x[r] + dx),
+                                            c(bei_resid_df$y[r] - dy,
+                                              bei_resid_df$y[r] + dy))])
 }
 
 # Set up a projection from the SPDE representation to the residual grid.
@@ -341,13 +343,14 @@ bei_resid_df$pearson <- (bei_resid_df$count - bei_resid_df$expected) /
   sqrt(bei_resid_df$expected)
 
 # Gridded Pearson residual plot.
-pdf('figures/beiresiduals.pdf', width = 12, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/bei_residuals.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
         unique(bei_resid_df$x), unique(bei_resid_df$y),
         unitname = c('meter', 'meters')),
+     ribsep = 0.05,
      main = 'Gridded Pearson Residuals')
-plot(Window(bei), border = 'white', add = TRUE)
+plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
@@ -367,8 +370,8 @@ marks(bei_marked) <- as.vector(1/sqrt(exp(
 )))
 
 # Mark plot.
-pdf('figures/beimarkplot.pdf', width = 12, height = 6)
-par(mar = c(0.5, 0, 2, 2))
+pdf('figures/bei_markplot.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
 plot(im(t(sqrt(exp(
           bei_result$summary.fixed['intercept', 'mean'] +
           bei_result$summary.fixed['elev', 'mean'] *
@@ -380,7 +383,149 @@ plot(im(t(sqrt(exp(
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
-        main = 'Mark Plot')
-plot(Window(bei), border = 'white', add = TRUE)
+        ribsep = 0.05, main = 'Mark Plot')
+plot(bei_win, border = 'white', add = TRUE)
 plot(bei_marked, col = '#ffffff80', add = TRUE)
+dev.off()
+
+# Lurking variable plots.
+lambda_im <- im(t(exp(
+  bei_result$summary.fixed['intercept', 'mean'] +
+  bei_result$summary.fixed['elev', 'mean'] *
+    inla.mesh.project(bei_proj, bei_mesh_elev) +
+  bei_result$summary.fixed['grad', 'mean'] *
+    inla.mesh.project(bei_proj, bei_mesh_grad) +
+  inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)
+  )),
+  xrange = bei_win$x,
+  yrange = bei_win$y)
+
+h_im <- 1/sqrt(lambda_im)
+
+x_im <- im(matrix(seq(0, 1000, 5), nrow = 101, ncol = 201, byrow = TRUE),
+  xrange = bei_win$x, yrange = bei_win$y)
+
+y_im <- im(matrix(seq(0, 500, 5), nrow = 101, ncol = 201, byrow = FALSE),
+  xrange = bei_win$x, yrange = bei_win$y)
+
+cum_pearson_x <- do.call(rbind, c(
+  list(data.frame(x = 0, observed = 0, expected = 0, pearson = 0, a = 0, v = 0, upper = 0, lower = 0)),
+  lapply(seq(0, 1000, 5), function(x){
+    sub_win <- bei_win[x_im <= x]
+    sub_ppp <- bei[sub_win]
+    a <- area(sub_win)
+    v <- a / area(bei_win)
+    observed <- sub_ppp$n
+    if(a > 0){
+      expected <- mean(lambda_im[sub_win]) * a
+      pearson <- (observed - expected) / sqrt(expected)
+    } else {
+      expected <- 0
+      pearson <- 0
+    }
+    upper <- 2 * sqrt(v)
+    lower <- -2 * sqrt(v)
+    return(data.frame(x, observed, expected, pearson, a, v, upper, lower))
+  })
+))
+
+pdf('figures/bei_lurk_x.pdf', width = 7, height = 6)
+par(bty = 'n')
+plot(pearson ~ x, data = cum_pearson_x, type = 'l',
+     xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
+     main = 'Lurking Variable Plot for Horizontal Coordinate')
+abline(h = 0, lty = 2)
+lines(lower ~ x, data = cum_pearson_x, type = 'l', lty = 3)
+lines(upper ~ x, data = cum_pearson_x, type = 'l', lty = 3)
+dev.off()
+
+cum_pearson_y <- do.call(rbind, c(
+  list(data.frame(y = 0, observed = 0, expected = 0, pearson = 0, a = 0, v = 0, upper = 0, lower = 0)),
+  lapply(seq(0, 500, 5), function(y){
+    sub_win <- bei_win[y_im <= y]
+    sub_ppp <- bei[sub_win]
+    a <- area(sub_win)
+    v <- a / area(bei_win)
+    observed <- sub_ppp$n
+    if(a > 0){
+      expected <- mean(lambda_im[sub_win]) * a
+      pearson <- (observed - expected) / sqrt(expected)
+    } else {
+      expected <- 0
+      pearson <- 0
+    }
+    upper <- 2 * sqrt(v)
+    lower <- -2 * sqrt(v)
+    return(data.frame(y, observed, expected, pearson, a, v, upper, lower))
+  })
+))
+
+pdf('figures/bei_lurk_y.pdf', width = 7, height = 6)
+par(bty = 'n')
+plot(pearson ~ y, data = cum_pearson_y, type = 'l',
+     xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
+     main = 'Lurking Variable Plot for Vertical Coordinate')
+abline(h = 0, lty = 2)
+lines(lower ~ y, data = cum_pearson_y, type = 'l', lty = 3)
+lines(upper ~ y, data = cum_pearson_y, type = 'l', lty = 3)
+dev.off()
+
+cum_pearson_elev <- do.call(rbind,
+  lapply(seq(118, 160, 2), function(elev){
+    sub_win <- bei_win[bei.extra$elev <= elev]
+    sub_ppp <- bei[sub_win]
+    a <- area(sub_win)
+    v <- a / area(bei_win)
+    observed <- sub_ppp$n
+    if(a > 0){
+      expected <- mean(lambda_im[sub_win]) * a
+      pearson <- (observed - expected) / sqrt(expected)
+    } else {
+      expected <- 0
+      pearson <- 0
+    }
+    upper <- 2 * sqrt(v)
+    lower <- -2 * sqrt(v)
+    return(data.frame(elev, observed, expected, pearson, a, v, upper, lower))
+  })
+)
+
+pdf('figures/bei_lurk_elev.pdf', width = 7, height = 6)
+par(bty = 'n')
+plot(pearson ~ elev, data = cum_pearson_elev, type = 'l',
+     xlab = 'Elevation', ylab = 'Cumulative Pearson Residual',
+     main = 'Lurking Variable Plot for Elevation')
+abline(h = 0, lty = 2)
+lines(lower ~ elev, data = cum_pearson_elev, type = 'l', lty = 3)
+lines(upper ~ elev, data = cum_pearson_elev, type = 'l', lty = 3)
+dev.off()
+
+cum_pearson_grad <- do.call(rbind,
+  lapply(seq(0, 0.35, 0.01), function(grad){
+    sub_win <- bei_win[bei.extra$grad <= grad]
+    sub_ppp <- bei[sub_win]
+    a <- area(sub_win)
+    v <- a / area(bei_win)
+    observed <- sub_ppp$n
+    if(a > 0){
+      expected <- mean(lambda_im[sub_win]) * a
+      pearson <- (observed - expected) / sqrt(expected)
+    } else {
+      expected <- 0
+      pearson <- 0
+    }
+    upper <- 2 * sqrt(v)
+    lower <- -2 * sqrt(v)
+    return(data.frame(grad, observed, expected, pearson, a, v, upper, lower))
+  })
+)
+
+pdf('figures/bei_lurk_grad.pdf', width = 7, height = 6)
+par(bty = 'n')
+plot(pearson ~ grad, data = cum_pearson_grad, type = 'l',
+     xlab = 'Gradient', ylab = 'Cumulative Pearson Residual',
+     main = 'Lurking Variable Plot for Gradient')
+abline(h = 0, lty = 2)
+lines(lower ~ grad, data = cum_pearson_grad, type = 'l', lty = 3)
+lines(upper ~ grad, data = cum_pearson_grad, type = 'l', lty = 3)
 dev.off()
