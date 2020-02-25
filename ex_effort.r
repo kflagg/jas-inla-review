@@ -10,8 +10,9 @@ library(INLA) # For model fitting.
 # Events within 5 meters of a transect will be recorded.
 set.seed(-3264)
 bei_win <- Window(bei)
+xsect_width <- 10
 bei_lines <- data.frame(
-  x0 = runif(1, 0, 25) + 50 * (0:19),
+  x0 = runif(1, xsect_width/2, 50 - xsect_width/2) + 50 * (0:19),
   y0 = min(bei_win$y),
   y1 = max(bei_win$y)
 )
@@ -19,7 +20,6 @@ bei_lines$x1 <- bei_lines$x0
 bei_psp <- as.psp(bei_lines, window = bei_win)
 
 # Create an window by giving the psp width.
-xsect_width <- 10
 bei_xsect <- dilation(bei_psp, xsect_width / 2)[bei_win]
 
 # Subset the point pattern to the observation window.
@@ -252,6 +252,20 @@ bei_pseudopoints <- rbind(bei_int_matrix, bei_bary)
 # idx. The indices correspond to the indixes of the mesh nodes.
 bei_formula <- y ~ -1 + intercept + elev + grad + f(idx, model = bei_spde)
 
+# Define linear combinations to predict the posterior distribution of the inear
+# predictor for the log-intensity surface at each node. We will use these for
+# model checking, exponentiating them and projecting to different lattices as
+# needed. A much more accurate overall approach is to specify a lincomb for
+# every single combination of posterior quantity and projection before fitting
+# the model (at added computational cost) but this quick-and-dirty approach is
+# adequate for checking model fit.
+bei_lcs <- inla.make.lincombs(
+  intercept = rep(1, bei_mesh_size),
+  elev = bei_mesh_elev,
+  grad = bei_mesh_grad,
+  idx = diag(bei_mesh_size)
+)
+
 # Create the data list to pass to inla().
 # Indices and intercepts are only needed for the nodes.
 bei_inla_data <- list(
@@ -268,7 +282,8 @@ bei_result <- inla(
   data = bei_inla_data,
   family = 'poisson',
   control.predictor = list(A = bei_pseudopoints),
-  E = bei_pseudodata_exp
+  E = bei_pseudodata_exp,
+  lincomb = bei_lcs
 )
 
 # Plot the posterior mean of the latent surface.
@@ -404,14 +419,8 @@ bei_resid_proj <- inla.mesh.projector(bei_mesh,
   loc = as.matrix(as.data.frame(centers)))
 
 # Project the intensity surface to the residual grid.
-bei_resid_df$intensity <- as.vector(exp(
-  bei_result$summary.fixed['intercept', 'mean'] +
-    bei_result$summary.fixed['elev', 'mean'] *
-  inla.mesh.project(bei_resid_proj, bei_mesh_elev) +
-    bei_result$summary.fixed['grad', 'mean'] *
-  inla.mesh.project(bei_resid_proj, bei_mesh_grad) +
-  inla.mesh.project(bei_resid_proj, bei_result$summary.random$idx$mean)
-))
+bei_resid_df$intensity <- as.vector(inla.mesh.project(bei_resid_proj,
+  sapply(bei_result$marginals.lincomb.derived, inla.emarginal, fun = exp)))
 
 # Calculate the (approximate) expected counts and the Pearson residuals.
 bei_resid_df$expected <- bei_resid_df$intensity * bei_resid_df$area
@@ -425,7 +434,7 @@ plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
         unique(bei_resid_df$x), unique(bei_resid_df$y),
         unitname = c('meter', 'meters')),
      ribsep = 0.05, main = 'Gridded Pearson Residuals')
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
+plot(bei_xsect, border = NA, col = '#ffffff40', add = TRUE)
 points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
@@ -435,43 +444,26 @@ bei_event_proj <- inla.mesh.projector(bei_mesh,
 
 # Create a copy of bei and mark with 1/sqrt(lambda).
 bei_marked <- bei_obs
-marks(bei_marked) <- as.vector(1/sqrt(exp(
-  bei_result$summary.fixed['intercept', 'mean'] +
-    bei_result$summary.fixed['elev', 'mean'] *
-  inla.mesh.project(bei_event_proj, bei_mesh_elev) +
-    bei_result$summary.fixed['grad', 'mean'] *
-  inla.mesh.project(bei_event_proj, bei_mesh_grad) +
-  inla.mesh.project(bei_event_proj, bei_result$summary.random$idx$mean)
-)))
+marks(bei_marked) <- as.vector(1/sqrt(inla.mesh.project(bei_event_proj,
+  sapply(bei_result$marginals.lincomb.derived, inla.emarginal, fun = exp))))
 
 # Mark plot.
 pdf('figures/bei-effort_markplot.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
-plot(im(t(sqrt(exp(
-          bei_result$summary.fixed['intercept', 'mean'] +
-          bei_result$summary.fixed['elev', 'mean'] *
-            inla.mesh.project(bei_proj, bei_mesh_elev) +
-          bei_result$summary.fixed['grad', 'mean'] *
-            inla.mesh.project(bei_proj, bei_mesh_grad) +
-          inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)
-        ))),
-        xrange = bei_win$x,
-        yrange = bei_win$y,
+plot(im(t(sqrt(inla.mesh.project(bei_proj,
+  sapply(bei_result$marginals.lincomb.derived, inla.emarginal, fun = exp)))),
+        xrange = Frame(bei)$x,
+        yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
         ribsep = 0.05, main = 'Mark Plot')
-plot(bei_win, border = 'white', add = TRUE)
+plot(bei_xsect, border = NA, col = '#ffffff40', add = TRUE)
 plot(bei_marked, col = '#ffffff80', add = TRUE)
 dev.off()
 
 # Lurking variable plots.
-lambda_im <- im(t(exp(
-  bei_result$summary.fixed['intercept', 'mean'] +
-  bei_result$summary.fixed['elev', 'mean'] *
-    inla.mesh.project(bei_proj, bei_mesh_elev) +
-  bei_result$summary.fixed['grad', 'mean'] *
-    inla.mesh.project(bei_proj, bei_mesh_grad) +
-  inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)
-  )),
+lambda_im <- im(t(inla.mesh.project(bei_proj, sapply(
+    bei_result$marginals.lincomb.derived, inla.emarginal, fun = exp
+  ))),
   xrange = bei_win$x,
   yrange = bei_win$y)
 
