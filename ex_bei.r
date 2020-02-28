@@ -255,7 +255,6 @@ plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
-
 # Plot the backtransformed posterior mean of the intensity surface.
 pdf('figures/bei_intensity.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
@@ -356,8 +355,7 @@ par(mar = c(0, 0, 2, 2))
 plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
         unique(bei_resid_df$x), unique(bei_resid_df$y),
         unitname = c('meter', 'meters')),
-     ribsep = 0.05,
-     main = 'Gridded Pearson Residuals')
+     ribsep = 0.05, main = 'Gridded Pearson Residuals')
 plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
@@ -403,10 +401,9 @@ cum_pearson_x <- do.call(rbind, c(
   list(data.frame(x = 0, observed = 0, expected = 0, pearson = 0, a = 0, v = 0, upper = 0, lower = 0)),
   lapply(seq(0, 1000, 5), function(x){
     sub_win <- bei_win[x_im <= x]
-    sub_ppp <- bei[sub_win]
     a <- area(sub_win)
     v <- a / area(bei_win)
-    observed <- sub_ppp$n
+    observed <- sum(bei$x <= x)
     if(a > 0){
       expected <- mean(lambda_im[sub_win]) * a
       pearson <- (observed - expected) / sqrt(expected)
@@ -434,10 +431,9 @@ cum_pearson_y <- do.call(rbind, c(
   list(data.frame(y = 0, observed = 0, expected = 0, pearson = 0, a = 0, v = 0, upper = 0, lower = 0)),
   lapply(seq(0, 500, 5), function(y){
     sub_win <- bei_win[y_im <= y]
-    sub_ppp <- bei[sub_win]
     a <- area(sub_win)
     v <- a / area(bei_win)
-    observed <- sub_ppp$n
+    observed <- sum(bei$y <= y)
     if(a > 0){
       expected <- mean(lambda_im[sub_win]) * a
       pearson <- (observed - expected) / sqrt(expected)

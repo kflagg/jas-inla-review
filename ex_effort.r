@@ -180,50 +180,39 @@ bei_n_events <- nrow(bei_pts)
 # pseudopoint location, that is 0 at each mesh node and 1 at each event.
 bei_pseudodata <- c(rep(0, bei_mesh_size), rep(1, bei_n_events))
 
-# Take the intersection of obs_psp with each triangle.
+# Create an owin of each triangle.
 mesh_tris <- apply(bei_mesh$graph$tv, 1, function(x){
   return(owin(poly = meshloc[x,]))
 })
 tri_areas <- sapply(mesh_tris, area)
-lines_subsegs <- lapply(mesh_tris, function(x){return(bei_psp[x])})
 
-# Calculate the area represented by each node.
-mesh_area <- rep(0, bei_mesh$n)
-for(i in seq_along(tri_areas)){
-  mesh_area[bei_mesh$graph$tv[i,]] <- mesh_area[bei_mesh$graph$tv[i,]] +
-    tri_areas[i] / 3
-}
+# Take the intersection of bei_xsect with each triangle.
+lines_subsegs <- do.call(c, lapply(mesh_tris, function(x){
+  return(lapply(bei_xsect[x]$bdry, function(b){return(owin(poly = b))}))
+}))
 
-# Track which triangle each segment came from.
-seg_tri_idx <- unlist(lapply(seq_along(lines_subsegs), function(i){return(rep(i, lines_subsegs[[i]]$n))}))
-
-# Get the midpoints
-lines_midpoints <- as.matrix(do.call(rbind, lapply(lapply(lines_subsegs, midpoints.psp), as.data.frame)))
+# Get the midpoints.
+lines_midpoints <- as.matrix(do.call(rbind,
+  lapply(lapply(lines_subsegs, centroid.owin), as.data.frame)))
 
 # Get barycentric coordinates of the midpoints.
 lines_bary <- inla.mesh.projector(bei_mesh, loc = lines_midpoints)$proj$A
 
-# Get the lengths within each triangle.
-lines_lengths <- unlist(sapply(lines_subsegs, lengths.psp))
+# Get the area of each segment within each triangle.
+lines_areas <- unlist(sapply(lines_subsegs, area))
 
-# Calculate the numerical integration weights for the SPDE approach.
-# For each row of the barycentric coordinates matrix (which is number of
-# segments by number of nodes), divide each entry by the portion of the
-# triangle's area represented by that node, which is 1/3rd of the area
-# of the triangle the segment is in.
-lines_bary_prop <- as(t(sapply(seq_along(seg_tri_idx),
-    function(i){return(lines_bary[i,] / tri_areas[seg_tri_idx[i]] * 3)})),
-  'sparseMatrix')
+# Distribute the area among nodes according to the barycentric coordincates.
+lines_bary_area <- as(apply(lines_bary, 2, `*`, lines_areas), 'sparseMatrix')
 
-# Multiply by the observed area represented in each triangle.
-mesh_weights <- as.vector(xsect_width * lines_lengths %*% lines_bary_prop)
+# Sum the columns to get the observed area represented by each node.
+mesh_weights <- colSums(lines_bary_area)
 
 # Get the unadjusted integration weights
 bei_int_weights <- diag(inla.mesh.fem(bei_mesh)$c0)
 
 # Concatenate the weight vector with a vector of zeros for the observed events.
 # This is the vector of Poisson exposure parameters for the pseudodata.
-bei_pseudodata_exp <- c(bei_int_weights * mesh_weights, rep(0, bei_n_events))
+bei_pseudodata_exp <- c(mesh_weights, rep(0, bei_n_events))
 
 # Compute the barycentric coordinates of the observed events
 # (i.e. project into the space spanned by the basis of mesh nodes).
@@ -452,8 +441,8 @@ pdf('figures/bei-effort_markplot.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(sqrt(inla.mesh.project(bei_proj,
   sapply(bei_result$marginals.lincomb.derived, inla.emarginal, fun = exp)))),
-        xrange = Frame(bei)$x,
-        yrange = Frame(bei)$y,
+        xrange = bei_win$x,
+        yrange = bei_win$y,
         unitname = c('meter', 'meters')),
         ribsep = 0.05, main = 'Mark Plot')
 plot(bei_xsect, border = NA, col = '#ffffff40', add = TRUE)
@@ -479,10 +468,9 @@ cum_pearson_x <- do.call(rbind, c(
   list(data.frame(x = 0, observed = 0, expected = 0, pearson = 0, a = 0, v = 0, upper = 0, lower = 0)),
   lapply(seq(0, 1000, 5), function(x){
     sub_win <- bei_xsect[x_im <= x]
-    sub_ppp <- bei_obs[sub_win]
     a <- area(sub_win)
     v <- a / area(bei_xsect)
-    observed <- sub_ppp$n
+    observed <- sum(bei_obs$x <= x)
     if(a > 0){
       expected <- mean(lambda_im[sub_win]) * a
       pearson <- (observed - expected) / sqrt(expected)
@@ -510,10 +498,9 @@ cum_pearson_y <- do.call(rbind, c(
   list(data.frame(y = 0, observed = 0, expected = 0, pearson = 0, a = 0, v = 0, upper = 0, lower = 0)),
   lapply(seq(0, 500, 5), function(y){
     sub_win <- bei_xsect[y_im <= y]
-    sub_ppp <- bei_obs[sub_win]
     a <- area(sub_win)
     v <- a / area(bei_xsect)
-    observed <- sub_ppp$n
+    observed <- sum(bei_obs$y <= y)
     if(a > 0){
       expected <- mean(lambda_im[sub_win]) * a
       pearson <- (observed - expected) / sqrt(expected)
