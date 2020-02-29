@@ -37,15 +37,19 @@
 
 \begin{itemize}
 
-\item 
+\item Finished the R code for the examples (save for specifying priors).
+
+\item Corrected the dual mesh diagram.
+
+\item Started fleshing out \S\ref{spde}
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 3895 \hfill \textbf{Current word count:} 
+\textbf{Previous word count:} 3895 \hfill \textbf{Current word count:} 3975
 
-\textbf{Previous page count:} 18.5 \hfill \textbf{Current page count:} 
+\textbf{Previous page count:} 18.5 \hfill \textbf{Current page count:} 19
 
 \pagebreak
 
@@ -291,8 +295,9 @@ intensity function is itself a random process to be predicted.
 % Need to better explain the hierarchical setup. Separate Poisson process from
 % GP and write out likelihoods separately?
 
-M\"{o}ller and Waagepetersen (2007) present model checking tools for LGCP
-models~\cite{moellerwaagepetersen}.
+Badeley et. al.~(2005) and M\"{o}ller and Waagepetersen~(2007) present model
+checking tools for LGCP and other spatial point process
+models~\cite{baddeleyresiduals,moellerwaagepetersen}.
 
 {\it (insert paragraph reviewing applications and uses of LGCP)}
 
@@ -312,6 +317,8 @@ of Laplace expansion, numerical integration, and numerical search. The method
 has established usefulness for LGCP~\cite{illianetal}. It is readily
 implemented using the standalone INLA software or in R via the
 R-INLA package~\cite{inlar}.
+
+{\it Add a page or so walking through the algorithm.}
 
 % Define some coherent notation, then come back and spell out the algorithm.
 
@@ -363,12 +370,12 @@ approximation can simplify computation, requiring only a sparse covariance
 structure.
 
 The GMRF approximation is motivated by the fact that Gaussian fields with
-Mat\'{e}rn covariances are solutions to the below stochastic partial
-differential equation (SPDE)~\cite{lindgrenetal}.
+Mat\'{e}rn covariances are solutions to the stochastic partial differential
+equation (SPDE) below~\cite{lindgrenetal}:
 \begin{displaymath}
 \tau(\kappa^{2} - \Delta)^{\alpha / 2} \mathbf{e}(u) = \mathbf{W}(u),
 \qquad u \in \mathbb{R}^d, \quad \kappa > 0,
-\quad \alpha = \nu + d/2, \quad \nu > 0
+\quad \alpha = \nu + d/2, \quad \nu > 0.
 \end{displaymath}
 Here, \(\mathbf{W}\) is a Gaussian white noise process with variance 1, and
 \(\Delta\) is the Laplacian operator. The stationary solution
@@ -377,7 +384,7 @@ function with precision (inverse variance) \(\tau\),  scaling parameter
 \(\kappa\) (approximately inversly proportional to the range), and smoothness
 parameter \(\nu\).
 
-Lindgren, Rue, and Lindstr\"{o}m investigate the limit as \(\nu \to 0\) for
+Lindgren, Rue, and Lindstr\"{o}m~(2011) investigate the limit as \(\nu \to 0\) for
 \(d = 2\), finding that the solution is a GMRF on a unit
 lattice~\cite{lindgrenetal}. They then construct approximations for positive
 integer values of \(\nu\) by \(\nu\)-fold convolution of \(\mathbf{e}\)
@@ -385,7 +392,19 @@ with itself. Finally, they use a finite element method to generalize the
 approximation to arbitrary triangulations of the support. This approximation
 has considerable computational benefits because the GMRF has a sparse
 covariance structure; the only nodes with nonzero covariances are those
- directly connected by edges in the triangulation.
+directly connected by edges in the triangulation.
+
+The core of the SPDE approach is the finite-element GMRF representation of the
+GP. This technique can approximate complicated surfaces in relatively few
+dimensions via a piecewise-linear approximation. Figure~\ref{surface} shows an
+example. The surface is modeled at the nodes of the mesh. Values at points
+other than the nodes are found by linear interpolation, resulting in a surface
+constructed from triangular faces. When using the finite element
+representation to compute averages or for numerical integration, the values at
+the nodes are used, and are weighted by the area represented by the
+nodes~(Figure~\ref{dual}). This area is one of third the total area of the
+triangles of which the node is a vertex.
+{\it (Add linear algebra and basis function stuff here.)}
 
 In practice, the SPDE approach goes as follows. Choose nodes \(s_{i}\)
 at which to model \(\boldsymbol{\Psi}(s_{i})
@@ -399,9 +418,13 @@ each \(\mathbf{e}(s_{i})\) depends only on the
 edge. The GMRF representation is assumed to be a piecewise linear approximation
 of the continuous Gaussian field; values of \(\mathbf{e}(s)\) for
 \(s\) not in the set of nodes are predicted by linear interpolation using
-the barycentric coordinates of \(s\).
-
-% Add some of the linear algebraic notation and basis function discussion.
+the barycentric coordinates of \(s\)~(Figure~\ref{triangle}). The mathematical
+form of this interpolation is very simple; for a point \(u\) inside the
+triangle with vertices \(s_{1}, s_{2}, s_{3}\), the approximation is simply
+\begin{displaymath}
+\mathbf{e}(u) \approx \alpha \mathbf{e}(s_{1})
++ \beta \mathbf{e}(s_{2}) + \gamma \mathbf{e}(s_{3}).
+\end{displaymath}
 
 % Add comments about coursenes/fineness of mesh.
 
@@ -409,22 +432,18 @@ the barycentric coordinates of \(s\).
 %certain values of the smoothness parameter. Check newer references.
 
 \begin{figure}[p]
-\includegraphics[width=\textwidth]{figures/surface.png}
-\caption{A realization of a spatial Gaussian process (left) and an
-approximation of that realization over a triangular mesh (right).}
+
+\subfloat[Example Gaussian process realization.]
+{\includegraphics[width=0.5\textwidth]{figures/surface.png}}
+\subfloat[Finite element approximation.]
+{\includegraphics[width=0.5\textwidth]{figures/interp.png}}
+
+\caption{A realization of a spatial Gaussian process and an
+approximation of that realization over a triangular mesh.}
 \label{surface}
 \end{figure}
 
-\begin{figure}[p]
-\includegraphics[width=0.5\textwidth]{figures/triangle.png}
-\includegraphics[width=0.5\textwidth]{figures/simplex.png}
-\caption{An illustration of the linear transformation from a mesh triangle to
-the simplex. \((\alpha, \beta, \gamma)\) are the barycentric coordinates of
-\(u\).}
-\label{triangle}
-\end{figure}
-
-\begin{figure}[h]\centering
+\begin{figure}[p]\centering
 \includegraphics[width=0.5\textwidth]{figures/dual.pdf}
 \caption{An illustration of the nodes (dots) and the weighting scheme for one
 node (large dot). In the SPDE approach, this node represents the shaded
@@ -433,7 +452,25 @@ constructed by connecting the midpoints of the node's edges.}
 \label{dual}
 \end{figure}
 
-The SPDE approach is implemented in the \texttt{R-INLA} package along with
+\begin{figure}[h]\centering
+
+\subfloat[A point \(u\) in a triangle with vertices \(s_{1}, s_{2}, s_{3}\).]
+{\includegraphics[width=0.4\textwidth]{figures/triangle.png}}
+\hspace{2em}
+\subfloat[A point \((\alpha, \beta, \gamma)\) in a simplex with vertices
+\((1, 0, 0), (0, 1, 0), (0, 0, 1)\). ]
+{\includegraphics[width=0.4\textwidth]{figures/simplex.png}}
+
+\caption{An illustration of the linear transformation from a mesh triangle to
+the 2-simplex. The transformation is defined from \(\mathbb{R}^{2}\) to
+\(\mathbb{R}^{3}\) such that the vertices are mapped to a unit vector along
+each axis. This transformation takes the point \(u\) to
+\((\alpha, \beta, \gamma)\), its barycentric coordinates. The barycentric
+coordinates have the property that \(\alpha + \beta + \gamma = 1\).}
+\label{triangle}
+\end{figure}
+
+The SPDE approach is implemented in the \texttt{R-INLA} package alongside
 tools for constructing meshes. A wrapper for easily fitting LGCP models is
 provided in the \texttt{inlabru} package~\cite{inlabru}.
 
@@ -525,7 +562,7 @@ generate point pattern data but are analyzed after aggregation rather than
 using a point process model. Another issue is that of false negatives, in other
 words events which exist but are not detected during the survey. False
 negatives are an accepted part of species abundance surveys, where the species
-of interest may be camouflaged or hidden in thick plant cover.
+of interest may be camouflaged or hidden in thick cover {\it citation?}.
 
 The idea of the incompletely-observed domain has been around for some time.
 Brix and M\"{o}ller (2001) fit an LGCP model to weed data observed in
@@ -631,7 +668,7 @@ the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a zero-mean Gaussian
 process with Mat\'{e}rn covariance and \(\alpha = 2\).
 
 {\it State priors --- using INLA's defaults which (I think) are uniform but I
-need to confirm than or adjust them to something reasonable.}
+need to confirm that or adjust them to something reasonable.}
 
 \begin{figure}[p]
 

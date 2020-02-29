@@ -36,11 +36,16 @@ edge_z <- sim_grf$data[t(vert_idx)]
 pdf('figures/dual.pdf', width = 6, height = 6)
 par(mar = c(0, 0, 2, 0))
 neighbors <- c(110, 226, 250, 129, 235, 115, 209)
-midpoints <- t(apply(ex_mesh$loc[neighbors, 1:2], 1,
+midpoints <- matrix(apply(cbind(
+    ex_mesh$loc[neighbors, 1:2],
+    ex_mesh$loc[c(neighbors[-1], neighbors[1]), 1:2]
+  ), 1,
   function(x){return(c(
     mean(c(x[1], ex_mesh$loc[9, 1])),
-    mean(c(x[2], ex_mesh$loc[9, 2]))
-  ))}))
+    mean(c(x[2], ex_mesh$loc[9, 2])),
+    mean(c(x[1], x[3], ex_mesh$loc[9, 1])),
+    mean(c(x[2], x[4], ex_mesh$loc[9, 2]))
+  ))}), ncol = 2, byrow = TRUE)
 plot(ex_mesh, main = '', asp = 1, xlim = c(0.4, 0.6), ylim = c(0.4, 0.6))
 polygon(midpoints, col = '#00000080', border = NA)
 points(ex_mesh$loc[,1:2], pch = 16, cex = 1.25)
