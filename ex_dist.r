@@ -377,6 +377,22 @@ plot(bei_psp, col = '#ffffff80', add = TRUE)
 points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
 dev.off()
 
+# Plot the backtransformed posterior mean of the intensity surface
+# for the thinned process.
+pdf('figures/bei-dist_thinned_intensity.pdf', width = 7, height = 6)
+par(mar = c(0, 0, 2, 2))
+plot(im(t(inla.mesh.project(bei_proj,
+            sapply(bei_result$marginals.lincomb.derived, inla.emarginal, fun = exp))
+        ),
+        xrange = bei_win$x,
+        yrange = bei_win$y,
+        unitname = c('meter', 'meters')),
+     riblab = 'Observable Events per Square Meter', ribsep = 0.05,
+     main = 'Posterior Thinned Intensity Function')
+plot(bei_psp, col = '#ffffff80', add = TRUE)
+points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+dev.off()
+
 
 # Plot posterior marginals of the covariance parameters and intercept.
 pdf('figures/bei-dist_post.pdf', width = 12, height = 6)
@@ -390,7 +406,7 @@ plot(inla.smarginal(bei_result$marginals.hyperpar$Theta2), type = 'l',
 dev.off()
 
 # Plot posterior marginals of the coefficients.
-pdf('figures/beieffortpostcoefs.pdf', width = 12, height = 12)
+pdf('figures/bei-dist_post_coefs.pdf', width = 12, height = 12)
 par(mfrow = c(2, 2), bty = 'n')
 plot(inla.smarginal(bei_result$marginals.fixed$intercept), type = 'l',
      yaxt = 'n', xlab = expression(beta[0]),
@@ -406,8 +422,14 @@ plot(inla.smarginal(bei_result$marginals.fixed$`I(dist^2)`), type = 'l',
      main = 'Posterior Distribution of the Distance Coefficient')
 dev.off()
 
-#TODO: Thinned intensity and detection curve.
-
+# Plot the detection functions.
+pdf('figures/bei-dist_detect_curve.pdf', width = 7, height = 6)
+par(bty = 'n')
+curve(exp(bei_result$summary.fixed['I(dist^2)', 'mean'] * x^2),
+      from = 0, to = 25, ylim = 0:1,,
+      ylab = 'Detection Probability', xlab = 'Distance',
+      main = 'Posterior Detection Function')
+dev.off()
 
 ####################
 ## MODEL CHECKING ##
@@ -505,7 +527,7 @@ x_im <- im(matrix(seq(0, 1000, 5), nrow = 101, ncol = 201, byrow = TRUE),
 y_im <- im(matrix(seq(0, 500, 5), nrow = 101, ncol = 201, byrow = FALSE),
   xrange = bei_win$x, yrange = bei_win$y)
 
-dist_im <- im(distfromxsect(as.ppp(expand.grid(x = 0:1000, y = 0:500), bei_win), bei_psp),
+dist_im <- im(matrix(distfromxsect(as.ppp(expand.grid(x = 0:1000, y = 0:500), bei_win), bei_psp), ncol = 1001, byrow = TRUE),
   xrange = bei_win$x, yrange = bei_win$y)
 
 cum_pearson_x <- do.call(rbind, c(
