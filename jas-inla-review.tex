@@ -578,6 +578,9 @@ a richer alternative to ecological presence/absence models and describe their
 data as ``degraded'' in the sense that sampling bias prevented the entire
 region from being fully observed; they fit their model by aggregating the
 point pattern to counts in grid cells and using MCMC~\cite{chakrabortyetal}.
+Gabriel et. al. (2016, 2017) derived a relationship between the Kriging
+predictor and the LGCP to predict the LGCP intensity across an unobserved
+subset of the region of interest~\cite{gabrieletal2016, gabrieletal2017}.
 
 With INLA, the SPDE approach, and the ``off grid'' approximation
 facilitating the routine fitting of LGCP models, there is now renewed interest
@@ -631,30 +634,13 @@ function~\cite{yuanetal}.
 %  {\bf Application of your Methodology:} Present some applications of the reviewed methods to some recent data in this or more sections. Also note: Simulation studies can be presented as a sub-section in this section or in a new standalone section.
 
 
-%\subsection{Simulation Study}
-
-%ideas:
-
-%simulate LGCPs
-
-%fit via Simpson method
-
-%vary mesh coarseness
-
-%explore complexity of predictors vs latent GP
-
-%explore bias/variability in parameter posteriors
-
-%explore spatial prediction error in latent GP
-
-
 \subsection{Beilschmiedia Pendula Lauraceae Dataset}
 \label{beianalysis}
 
 For an example analysis of real-world data, we consider the locations of
-\(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in 1000~m by 500~m
-plot in a tropical rainforest~\cite{moellerwaagepetersen}. The data are
-available as the \texttt{bei} dataset in the \texttt{spatstat} R
+\(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in a 1000~meter by
+500~meter plot in a tropical rainforest~\cite{moellerwaagepetersen}. The data
+are available as the \texttt{bei} dataset in the \texttt{spatstat} R
 package~\cite{spatstat}. The point pattern is accompanied by elevation and
 gradient covariates measured on a square lattice with 5 m spacing. The point
 pattern exhibits inhomogeneity which appears to be associated with elevation
@@ -710,7 +696,9 @@ covariance structure on the mesh.
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/bei_mesh.pdf}
-\caption{Triangular mesh with events overlaid.}
+\caption{Triangular mesh with pseudodata overlaid. Black dots represent
+pseudodata with values of 0 at the mesh nodes. Red dots represent pseudodata
+with values of 1 at the events.}
 \label{beimesh}
 \end{figure}
 
@@ -823,31 +811,61 @@ clustering?), tried a few different grids (not shown) and saw the same patterns
 \subsection{Transect Sampling Example}
 \label{xsectanalysis}
 
-simulate sampling along transects, events within 5 m of transects are recorded
-(saves effort e.g. if mark data are desired and too expensive to collect for
-all events)
+In this section, we illustrate the analysis of incompletely-observed point
+pattern data using the \emph{Beilschmiedia pendula Lauraceae} and a simulated
+transect sampling scheme. Suppose part of the study requires every observed
+tree to be visited so time-consuming measurements can be made on each. For
+practical reasons, the researchers decide to take a systematic sample of
+transects and limit data collection to events within 5~m of a transect. We
+assume the elevation and gradient data were available from another source so
+that the full covariate data can be used to predict the intensity in the
+unobserved parts of the site.
 
-the coding is more involved for the window approach than for distance sampling
---- mention a distance sampling example is in the online supplement
+We simulate this by choosing a random starting point and defining transects
+running north-south spaced 50~m apart. All events within 5~m of a transect are
+saved; all other events are discarded. The result is \(n = 710\) events
+observed in 20 rectangles sized 500~m by 10~m~(Figure~\ref{effort}).
+
+{\it (the coding is more involved for the window approach than for distance
+sampling --- mention a distance sampling example is in the online supplement
+but the preprocessing and model-fitting procedure is not much more complicated
+than for the fully-observed situation)}
+
+
+\subsubsection{Model Specification}
+
+We use the same model as fit to the full data, a log-Gaussian Cox process model
+with intensity
+\begin{displaymath}
+\log\left[\lambda(u)\right] = \beta_{0} + \beta_{1} z_{1}(u)
++ \beta_{2} z_{2}(u) + \mathbf{e}(u).
+\end{displaymath}
+Again, \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the
+magnitude of the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a
+zero-mean Gaussian process with Mat\'{e}rn covariance and \(\alpha = 2\).
 
 \begin{figure}[p]
 
-\subfloat[Locations of trees (events).]
+\subfloat[Locations of observed trees (events).]
 {\includegraphics[width=0.9\textwidth]{figures/bei-effort.pdf}}
 
-\subfloat[Elevation in meters, with events overlaid.]
+\subfloat[Elevation in meters, with observed region and events overlaid.]
 {\includegraphics[width=0.9\textwidth]{figures/bei-effort_elev.pdf}}
 
-\subfloat[Magnitude of the elevation gradient, with events overlaid.]
+\subfloat[Magnitude of the elevation gradient, with observed region and events
+overlaid.]
 {\includegraphics[width=0.9\textwidth]{figures/bei-effort_grad.pdf}}
 
 \caption{Plots of the event and covariate data.}
 \label{effort}
 \end{figure}
 
+
+\subsubsection{Fitting in R-INLA}
+
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/bei-effort_mesh.pdf}
-\caption{Triangular mesh with events overlaid.}
+\caption{Triangular mesh with observed region and events overlaid.}
 \label{effortmesh}
 \end{figure}
 
@@ -862,6 +880,22 @@ the coding is more involved for the window approach than for distance sampling
 \caption{Piecewise linear approximation of the gradient surface.}
 \label{effortgradmesh}
 \end{figure}
+
+\subsubsection{Results}
+
+{\it insert intervals for betas and covariance parameters}
+
+{\it decide which of figures \ref{effortbetas}, \ref{effortmean},
+\ref{effortsd}, \ref{effortintensity} are needed, then combine into a single
+multi-panel figure.}
+
+The posterior mean of the fixed effect component of the linear predictor,
+again appears very as an average of the elevation and gradient
+surfaces~(Figure~\ref{effortbetas}), very similar to the previous figure. As
+before, there is some additional spatial structure described by the
+GP~(Figure~\ref{effortmean}). However, there is less detail in the predicted
+GP surface compared to the model fit to the fully data.
+{\it (compare posterior dists of covariance params)}
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/bei-effort_betas.pdf}
@@ -888,6 +922,9 @@ using the piecewise linear approximate covariate surfaces and the posterior
 means of the intercept, coefficients, and GP.}
 \label{effortintensity}
 \end{figure}
+
+
+\subsubsection{Model Checking}
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/bei-effort_residuals.pdf}
