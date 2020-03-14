@@ -10,21 +10,21 @@ bei_win <- Window(bei)
 # Plot the observed point pattern and its window.
 pdf('figures/bei.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
-plot(bei, main = expression(paste(italic('Beilschmiedia pendula Lauraceae'), ' Locations')))
+plot(bei, main = expression(bold(paste(italic('Beilschmiedia pendula Lauraceae'), ' Locations'))))
 dev.off()
 
 # Plot the elevation surface.
 pdf('figures/bei_elev.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
-points(bei, pch = '.', col = 'white')
+points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the gradient surface.
 pdf('figures/bei_grad.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$grad, main = 'Gradient', ribsep = 0.05)
-points(bei, pch = '.', col = 'white')
+points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 
@@ -104,7 +104,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
         riblab = 'Meters', ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Elevation')
 plot(bei_win, border = '#80808080', add = TRUE)
-points(bei, pch = '.', col = 'white')
+points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the piecewise linear approximation of the gradient surface.
@@ -117,7 +117,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
 plot(bei_win, border = 'white', add = TRUE)
-points(bei, pch = '.', col = 'white')
+points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 

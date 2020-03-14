@@ -724,9 +724,10 @@ representing the events. The weight vector is
 \begin{displaymath}
 \boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{2145}, 0, \dots, 0)'.
 \end{displaymath}
-The alphas equal one-third of the area of the triangles of which each node is
-a vertex, calculated by the \texttt{INLA} package. The zeros correspond to the
-events, which do not contribute to the numerical integration.
+The alphas equal one-third of the total area of all triangles of which each
+node is a vertex, calculated automatically by the \texttt{INLA} package. The
+zeros correspond to the 3604 events, which do not contribute to the numerical
+integration.
 
 {\it Talk about the \(\mathbf{A}\) matrix.}
 
@@ -816,10 +817,12 @@ pattern data using the \emph{Beilschmiedia pendula Lauraceae} and a simulated
 transect sampling scheme. Suppose part of the study requires every observed
 tree to be visited so time-consuming measurements can be made on each. For
 practical reasons, the researchers decide to take a systematic sample of
-transects and limit data collection to events within 5~m of a transect. We
-assume the elevation and gradient data were available from another source so
-that the full covariate data can be used to predict the intensity in the
-unobserved parts of the site.
+transects and limit data collection to events within 5~m of a transect.
+Sections of the site farther than 5~m from a transect are unobserved, meaning
+events in those regions cannot be observed and nothing is known about the
+number of events or their locations. We assume the elevation and gradient data
+were available from another source so that the full covariate data can be used
+to predict the intensity in the unobserved parts of the site.
 
 We simulate this by choosing a random starting point and defining transects
 running north-south spaced 50~m apart. All events within 5~m of a transect are
@@ -840,7 +843,7 @@ with intensity
 \log\left[\lambda(u)\right] = \beta_{0} + \beta_{1} z_{1}(u)
 + \beta_{2} z_{2}(u) + \mathbf{e}(u).
 \end{displaymath}
-Again, \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the
+As before, \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the
 magnitude of the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a
 zero-mean Gaussian process with Mat\'{e}rn covariance and \(\alpha = 2\).
 
@@ -863,6 +866,49 @@ overlaid.]
 
 \subsubsection{Fitting in R-INLA}
 
+The procedure for fitting the LGCP model to variable sampling effort data is
+the same as for fully-observed data except that the weight vector
+\(\boldsymbol{\alpha}\) is different. Our code is available in the
+supplementary materials.
+
+The mesh~(Figure~\ref{effortmesh}) is the same as used with the fully-observed
+point pattern, with \(m = 2145\) nodes. We interpolated the covariates
+at the nodes and had \texttt{INLA} can initialize the covariance structure as
+before. The pseudodata vector changes dimension, becoming
+\begin{displaymath}
+\mathbf{y} = (0, \dots, 0, 1, \dots, 1)'
+\end{displaymath}
+with 2145 zeros corresponding to the mesh nodes and 710 ones for the observed
+events.
+
+The computation of the weight vector is more involved. The notation is again
+\begin{displaymath}
+\boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{2145}, 0, \dots, 0)',
+\end{displaymath}
+now with 710 zeros representing the observed events. The alphas equal the
+observed area represented by each node. We used tools from \texttt{spatstat}
+to calculate these areas. First, we created an \texttt{owin} object defining
+the observed region along the transects. Then, we created a list of
+\texttt{owin} objects with each representing one triangle of the mesh. Next,
+we intersected the observed region with each triangle to partition the observed
+region into many small shards, each contained within a single
+triangle~(Figure~\ref{effortpartition}). Then we calculated the area of each
+shard. These areas are each associated with a triangle, but the need to be
+allocated to the nodes at the vertices of the triangle. To do this, we found
+the centroid of each shard and allocated the area proportional to the
+barycentric coordinates of the centroid. This way, the area of each shard is
+distributed to the three nodes which define the triangle, and the closest node
+gets the most weight while the farthest node get the least weight. Finally,
+the alpha value for each node is computed by summing the weights contributed
+by each shard to that node.
+
+{\it Is there a better (or more formal) term than ``shard''? It has an
+intuitive meaning to me, but it feels weird to create nonstandard terminology
+for use in exactly one paragraph. ---Kenny}
+
+Finally, the pseudodata, covariates, and an index are combined into a data
+list and the \texttt{inla()} function is called to fit the model.
+
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/bei-effort_mesh.pdf}
 \caption{Triangular mesh with observed region and events overlaid.}
@@ -881,6 +927,13 @@ overlaid.]
 \label{effortgradmesh}
 \end{figure}
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{figures/bei-effort_partition.pdf}
+\caption{Partition of the observed region created by intersection with each
+mesh triangle.}
+\label{effortpartition}
+\end{figure}
+
 \subsubsection{Results}
 
 {\it insert intervals for betas and covariance parameters}
@@ -893,8 +946,8 @@ The posterior mean of the fixed effect component of the linear predictor,
 again appears very as an average of the elevation and gradient
 surfaces~(Figure~\ref{effortbetas}), very similar to the previous figure. As
 before, there is some additional spatial structure described by the
-GP~(Figure~\ref{effortmean}). However, there is less detail in the predicted
-GP surface compared to the model fit to the fully data.
+GP~(Figure~\ref{effortmean}). However, the predicted GP surface is smoother
+compared to the model fit to the fully data.
 {\it (compare posterior dists of covariance params)}
 
 \begin{figure}[h]
@@ -932,6 +985,13 @@ means of the intercept, coefficients, and GP.}
 \label{effortresiduals}
 \end{figure}
 
+Pearson residuals~(Figure~\ref{effortresiduals}): undefined where grid cells
+have 0 observed area (because 0 events expected), where defined the residuals
+appear similar to those from the model fit to the full data, small magnitude
+in the observed region with no events and low posterior intensity, more large
+positive residuals than large-magnitude negative residuals, random with no
+obvious spatial patterns
+
 
 \section{Conclusion and Discussion}
 \label{conclusion}
@@ -944,6 +1004,12 @@ have their joint posterior
 the mesh used for \texttt{bei} for is finer than needed to describe the
 GP --- think about coarsening and refining based on the detail needed to
 represent the covariates (is there literature on this?)
+
+comment on similarities in posterior between model fit to full data and model
+fit to sampled data
+
+need further work on model checking when prediction is desired over a different
+region than observed
 
 shows that mapping based on Bayesian LGCP models is now practical with
 useful accuracy in short amount of time

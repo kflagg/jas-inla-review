@@ -53,7 +53,7 @@ bei_obs <- bei[as.logical(rbinom(bei$n, 1, exp(-0.1 * marks(bei)^2)))]
 # Plot the observed point pattern and its window.
 pdf('figures/bei-dist.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
-plot(bei_win, border = 'grey', main = expression(paste('Observed ', italic('Beilschmiedia pendula Lauraceae'), ' Locations')))
+plot(bei_win, border = 'grey', main = expression(bold(paste('Observed ', italic('Beilschmiedia pendula Lauraceae'), ' Locations'))))
 plot(bei_psp, add = TRUE)
 points(bei_obs, col = '#00000080')
 dev.off()
@@ -63,7 +63,7 @@ pdf('figures/bei-dist_elev.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the gradient surface.
@@ -71,7 +71,7 @@ pdf('figures/bei-dist_grad.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$grad, main = 'Gradient', rib.sep = 0.05)
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 
@@ -175,7 +175,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
         riblab = 'Meters', ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Elevation')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the piecewise linear approximation of the gradient surface.
@@ -188,7 +188,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the piecewise linear approximation of the distance surface.
@@ -201,7 +201,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_dist)),
         zlim = c(0, 35), ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Distance to Transect')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 
@@ -304,7 +304,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)),
      riblab = expression(E(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Predicted Mean of Latent GP')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the posterior standard deviation of the latent surface.
@@ -317,7 +317,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
      riblab = expression(SD(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Prediction SD of Latent GP')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the posterior mean of the linear predictor.
@@ -338,7 +338,7 @@ plot(im(t(
                          E(beta[2]*'|'*bold(x)) * z[2](u)), ribsep = 0.05,
      main = 'Posterior Mean of Fixed Effects')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the backtransformed posterior mean of the detecton function.
@@ -354,7 +354,7 @@ plot(im(t(exp(
      zlim = 0:1, riblab = 'Detection Probability', ribsep = 0.05,
      main = 'Posterior Detection Surface')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the backtransformed posterior mean of the intensity surface.
@@ -374,7 +374,7 @@ plot(im(t(exp(
      riblab = 'Events per Square Meter', ribsep = 0.05,
      main = 'Posterior Intensity Function')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the backtransformed posterior mean of the intensity surface
@@ -390,7 +390,7 @@ plot(im(t(inla.mesh.project(bei_proj,
      riblab = 'Observable Events per Square Meter', ribsep = 0.05,
      main = 'Posterior Thinned Intensity Function')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 
@@ -487,7 +487,7 @@ plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
         unitname = c('meter', 'meters')),
      ribsep = 0.05, main = 'Gridded Pearson Residuals')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Set up a projection from the SPDE representation to the event locations.
