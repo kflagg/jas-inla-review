@@ -44,7 +44,19 @@ bei_mesh <- inla.mesh.create(
 )
 
 # Define a SPDE representation of a GP with Matern covariance.
-bei_spde <- inla.spde2.matern(mesh = bei_mesh)
+bei_spde <- inla.spde2.pcmatern(
+  mesh = bei_mesh,
+  alpha = 2,
+  prior.range = c(45, 0.5), # Pr(range < 45) = 0.5
+  prior.sigma = c(1, 0.5) # Pr(sd > 1) = 0.5
+)
+# Note: alpha = 3/2 is exponential covariance. Only interger alpha are implemented.
+# Moeller and Waagepetersen:
+#   Exponential covariance
+#   alpha is one-third of the range
+#     log(alpha) ~ unif(log(1), log(235))
+#   sigma is the sd
+#     sigma ~ unif(0.001, inf)
 
 # Set up a projection from the SPDE representation to a 400x200 grid.
 bei_proj <- inla.mesh.projector(bei_mesh, dims = c(400, 200))
@@ -203,10 +215,21 @@ bei_result <- inla(
   formula = bei_formula,
   data = bei_inla_data,
   family = 'poisson',
+  control.fixed = list(
+    # Prior means and precisions for coefficients.
+    mean.intercept = 0,
+    prec.intercept = 0,
+    mean = 0,
+    prec = 0
+  ),
   control.predictor = list(A = bei_pseudopoints),
   E = bei_pseudodata_exp,
   lincomb = bei_lcs
 )
+
+# Summarize the posterior marginals of the parameters.
+print(bei_result$summary.fixed)
+print(bei_result$summary.hyperpar)
 
 # Plot the posterior mean of the latent surface.
 pdf('figures/bei_mean.pdf', width = 12, height = 6)
@@ -278,12 +301,12 @@ dev.off()
 # Plot posterior marginals of the covariance parameters and intercept.
 pdf('figures/bei_post.pdf', width = 18, height = 6)
 par(mfrow = c(1, 3), bty = 'n')
-plot(inla.smarginal(bei_result$marginals.hyperpar$Theta1), type = 'l',
-     yaxt = 'n', xlab = expression(tau),
-     main = expression(paste(bold('Posterior Distribution of '), tau)))
-plot(inla.smarginal(bei_result$marginals.hyperpar$Theta2), type = 'l',
-     yaxt = 'n', xlab = expression(kappa),
-     main = expression(paste(bold('Posterior Distribution of '), kappa)))
+plot(inla.smarginal(bei_result$marginals.hyperpar$`Stdev for idx`), type = 'l',
+     yaxt = 'n', xlab = expression(sigma),
+     main = 'Posterior Distribution of GP Standard Deviation')
+plot(inla.smarginal(bei_result$marginals.hyperpar$`Range for idx`), type = 'l',
+     yaxt = 'n', xlab = expression(rho),
+     main = 'Posterior Distribution of the Range')
 plot(inla.smarginal(bei_result$marginals.fixed$intercept), type = 'l',
      yaxt = 'n', xlab = expression(beta[0]),
      main = 'Posterior Distribution of the Intercept')

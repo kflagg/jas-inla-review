@@ -37,15 +37,23 @@
 
 \begin{itemize}
 
-\item
+\item Wrote up transect sampling simulation and model fitting procedure.
+
+\item Added a figure showing the partition of the observed region used to
+calculate the numerical integration weights for variable sampling effort.
+
+\item Specified priors in the paper and code.
+
+\item Added posterior means and intervals for parameters in both results
+sections.
 
 \end{itemize}
 
 \vfill
 
-\textbf{Previous word count:} 3975 \hfill \textbf{Current word count:} 
+\textbf{Previous word count:} 3975 \hfill \textbf{Current word count:} 5328
 
-\textbf{Previous page count:} 19 \hfill \textbf{Current page count:} 
+\textbf{Previous page count:} 19 \hfill \textbf{Current page count:} 21.5
 
 \pagebreak
 
@@ -476,8 +484,8 @@ coordinates have the property that \(\alpha + \beta + \gamma = 1\).}
 \label{triangle}
 \end{figure}
 
-The SPDE approach is implemented in the \texttt{R-INLA} package alongside
-tools for constructing meshes. A wrapper for easily specifying LGCP models is
+The SPDE approach is implemented in the \texttt{INLA} package alongside tools
+for constructing meshes. A wrapper for easily specifying LGCP models is
 provided in the \texttt{inlabru} package~\cite{inlabru}.
 
 
@@ -639,12 +647,13 @@ function~\cite{yuanetal}.
 
 For an example analysis of real-world data, we consider the locations of
 \(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in a 1000~meter by
-500~meter plot in a tropical rainforest~\cite{moellerwaagepetersen}. The data
-are available as the \texttt{bei} dataset in the \texttt{spatstat} R
-package~\cite{spatstat}. The point pattern is accompanied by elevation and
-gradient covariates measured on a square lattice with 5 m spacing. The point
-pattern exhibits inhomogeneity which appears to be associated with elevation
-and the the elevation~(Figure~\ref{bei}).
+500~meter plot in a tropical rainforest on Barro Colorado Island,
+Panama~\cite{moellerwaagepetersen}. The data are available as the \texttt{bei}
+dataset in the \texttt{spatstat} R package~\cite{spatstat}. The point pattern
+is accompanied by elevation and gradient covariates measured on a square
+lattice with 5 m spacing. The point pattern exhibits inhomogeneity which
+appears to be associated with elevation and the elevation
+gradient~(Figure~\ref{bei}).
 
 
 \subsubsection{Model Specification}
@@ -658,8 +667,14 @@ where \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the magnitude of
 the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a zero-mean Gaussian
 process with Mat\'{e}rn covariance and \(\alpha = 2\).
 
-{\it State priors --- using INLA's defaults which (I think) are uniform but I
-need to confirm that or adjust them to something reasonable.}
+The prior distributions are set as follows. \(\beta_{0}\), \(\beta_{1}\), and
+\(\beta_{2}\) are independent \(\mathrm{N}(0, \infty)\). For the Mat\'{e}rn
+covariance parameters, R-INLA provides a PC prior defined in terms of the
+standard deviation \(\sigma\) and the effective range \(\rho\). The PC prior
+implements is specified by defining a tail probability for each parameter. We
+set \(\mathrm{Pr}(\sigma > 1) = 0.5\) to be relatively uninformative for the
+SD of a log-scale random effect, and \(\mathrm{Pr}(\rho < 45) = 0.5\) similar
+to the prior used by M\"{o}ller and Waagepetersen~\cite{moellerwaagepetersen}.
 
 \begin{figure}[p]
 
@@ -684,15 +699,16 @@ the SPDE approach. Some manual preprocessing was needed to employ the Poisson
 factorization. Our R code can be found in the supplementary materials. This
 section provides a conceptual explanation of the model-fitting process.
 
-The first task is to construct a mesh for the
-piecewise linear approximations. A 25 meter resolution appears adequate to
-accurately represent the covariate surfaces. We used tools in the \texttt{INLA}
-package to create a Delaunay triangulation with a maximum edge length of 25~m.
-The resulting mesh has \(m = 2145\) nodes \(s_{1},  \dots, s_{2145}\) and 4096
+The first task is to construct a mesh for the piecewise linear approximations.
+A 25 meter resolution appears adequate to accurately represent the covariate
+surfaces. We used tools in the \texttt{INLA} package to create a Delaunay
+triangulation with a maximum edge length of 25~m. The resulting mesh has
+\(m = 2145\) nodes \(s_{1},  \dots, s_{2145}\) and 4096
 triangles~(Figure~\ref{beimesh}). We used linear interpolation to approximate
 the covariates \(z_{1}(s_{i})\) and \(z_{2}(s_{i})\) at each node. After
-creating the mesh, \texttt{INLA} can initialize an object to represent the
-covariance structure on the mesh.
+creating the mesh, we specifiy the priors for the covariance parameters and
+\texttt{INLA} can initialize an object to represent the covariance structure
+on the mesh.
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{figures/bei_mesh.pdf}
@@ -725,8 +741,8 @@ representing the events. The weight vector is
 \boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{2145}, 0, \dots, 0)'.
 \end{displaymath}
 The alphas equal one-third of the total area of all triangles of which each
-node is a vertex, calculated automatically by the \texttt{INLA} package. The
-zeros correspond to the 3604 events, which do not contribute to the numerical
+node is a vertex, calculated by the \texttt{INLA} package. The zeros
+correspond to the 3604 events, which do not contribute to the numerical
 integration.
 
 {\it Talk about the \(\mathbf{A}\) matrix.}
@@ -735,13 +751,18 @@ The final bit of setup is to combine the pseudodata, covariates at the nodes,
 and a node index variable into a data list for the \texttt{inla()} function.
 This function is then called with arguments specifying a formula for the
 linear predictor, a Poisson family model (which defaults to a log link), the
-data list, the \(\mathbf{A}\) matrix, and the \(\boldsymbol{\alpha}\) vector as
-the exposure parameter.
+data list, the \(\mathbf{A}\) matrix, the priors for the coefficients, and the
+\(\boldsymbol{\alpha}\) vector as the exposure parameter.
 
 
 \subsubsection{Results}
 
-{\it insert intervals for betas and covariance parameters}
+Posterior means and central 95\% posterior intervals:
+\(\beta_{0}\): \(10.9\), \((-14.2, -7.61)\);
+\(\beta_{1}\): \(0.0327\), \((0.0111, 0.0547)\);
+\(\beta_{2}\): \(4.43\), \((2.41, 6.45)\);
+\(\sigma\): \(1.31\), \((1.06, 1.65)\);
+Range: \(178\), \((138, 234)\)
 
 {\it decide which of figures \ref{beibetas}, \ref{beimean}, \ref{beisd},
 \ref{beiintensity} are needed, then combine into a single multi-panel figure.}
@@ -846,6 +867,9 @@ with intensity
 As before, \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the
 magnitude of the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a
 zero-mean Gaussian process with Mat\'{e}rn covariance and \(\alpha = 2\).
+The prior distributions are again \(\beta_{0}\), \(\beta_{1}\), and
+\(\beta_{2}\) independent \(\mathrm{N}(0, \infty)\),
+\(\mathrm{Pr}(\sigma > 1) = 0.5\), and \(\mathrm{Pr}(\rho < 45) = 0.5\).
 
 \begin{figure}[p]
 
@@ -936,7 +960,12 @@ mesh triangle.}
 
 \subsubsection{Results}
 
-{\it insert intervals for betas and covariance parameters}
+Posterior means and central 95\% posterior intervals:
+\(\beta_{0}\): \(-12.7\), \((-18.7, -7.07)\);
+\(\beta_{1}\): \(0.0445\), \((0.00676, 0.0839)\);
+\(\beta_{2}\): \(6.19\), \((3.21, 9.19)\);
+\(\sigma\): \(1.29\), \((0.967, 1.76)\);
+Range: \(237\), \((162, 352)\)
 
 {\it decide which of figures \ref{effortbetas}, \ref{effortmean},
 \ref{effortsd}, \ref{effortintensity} are needed, then combine into a single
