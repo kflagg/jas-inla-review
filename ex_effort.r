@@ -12,7 +12,7 @@ set.seed(-3264)
 bei_win <- Window(bei)
 xsect_width <- 10
 bei_lines <- data.frame(
-  x0 = runif(1, xsect_width/2, 50 - xsect_width/2) + 50 * (0:19),
+  x0 = runif(1, xsect_width / 2, 50 - xsect_width / 2) + 50 * (0:19),
   y0 = min(bei_win$y),
   y1 = max(bei_win$y)
 )
@@ -28,7 +28,7 @@ bei_obs <- bei[bei_xsect]
 # Plot the observed point pattern and its window.
 pdf('figures/bei-effort.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
-plot(bei_win, border = 'grey', main = expression(paste('Observed ', italic('Beilschmiedia pendula Lauraceae'), ' Locations')))
+plot(bei_win, border = 'grey', main = expression(bold(paste('Observed ', italic('Beilschmiedia pendula Lauraceae'), ' Locations'))))
 plot(bei_xsect, add = TRUE)
 points(bei_obs, col = '#00000040')
 dev.off()
@@ -37,16 +37,16 @@ dev.off()
 pdf('figures/bei-effort_elev.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the gradient surface.
 pdf('figures/bei-effort_grad.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei.extra$grad, main = 'Gradient', ribsep = 0.05)
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 
@@ -86,7 +86,12 @@ mesh_win <- convexhull(mesh_psp)
 Window(mesh_psp) <- mesh_win
 
 # Define a SPDE representation of a GP with Matern covariance.
-bei_spde <- inla.spde2.matern(mesh = bei_mesh)
+bei_spde <- inla.spde2.pcmatern(
+  mesh = bei_mesh,
+  alpha = 2,
+  prior.range = c(45, 0.5), # Pr(range < 45) = 0.5
+  prior.sigma = c(1, 0.5) # Pr(sd > 1) = 0.5
+)
 
 # Set up a projection from the SPDE representation to a 400x200 grid.
 bei_proj <- inla.mesh.projector(bei_mesh, dims = c(400, 200))
@@ -146,8 +151,8 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
         unitname = c('meter', 'meters')),
         riblab = 'Meters', ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Elevation')
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the piecewise linear approximation of the gradient surface.
@@ -159,8 +164,8 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         unitname = c('meter', 'meters')),
         ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 
@@ -190,6 +195,14 @@ tri_areas <- sapply(mesh_tris, area)
 lines_subsegs <- do.call(c, lapply(mesh_tris, function(x){
   return(lapply(bei_xsect[x]$bdry, function(b){return(owin(poly = b))}))
 }))
+
+pdf('figures/bei-effort_partition.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 2))
+plot(bei_win, border = 'grey', main = 'Partition of the Observed Region')
+for(i in seq_along(lines_subsegs)){
+  plot(lines_subsegs[[i]], border = 'red', add = TRUE)
+}
+dev.off()
 
 # Get the midpoints.
 lines_midpoints <- as.matrix(do.call(rbind,
@@ -270,10 +283,22 @@ bei_result <- inla(
   formula = bei_formula,
   data = bei_inla_data,
   family = 'poisson',
+  control.fixed = list(
+    # Prior means and precisions for coefficients.
+    mean.intercept = 0,
+    prec.intercept = 0,
+    mean = 0,
+    prec = 0
+  ),
   control.predictor = list(A = bei_pseudopoints),
   E = bei_pseudodata_exp,
   lincomb = bei_lcs
 )
+
+
+# Summarize the posterior marginals of the parameters.
+print(bei_result$summary.fixed)
+print(bei_result$summary.hyperpar)
 
 # Plot the posterior mean of the latent surface.
 pdf('figures/bei-effort_mean.pdf', width = 12, height = 6)
@@ -284,8 +309,8 @@ plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)),
         unitname = c('meter', 'meters')),
      riblab = expression(E(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Predicted Mean of Latent GP')
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the posterior standard deviation of the latent surface.
@@ -297,8 +322,8 @@ plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
         unitname = c('meter', 'meters')),
      riblab = expression(SD(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Prediction SD of Latent GP')
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the posterior mean of the linear predictor.
@@ -318,8 +343,8 @@ plot(im(t(
                          E(beta[1]*'|'*bold(x)) * z[1](u) +
                          E(beta[2]*'|'*bold(x)) * z[2](u)), ribsep = 0.05,
      main = 'Posterior Mean of Fixed Effects')
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the backtransformed posterior mean of the intensity surface.
@@ -338,19 +363,19 @@ plot(im(t(exp(
         unitname = c('meter', 'meters')),
      riblab = 'Events per Square Meter', ribsep = 0.05,
      main = 'Posterior Intensity Function')
-plot(bei_xsect, border = NA, col = '#ffffff80', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot posterior marginals of the covariance parameters and intercept.
 pdf('figures/bei-effort_post.pdf', width = 18, height = 6)
 par(mfrow = c(1, 3), bty = 'n')
-plot(inla.smarginal(bei_result$marginals.hyperpar$Theta1), type = 'l',
-     yaxt = 'n', xlab = expression(tau),
-     main = expression(paste(bold('Posterior Distribution of '), tau)))
-plot(inla.smarginal(bei_result$marginals.hyperpar$Theta2), type = 'l',
-     yaxt = 'n', xlab = expression(kappa),
-     main = expression(paste(bold('Posterior Distribution of '), kappa)))
+plot(inla.smarginal(bei_result$marginals.hyperpar$`Stdev for idx`), type = 'l',
+     yaxt = 'n', xlab = expression(sigma),
+     main = 'Posterior Distribution of GP Standard Deviation')
+plot(inla.smarginal(bei_result$marginals.hyperpar$`Range for idx`), type = 'l',
+     yaxt = 'n', xlab = expression(rho),
+     main = 'Posterior Distribution of the Range')
 plot(inla.smarginal(bei_result$marginals.fixed$intercept), type = 'l',
      yaxt = 'n', xlab = expression(beta[0]),
      main = 'Posterior Distribution of the Intercept')
@@ -423,8 +448,8 @@ plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
         unique(bei_resid_df$x), unique(bei_resid_df$y),
         unitname = c('meter', 'meters')),
      ribsep = 0.05, main = 'Gridded Pearson Residuals')
-plot(bei_xsect, border = NA, col = '#ffffff40', add = TRUE)
-points(bei_obs, pch = 21, cex = 0.5, col = '#00000080', bg = '#ffffff80')
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
+points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Set up a projection from the SPDE representation to the event locations.
@@ -445,7 +470,7 @@ plot(im(t(sqrt(inla.mesh.project(bei_proj,
         yrange = bei_win$y,
         unitname = c('meter', 'meters')),
         ribsep = 0.05, main = 'Mark Plot')
-plot(bei_xsect, border = NA, col = '#ffffff40', add = TRUE)
+plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
 plot(bei_marked, col = '#ffffff80', add = TRUE)
 dev.off()
 
