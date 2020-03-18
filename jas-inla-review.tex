@@ -100,19 +100,36 @@ Markov chain Monte
 Carlo~\cite{bermanturner,baddeleyetal,baddeleyturner,moellerwaagepetersen}.
 The number of parameters and latent variables in these models still poses a
 major computational challenge. This computational challenge led to the
-development of INLA~\cite{rueetal}.
+development of the integrated nested Laplace approximation (INLA).
 
-{\it (Add a paragraph about computational challenges. This is really the point
-of INLA (fast albeit approximate solutions). ---Andy)}
+INLA was introduced by Rue, Martino, and Chopin (2009), who sought fast and
+accurate posterior approximation for Bayesian additive regression models with
+Gaussian latent fields and allowing for non-Gaussian responses~\cite{rueetal}.
+This setting includes random effects models, generalized linear models, spline
+models, dynamic models, spatial and spatiotemporal models, among others.
+A non-Gaussian response in one of these models typically results in the
+posterior having no closed form. The standard solution is MCMC due to ease of
+implementation and because the simulation error can always be made smaller by
+running the sampler for more iterations. However, INLA is much faster; Rue,
+Martino, and Chopin showed that INLA can find accurate approximations in
+minutes or seconds when MCMC would take days or hours.
+% The paper also discuss VB and similar methods, identify limitations in
+% applicability, point out bias in posterior variance that scales with the
+% number of latent variables.
+% Illustrates how to compute model comparison criteria and predictions.
+% LGCP example using \texttt{bei} gridded to a 200 by 100 lattice,
+% resulting in 40003 latent Gaussian variables.
+% LGCP took 4 hours to fit, paper did not include MCMC results on full
+% resolution lattice for comparison due to time.
+% INLA can be further sped up with more recent advancements
 
-Development of the integrated nested Laplace approximation (INLA) has made
-accurate approximate model fitting considerably more feasible for a particular
-class of log-Gaussian Cox process (LGCP) models. INLA was developed to fit
-Bayesian hierarchical models with many latent Gaussian
-variables~\cite{rueetal}. A key part of INLA's computational simplicity is that
-it calculates the posterior distribution of each latent Gaussian variable one
-at a time; that is, it provides only the posterior marginal distributions
-rather than the full joint distribution.
+Development of INLA has made accurate approximate model fitting considerably
+more feasible for a particular class of log-Gaussian Cox process (LGCP)
+models. INLA was developed to fit Bayesian hierarchical models with many
+latent Gaussian variables~\cite{rueetal}. A key part of INLA's computational
+simplicity is that it calculates the posterior distribution of each latent
+Gaussian variable one at a time; that is, it provides only the posterior
+marginal distributions rather than the full joint distribution.
 
 When using a LGCP for spatial mapping, two aspects make INLA a suitable
 approach. First, the LGCP is driven by a spatial Gaussian process (GP), so the
