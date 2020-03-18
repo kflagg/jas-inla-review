@@ -37,7 +37,9 @@
 
 \begin{itemize}
 
-\item
+\item Added the goals of INLA to \ref{intro}.
+
+\item Set up variable sampling effort in \ref{intro}.
 
 \end{itemize}
 
@@ -51,7 +53,7 @@
 
 \articletype{REVIEW ARTICLE}% Specify the article type or omit as appropriate
 
-\title{The Integrated Nested Laplace Approximation applied to Spatial Point Process Models}
+\title{The Integrated Nested Laplace Approximation applied to Spatial Log-Gaussian Cox Process Models}
 
 \author{
 \name{Kenneth Flagg\thanks{CONTACT Kenneth Flagg. Email: kenneth.flagg@montana.edu} and Andrew Hoegh}
@@ -111,8 +113,9 @@ A non-Gaussian response in one of these models typically results in the
 posterior having no closed form. The standard solution is MCMC due to ease of
 implementation and because the simulation error can always be made smaller by
 running the sampler for more iterations. However, INLA is much faster; Rue,
-Martino, and Chopin showed that INLA can find accurate approximations in
-minutes or seconds when MCMC would take days or hours.
+Martino, and Chopin showed that INLA can find accurate and precise
+approximations in minutes or seconds when MCMC would take days or hours to
+achieve similar precision.
 % The paper also discuss VB and similar methods, identify limitations in
 % applicability, point out bias in posterior variance that scales with the
 % number of latent variables.
@@ -123,15 +126,18 @@ minutes or seconds when MCMC would take days or hours.
 % resolution lattice for comparison due to time.
 % INLA can be further sped up with more recent advancements
 
+% Kenny observation about terminology:
+%   accuracy ~ convergeance
+%   precision ~ number of iterations
+
 Development of INLA has made accurate approximate model fitting considerably
 more feasible for a particular class of log-Gaussian Cox process (LGCP)
-models. INLA was developed to fit Bayesian hierarchical models with many
-latent Gaussian variables~\cite{rueetal}. A key part of INLA's computational
-simplicity is that it calculates the posterior distribution of each latent
-Gaussian variable one at a time; that is, it provides only the posterior
-marginal distributions rather than the full joint distribution.
+models. A key part of INLA's computational simplicity is that it calculates
+the posterior distribution of each latent Gaussian variable one at a time;
+that is, it provides only the posterior marginal distributions rather than the
+full joint distribution.
 
-When using a LGCP for spatial mapping, two aspects make INLA a suitable
+When using a LGCP model for spatial mapping, two aspects make INLA a suitable
 approach. First, the LGCP is driven by a spatial Gaussian process (GP), so the
 latent variables are Gaussian. Second, even though the latent variables are
 expected to exhibit spatial dependence, their full joint distribution is not
@@ -145,13 +151,32 @@ conditional intensity function. For readers interested in the general spatial
 point process context in which the LGCP originates, we recommend other
 references~\cite{moellerwaagepetersen, digglepoint, cressie}.
 
-{\it (paragraph about partially observed point processes --- describe both
-distance sampling and subwindow observation to set up for \S\ref{veffort})}
-
 %Much recent work in point process modeling involves spatiotemporal models,
 %which are easily implemented in INLA by allowing the parameters of a spatial
 %point process model to vary over time. To keep the focus on the spatial
 %aspects, we do not discuss spatiotemporal models.
+
+Recently, there has been renewed interest in fitting LGCP models to
+incompletely-observed point patterns, known in the point process literature as
+variable sampling effort. This scenario arises when analysts seek to map the
+intensity across some domain, but cannot census every event in the domain.
+Instead, effort is made to observe events in certain sections of the domain.
+Either a subregion of the domain is sampled or a random subset of the events
+are sampled. The subregion situation commonly occurs when quadrat sampling is
+employed or when the domain is partitioned into areal regions and only certain
+regions can be surveyed. The random subset situation is best known from
+distance sampling, where a set of line transects are traversed and all events
+detected near the transects are recorded. The events are assumed to be detecded
+with a probability depending on the distance from the transect. Hybrids of the
+subregion and random subset situation are possible when there is a hard limit
+to the distance at which events can be observed, for example because some
+equipment cannot leave the transect. Point patterns observed under variable
+sampling effort have traditionally been aggregated to the quadrat, transect,
+or grid cell level before analysis. However, INLA aids the fitting of LGCP
+models to such data.
+{\it (elaborate on the additional challenges of fitting point process models
+to incomplete point patterns --- computational and model-related --- here or
+in \ref{veffort}?)}
 
 This article provides a review of recent advances in the fitting of spatial
 LGCP models via INLA, including a finite element approach for dimension
