@@ -41,6 +41,8 @@
 
 \item Set up variable sampling effort in \ref{intro}.
 
+\item Added INLA details to \ref{inla}.
+
 \end{itemize}
 
 \vfill
@@ -302,7 +304,7 @@ independent and identically distributed with probability density
 \end{enumerate}
 The distribution function of a Poisson process is
 \begin{displaymath}
-[\mathbf{X}|\lambda]
+\pi[\mathbf{X}|\lambda]
 = \frac{\exp\left[-\int_{\mathcal{R}} \lambda(u) \mathrm{d}u\right]}
 {n!} \prod_{x \in \mathbf{X}} \lambda(x)
 \end{displaymath}
@@ -364,8 +366,6 @@ established usefulness for LGCP~\cite{illianetal}. It is readily implemented
 using the standalone INLA software or in R via the R-INLA
 package~\cite{inlar}.
 
-{\it Add a page or so walking through the algorithm.}
-
 % Define some coherent notation, then come back and spell out the algorithm.
 
 %- $\mathbf{y} = (y_{1}, \dots, y_{n})'$ independent Gaussian observations
@@ -387,6 +387,70 @@ package~\cite{inlar}.
 %Repeat for $\theta$, will depend on $\psi$
 
 %Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\theta}$
+
+Our objective in this section is to provide an overview of the mathematical
+motivation behind INLA while omitting technical details that can be found
+elsewhere. The notation used in this section is somewhat nonstandard, but
+consistent with spatial point process notation. Let \(\mathbf{X}\) be the
+response (vector). Let \(\boldsymbol{\xi}\) be a vector of all unobserved
+Gaussian variables in the model, including both parameters with Gaussian
+priors, and latent Gaussian variables such as random effects or values of a
+Gaussian field to be predicted. Let \(\boldsymbol{\theta}\) be a vector of all
+non-Gaussian model parameters. The posterior distribution is
+\begin{displaymath}
+\pi\left[\boldsymbol{\xi}, \boldsymbol{\theta}| \mathbf{X}\right]
+= \frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
+{\int \pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]
+\mathrm{d}\mathbf{X}},
+\end{displaymath}
+but the integral is not available in clossed form, so the posterior must be
+either sampled from or approximated. The INLA approach is to first find a
+Laplace approximation of \(\pi\left[\boldsymbol{\theta} | \mathbf{X}\right]\).
+Then, that result and a further Laplace expansion are used to approximate each
+posterior marginal \(\pi\left[\xi_{i}| \mathbf{X}\right]\), where \(\xi_{i}\)
+is the \(i\)th latent Gaussian variable in \(\boldsymbol{\xi}\).
+
+The derivation begins by invoking the definition of conditional probability,
+rewriting
+\begin{displaymath}
+\pi\left[\boldsymbol{\theta} | \mathbf{X}\right]
+\propto \frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
+{\pi\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]}.
+\end{displaymath}
+The Laplace approximation is applied the to denominator, taking a second-order
+Taylor expansion of
+\(\log\left(\pi\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]\right)\)
+around the posterior mode of \(\boldsymbol{\xi}\) and then exponentiating. The
+result is a Gaussian aproximation of
+\(\pi\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]\). Then
+the approximate posterior marginal distribution of \(\boldsymbol{\theta}\) is
+\begin{displaymath}
+\tilde{\pi}\left[\boldsymbol{\theta} | \mathbf{X}\right]
+\propto \left.\frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
+{\pi_{G}\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]}
+\right|\boldsymbol{\xi}=\boldsymbol{\xi}^{*}
+\end{displaymath}
+with \(\boldsymbol{\xi}^{*}\) denoting the posterior mode of
+\(\boldsymbol{\xi}\).
+
+A similar process is repeated for the posterior marginal of each \(\xi_{i}\),
+beginning with
+\begin{displaymath}
+\pi\left[\xi_{i} | \mathbf{X}, \boldsymbol{\theta}\right]
+\propto \frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
+{\pi\left[\boldsymbol{\xi}_{-i} | \xi_{i}, \mathbf{X}, \boldsymbol{\theta}\right]},
+\end{displaymath}
+where the \(-i\) notation indicates that the \(i\)th element is omitted from
+the vector. The Laplace approximation of this denominator is still complicated,
+but further approximations make it tractable. The takeaway is that, by
+handling the Gaussian latent variables one at a time, computation can be made
+considerably simpler compared to methods that approximate the joint poster.
+
+These approximations, as well as fast numerical integration methods and
+numerical optimization to find the posterior modes, are packaged in the INLA
+software and R-INLA library. The software offerings are stable and documented
+to the point to the applied statistican can use them without knowing all of
+the computations details.
 
 
 \section{Methodology}
