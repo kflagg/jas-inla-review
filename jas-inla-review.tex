@@ -727,7 +727,8 @@ For an example analysis of real-world data, we consider the locations of
 500~meter plot in a tropical rainforest on Barro Colorado Island,
 Panama~\cite{moellerwaagepetersen}. This dataset has appeared as an example
 in several articles, including the origial INLA paper where the events were
-aggregated to grid cell counts. We present an analysis without aggregating.
+aggregated to grid cell counts. We present an analysis that does not use
+aggregation.
 
 The data are available as the \texttt{bei} dataset in the \texttt{spatstat} R
 package~\cite{spatstat}. The point pattern is accompanied by elevation and
@@ -744,14 +745,15 @@ We use the log-Gaussian Cox process model with intensity
 + \beta_{2} z_{2}(u) + \mathbf{e}(u)
 \end{displaymath}
 where \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the magnitude of
-the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a zero-mean Gaussian
-process with Mat\'{e}rn covariance and \(\alpha = 2\).
+the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a zero-mean
+stationary and isotropic Gaussian process with Mat\'{e}rn covariance and
+\(\alpha = 2\).
 
 The prior distributions are set as follows. \(\beta_{0}\), \(\beta_{1}\), and
 \(\beta_{2}\) are independent \(\mathrm{N}(0, \infty)\). For the Mat\'{e}rn
 covariance parameters, R-INLA provides a PC prior defined in terms of the
-standard deviation \(\sigma\) and the effective range \(\rho\). The PC prior
-implements is specified by defining a tail probability for each parameter. We
+standard deviation \(\sigma\) and the effective range \(\rho\) {\it (citation?)}.
+The PC prior is specified by defining a tail probability for each parameter. We
 set \(\mathrm{Pr}(\sigma > 1) = 0.5\) to be relatively uninformative for the
 SD of a log-scale random effect, and \(\mathrm{Pr}(\rho < 45) = 0.5\) similar
 to the prior used by M\"{o}ller and Waagepetersen~\cite{moellerwaagepetersen}.
@@ -834,22 +836,29 @@ function takes about 110 seconds to fit the model on a midrange laptop.
 
 \subsubsection{Results}
 
-Posterior means and central 95\% posterior intervals:
-\(\beta_{0}\): \(10.9\), \((-14.2, -7.61)\);
-\(\beta_{1}\): \(0.0327\), \((0.0111, 0.0547)\);
-\(\beta_{2}\): \(4.43\), \((2.41, 6.45)\);
-\(\sigma\): \(1.31\), \((1.06, 1.65)\);
-Range: \(178\), \((138, 234)\)
-
-The posterior mean of the fixed effect component of the linear predictor,
+The posterior marginals provide evidence that both higher elevation and larger
+gradient are associated with higher intensity. The elevation coefficent
+\(\beta_{1}\) has a posterior mean of 0.0327 with a central 95\% interval of
+\((0.0111, 0.0547)\), and the grandient coefficient \(\beta_{2}\) has posterior
+mean 4.43 with 95\% interval \((2.41, 6.45)\). The posterior mean of the
+intercept \(\beta_{0}\) is \(-10.9\) with 95\% interval of \((-14.2, -7.61)\).
+Mapped across space, the posterior mean of the fixed effect component of the
+linear predictor,
 \begin{displaymath}
 E(\beta_{0} | \mathbf{x}) + E(\beta_{1} | \mathbf{x}) z_{1}(u)
 + E(\beta_{2} | \mathbf{x}) z_{2}(u),
 \end{displaymath}
 appears as an average of the elevation and gradient
-surfaces~(Figure~\ref{beimean},~top). The fixed effects do not explain all of
-the heterogeneity of the point pattern; some spatial structure remains to be
-described by the posterior predicted GP~(Figure~\ref{beimean},~bottom).
+surfaces~(Figure~\ref{beimean},~top).
+
+The fixed effects do not explain all of the heterogeneity of the point pattern;
+some spatial structure remains to be described by the posterior predicted
+GP~(Figure~\ref{beimean},~bottom). The prediction surface shows a large region
+of low values in the center where there are nearly no events, and hotspots
+where many events are clumped together. The GP standard deviation \(\sigma\)
+has posterior mean 1.31 and 95\% central interval \((1.06, 1.65)\), while the
+range parameter \(\rho\) has a posterior mean of 178 with a 95\% interval of
+\((138, 234)\).
 
 \begin{figure}[h]
 
@@ -871,7 +880,6 @@ spatial GP.}
 \end{figure}
 
 \begin{figure}[h]
-
 
 \subfloat[Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
@@ -1008,9 +1016,9 @@ by each shard to that node.
 intuitive meaning to me, but it feels weird to create nonstandard terminology
 for use in exactly one paragraph. ---Kenny}
 
-Finally, the pseudodata, covariates, and an index are combined into a data
-list and the \texttt{inla()} function is called to fit the model. The
-model takes about 90 seconds to fit on our laptop computer.
+Finally, the pseudodata, covariates, and a node index are combined into a data
+list and the \texttt{inla()} function is called to fit the model. The model
+takes about 90 seconds to fit on our laptop computer.
 
 \begin{figure}[h]
 
@@ -1036,20 +1044,24 @@ mesh triangle.}
 
 \subsubsection{Results}
 
-Posterior means and central 95\% posterior intervals:
-\(\beta_{0}\): \(-12.7\), \((-18.7, -7.07)\);
-\(\beta_{1}\): \(0.0445\), \((0.00676, 0.0839)\);
-\(\beta_{2}\): \(6.19\), \((3.21, 9.19)\);
-\(\sigma\): \(1.29\), \((0.967, 1.76)\);
-Range: \(237\), \((162, 352)\)
-
-The posterior mean of the fixed effect component of the linear predictor,
-again appears very as an average of the elevation and gradient
+The fixed effect posterior marginals give evidence of relationships between
+the intensity and both elevation and grandient. The elevation coefficient
+\(\beta_{1}\) has a posterior mean of 0.0445 and a central 95\% posterior
+interval of \((0.00676, 0.0839)\). The gradient coefficient \(\beta_{2}\) has
+a posterior mean of 6.19 and a 95\% interval of \((3.21, 9.19)\). The
+intercept \(\beta_{0}\) has posterior mean \(-12.7\) and 95\% interval
+\((-18.7, -7.07)\). The posterior mean of the fixed effect component of the
+linear predictor again appears as an average of the elevation and gradient
 surfaces~(Figure~\ref{effortmean},~top), very similar to the previous figure.
+
 As before, there is some additional spatial structure described by the
-GP~(Figure~\ref{effortmean},~bottom). However, the predicted GP surface is
-smoother compared to the model fit to the fully data.
-{\it (compare posterior dists of covariance params)}
+GP~(Figure~\ref{effortmean},~bottom). The prediction surface has low values
+in the center and north where no events were observed, hotspots where events
+are concentrated along the transects, and smooth transitions across the
+unsurved regions between transects. The standard deviation \(\sigma\) has a
+posterior mean of 1.29 with a central 95\% posterior interval of
+\((0.967, 1.76)\). The range \(\rho\) has a posterior mean of 237 and
+95\% interval of \((162, 352)\).
 
 \begin{figure}[h]
 \subfloat[Posterior mean surface for the fixed effects.]
@@ -1107,7 +1119,9 @@ GP --- think about coarsening and refining based on the detail needed to
 represent the covariates (is there literature on this?)
 
 comment on similarities in posterior between model fit to full data and model
-fit to sampled data
+fit to sampled data --- coefs from sample have wider intervals but lots of
+overlap; posterior mean of linear predictor very similar over space ---
+similar SD but larger range and less structure in predicted GP
 
 need further work on model checking when prediction is desired over a different
 region than observed
