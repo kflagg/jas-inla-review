@@ -366,28 +366,6 @@ established usefulness for LGCP~\cite{illianetal}. It is readily implemented
 using the standalone INLA software or in R via the R-INLA
 package~\cite{inlar}.
 
-% Define some coherent notation, then come back and spell out the algorithm.
-
-%- $\mathbf{y} = (y_{1}, \dots, y_{n})'$ independent Gaussian observations
-
-%- $y_{i} \sim \mathrm{N}(\theta, \sigma^{2})$
-
-%- $\theta \sim \mathrm{N}(\mu_{0}, \sigma_{0}^{2})$
-
-%- $\psi = 1/\sigma^{2}$, $\psi \sim \mathrm{Gamma}(a, b)$
-
-%- The posterior distribution of $\psi$:
-%$$p(\psi|\mathbf{y}) \propto \frac{p(\mathbf{y} | \theta, \psi) p(\theta) p(\psi)}
-%{p(\theta | \psi, \mathbf{y})}$$
-
-%- Laplace approximation:
-%$$\tilde{p}(\psi|\mathbf{y}) \propto \frac{p(\mathbf{y} | \theta, \psi) p(\theta) p(\psi)}
-%{\tilde{p}_{G}(\theta^{*} | \psi, \mathbf{y})}$$
-
-%Repeat for $\theta$, will depend on $\psi$
-
-%Provides marginal posteror for one entry at a time of a vector $\boldsymbol{\theta}$
-
 Our objective in this section is to provide an overview of the mathematical
 motivation behind INLA while omitting technical details that can be found
 elsewhere. The notation used in this section is somewhat nonstandard, but
@@ -428,7 +406,7 @@ the approximate posterior marginal distribution of \(\boldsymbol{\theta}\) is
 \tilde{\pi}\left[\boldsymbol{\theta} | \mathbf{X}\right]
 \propto \left.\frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
 {\pi_{G}\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]}
-\right|\boldsymbol{\xi}=\boldsymbol{\xi}^{*}
+\right|_{\boldsymbol{\xi}=\boldsymbol{\xi}^{*}}
 \end{displaymath}
 with \(\boldsymbol{\xi}^{*}\) denoting the posterior mode of
 \(\boldsymbol{\xi}\).
@@ -449,8 +427,8 @@ considerably simpler compared to methods that approximate the joint poster.
 These approximations, as well as fast numerical integration methods and
 numerical optimization to find the posterior modes, are packaged in the INLA
 software and R-INLA library. The software offerings are stable and documented
-to the point to the applied statistican can use them without knowing all of
-the computations details.
+to the point that the applied statistican can use them without knowing all of
+the computational details.
 
 
 \section{Methodology}
@@ -747,12 +725,15 @@ function~\cite{yuanetal}.
 For an example analysis of real-world data, we consider the locations of
 \(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in a 1000~meter by
 500~meter plot in a tropical rainforest on Barro Colorado Island,
-Panama~\cite{moellerwaagepetersen}. The data are available as the \texttt{bei}
-dataset in the \texttt{spatstat} R package~\cite{spatstat}. The point pattern
-is accompanied by elevation and gradient covariates measured on a square
-lattice with 5 m spacing. The point pattern exhibits inhomogeneity which
-appears to be associated with elevation and the elevation
-gradient~(Figure~\ref{bei}).
+Panama~\cite{moellerwaagepetersen}. This dataset has appeared as an example
+in several articles, including the origial INLA paper where the events were
+aggregated to grid cell counts. We present an analysis without aggregating.
+
+The data are available as the \texttt{bei} dataset in the \texttt{spatstat} R
+package~\cite{spatstat}. The point pattern is accompanied by elevation and
+gradient covariates measured on a square lattice with 5 m spacing. The point
+pattern exhibits inhomogeneity which appears to be associated with elevation
+and the elevation gradient~(Figure~\ref{bei}).
 
 
 \subsubsection{Model Specification}
@@ -810,23 +791,19 @@ creating the mesh, we specifiy the priors for the covariance parameters and
 on the mesh.
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei_mesh.pdf}
-\caption{Triangular mesh with pseudodata overlaid. Black dots represent
+\subfloat[Triangular mesh with pseudodata overlaid. Black dots represent
 pseudodata with values of 0 at the mesh nodes. Red dots represent pseudodata
-with values of 1 at the events.}
+with values of 1 at the events.]
+{\includegraphics[width=0.9\textwidth]{figures/bei_mesh.pdf}}
+
+\subfloat[Piecewise linear approximation of the elevation surface.]
+{\includegraphics[width=0.9\textwidth]{figures/bei_elev_mesh.pdf}}
+
+\subfloat[Piecewise linear approximation of the gradient surface.]
+{\includegraphics[width=0.9\textwidth]{figures/bei_grad_mesh.pdf}}
+
+\caption{Data used with the Simpson and SPDE methods.}
 \label{beimesh}
-\end{figure}
-
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei_elev_mesh.pdf}
-\caption{Piecewise linear approximation of the elevation surface.}
-\label{beielevmesh}
-\end{figure}
-
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei_grad_mesh.pdf}
-\caption{Piecewise linear approximation of the gradient surface.}
-\label{beigradmesh}
 \end{figure}
 
 The next step is to define the pseudodata and calculate the numerical
@@ -851,7 +828,8 @@ and a node index variable into a data list for the \texttt{inla()} function.
 This function is then called with arguments specifying a formula for the
 linear predictor, a Poisson family model (which defaults to a log link), the
 data list, the \(\mathbf{A}\) matrix, the priors for the coefficients, and the
-\(\boldsymbol{\alpha}\) vector as the exposure parameter.
+\(\boldsymbol{\alpha}\) vector as the exposure parameter. The \texttt{inla()}
+function takes about 110 seconds to fit the model on a midrange laptop.
 
 
 \subsubsection{Results}
@@ -863,28 +841,26 @@ Posterior means and central 95\% posterior intervals:
 \(\sigma\): \(1.31\), \((1.06, 1.65)\);
 Range: \(178\), \((138, 234)\)
 
-{\it decide which of figures \ref{beibetas}, \ref{beimean}, \ref{beisd},
-\ref{beiintensity} are needed, then combine into a single multi-panel figure.}
-
 The posterior mean of the fixed effect component of the linear predictor,
 \begin{displaymath}
 E(\beta_{0} | \mathbf{x}) + E(\beta_{1} | \mathbf{x}) z_{1}(u)
 + E(\beta_{2} | \mathbf{x}) z_{2}(u),
 \end{displaymath}
 appears as an average of the elevation and gradient
-surfaces~(Figure~\ref{beibetas}). The fixed effects do not explain all of the
-heterogeneity of the point pattern; some spatial structure remains to be
-described by the posterior predicted GP~(Figure~\ref{beimean}).
+surfaces~(Figure~\ref{beimean},~top). The fixed effects do not explain all of
+the heterogeneity of the point pattern; some spatial structure remains to be
+described by the posterior predicted GP~(Figure~\ref{beimean},~bottom).
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei_betas.pdf}
-\caption{Posterior mean surface for the fixed effects.}
-\label{beibetas}
-\end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei_mean.pdf}
-\caption{Posterior mean of prediction surface.}
+\subfloat[Posterior mean surface for the fixed effects.]
+{\includegraphics[width=\textwidth]{figures/bei_betas.pdf}}
+
+\subfloat[Posterior mean of the GP prediction surface.]
+{\includegraphics[width=\textwidth]{figures/bei_mean.pdf}}
+
+\caption{Posterior mean surfaces of the fixed effects component and the
+spatial GP.}
 \label{beimean}
 \end{figure}
 
@@ -895,21 +871,23 @@ described by the posterior predicted GP~(Figure~\ref{beimean}).
 \end{figure}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei_intensity.pdf}
-\caption{Posterior intensity surface in events per square meter, calculated
+
+
+\subfloat[Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
-means of the intercept, coefficients, and GP.}
+means of the intercept, coefficients, and GP.]
+{\includegraphics[width=\textwidth]{figures/bei_intensity.pdf}}
+
+\subfloat[Pearson residuals calculated on a grid.]
+{\includegraphics[width=\textwidth]{figures/bei_residuals.pdf}}
+
+\caption{Posterior mean intensity function and Pearson residuals calculated
+using the posterior mean intensity.}
 \label{beiintensity}
 \end{figure}
 
 
 \subsubsection{Model Checking}
-
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei_residuals.pdf}
-\caption{Pearson residuals calculated on a grid.}
-\label{beiresiduals}
-\end{figure}
 
 For a more general discussion of residuals, see \cite{baddeleyresiduals}. The
 classic Pearson residual,
@@ -921,12 +899,13 @@ is a special case.
 
 {\it Should make the whole four-panel plot if citing Baddeley et. al.}
 
-Pearson residuals~(Figure~\ref{beiresiduals}): small magnitude in the region
-with no observed events and low posterior intensity (not possible to see much
-variation), the model overestimates the intensity in the canyon (too small to
-be accurately represented on the mesh), random with no obvious spatial patterns
-elsewhere, a few large-magnitude positive residuals (maybe there is some
-clustering?), tried a few different grids (not shown) and saw the same patterns
+Pearson residuals~(Figure~\ref{beiintensity},~bottom): small magnitude in the
+region with no observed events and low posterior intensity (not possible to see
+much variation), the model overestimates the intensity in the canyon (too small
+to be accurately represented on the mesh), random with no obvious spatial
+patterns elsewhere, a few large-magnitude positive residuals (maybe there is
+some clustering?), tried a few different grids (not shown) and saw the same
+patterns
 
 
 \subsection{Transect Sampling Example}
@@ -1030,24 +1009,22 @@ intuitive meaning to me, but it feels weird to create nonstandard terminology
 for use in exactly one paragraph. ---Kenny}
 
 Finally, the pseudodata, covariates, and an index are combined into a data
-list and the \texttt{inla()} function is called to fit the model.
+list and the \texttt{inla()} function is called to fit the model. The
+model takes about 90 seconds to fit on our laptop computer.
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_mesh.pdf}
-\caption{Triangular mesh with observed region and events overlaid.}
+
+\subfloat[Triangular mesh with observed region and events overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_mesh.pdf}}
+
+\subfloat[Piecewise linear approximation of the elevation surface.]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_elev_mesh.pdf}}
+
+\subfloat[Piecewise linear approximation of the gradient surface.]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_grad_mesh.pdf}}
+
+\caption{Data used with the Simpson and SPDE methods.}
 \label{effortmesh}
-\end{figure}
-
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_elev_mesh.pdf}
-\caption{Piecewise linear approximation of the elevation surface.}
-\label{effortelevmesh}
-\end{figure}
-
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_grad_mesh.pdf}
-\caption{Piecewise linear approximation of the gradient surface.}
-\label{effortgradmesh}
 \end{figure}
 
 \begin{figure}[h]
@@ -1066,27 +1043,23 @@ Posterior means and central 95\% posterior intervals:
 \(\sigma\): \(1.29\), \((0.967, 1.76)\);
 Range: \(237\), \((162, 352)\)
 
-{\it decide which of figures \ref{effortbetas}, \ref{effortmean},
-\ref{effortsd}, \ref{effortintensity} are needed, then combine into a single
-multi-panel figure.}
-
 The posterior mean of the fixed effect component of the linear predictor,
 again appears very as an average of the elevation and gradient
-surfaces~(Figure~\ref{effortbetas}), very similar to the previous figure. As
-before, there is some additional spatial structure described by the
-GP~(Figure~\ref{effortmean}). However, the predicted GP surface is smoother
-compared to the model fit to the fully data.
+surfaces~(Figure~\ref{effortmean},~top), very similar to the previous figure.
+As before, there is some additional spatial structure described by the
+GP~(Figure~\ref{effortmean},~bottom). However, the predicted GP surface is
+smoother compared to the model fit to the fully data.
 {\it (compare posterior dists of covariance params)}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_betas.pdf}
-\caption{Posterior mean surface for the fixed effects.}
-\label{effortbetas}
-\end{figure}
+\subfloat[Posterior mean surface for the fixed effects.]
+{\includegraphics[width=\textwidth]{figures/bei-effort_betas.pdf}}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_mean.pdf}
-\caption{Posterior mean of prediction surface.}
+\subfloat[Posterior mean of prediction surface.]
+{\includegraphics[width=\textwidth]{figures/bei-effort_mean.pdf}}
+
+\caption{Posterior mean surfaces of the fixed effects component and the
+spatial GP.}
 \label{effortmean}
 \end{figure}
 
@@ -1097,23 +1070,23 @@ compared to the model fit to the fully data.
 \end{figure}
 
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_intensity.pdf}
-\caption{Posterior intensity surface in events per square meter, calculated
+\subfloat[Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
-means of the intercept, coefficients, and GP.}
+means of the intercept, coefficients, and GP.]
+{\includegraphics[width=\textwidth]{figures/bei-effort_intensity.pdf}}
+
+\subfloat[Pearson residuals calculated on a grid.]
+{\includegraphics[width=\textwidth]{figures/bei-effort_residuals.pdf}}
+
+\caption{Posterior mean intensity function and Pearson resuiduals calculated
+using the posterior mean intensity.}
 \label{effortintensity}
 \end{figure}
 
 
 \subsubsection{Model Checking}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_residuals.pdf}
-\caption{Pearson residuals calculated on a grid.}
-\label{effortresiduals}
-\end{figure}
-
-Pearson residuals~(Figure~\ref{effortresiduals}): undefined where grid cells
+Pearson residuals~(Figure~\ref{effortintensity},~bottom): undefined where grid cells
 have 0 observed area (because 0 events expected), where defined the residuals
 appear similar to those from the model fit to the full data, small magnitude
 in the observed region with no events and low posterior intensity, more large
