@@ -43,6 +43,10 @@
 
 \item Added INLA details to \ref{inla}.
 
+\item Wrote up results in \ref{beiresults} and \ref{xsectresults}.
+
+\item Removed figures that we probably won't discuss.
+
 \end{itemize}
 
 \vfill
@@ -304,7 +308,7 @@ independent and identically distributed with probability density
 \end{enumerate}
 The distribution function of a Poisson process is
 \begin{displaymath}
-\pi[\mathbf{X}|\lambda]
+\pi(\mathbf{X}|\lambda)
 = \frac{\exp\left[-\int_{\mathcal{R}} \lambda(u) \mathrm{d}u\right]}
 {n!} \prod_{x \in \mathbf{X}} \lambda(x)
 \end{displaymath}
@@ -376,36 +380,36 @@ priors, and latent Gaussian variables such as random effects or values of a
 Gaussian field to be predicted. Let \(\boldsymbol{\theta}\) be a vector of all
 non-Gaussian model parameters. The posterior distribution is
 \begin{displaymath}
-\pi\left[\boldsymbol{\xi}, \boldsymbol{\theta}| \mathbf{X}\right]
-= \frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
-{\int \pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]
+\pi\left(\boldsymbol{\xi}, \boldsymbol{\theta}| \mathbf{X}\right)
+= \frac{\pi\left(\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)}
+{\int \pi\left(\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)
 \mathrm{d}\mathbf{X}},
 \end{displaymath}
 but the integral is not available in clossed form, so the posterior must be
 either sampled from or approximated. The INLA approach is to first find a
-Laplace approximation of \(\pi\left[\boldsymbol{\theta} | \mathbf{X}\right]\).
+Laplace approximation of \(\pi\left(\boldsymbol{\theta} | \mathbf{X}\right)\).
 Then, that result and a further Laplace expansion are used to approximate each
-posterior marginal \(\pi\left[\xi_{i}| \mathbf{X}\right]\), where \(\xi_{i}\)
+posterior marginal \(\pi\left(\xi_{i}| \mathbf{X}\right)\), where \(\xi_{i}\)
 is the \(i\)th latent Gaussian variable in \(\boldsymbol{\xi}\).
 
 The derivation begins by invoking the definition of conditional probability,
 rewriting
 \begin{displaymath}
-\pi\left[\boldsymbol{\theta} | \mathbf{X}\right]
-\propto \frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
-{\pi\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]}.
+\pi\left(\boldsymbol{\theta} | \mathbf{X}\right)
+\propto \frac{\pi\left(\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)}
+{\pi\left(\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right)}.
 \end{displaymath}
 The Laplace approximation is applied the to denominator, taking a second-order
 Taylor expansion of
-\(\log\left(\pi\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]\right)\)
+\(\log\left[\pi\left(\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right)\right]\)
 around the posterior mode of \(\boldsymbol{\xi}\) and then exponentiating. The
 result is a Gaussian aproximation of
-\(\pi\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]\). Then
+\(\pi\left(\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right)\). Then
 the approximate posterior marginal distribution of \(\boldsymbol{\theta}\) is
 \begin{displaymath}
-\tilde{\pi}\left[\boldsymbol{\theta} | \mathbf{X}\right]
-\propto \left.\frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
-{\pi_{G}\left[\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right]}
+\tilde{\pi}\left(\boldsymbol{\theta} | \mathbf{X}\right)
+\propto \left.\frac{\pi\left(\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)}
+{\pi_{G}\left(\boldsymbol{\xi} | \mathbf{X}, \boldsymbol{\theta}\right)}
 \right|_{\boldsymbol{\xi}=\boldsymbol{\xi}^{*}}
 \end{displaymath}
 with \(\boldsymbol{\xi}^{*}\) denoting the posterior mode of
@@ -414,9 +418,9 @@ with \(\boldsymbol{\xi}^{*}\) denoting the posterior mode of
 A similar process is repeated for the posterior marginal of each \(\xi_{i}\),
 beginning with
 \begin{displaymath}
-\pi\left[\xi_{i} | \mathbf{X}, \boldsymbol{\theta}\right]
-\propto \frac{\pi\left[\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right]}
-{\pi\left[\boldsymbol{\xi}_{-i} | \xi_{i}, \mathbf{X}, \boldsymbol{\theta}\right]},
+\pi\left(\xi_{i} | \mathbf{X}, \boldsymbol{\theta}\right)
+\propto \frac{\pi\left(\mathbf{X}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)}
+{\pi\left(\boldsymbol{\xi}_{-i} | \xi_{i}, \mathbf{X}, \boldsymbol{\theta}\right)},
 \end{displaymath}
 where the \(-i\) notation indicates that the \(i\)th element is omitted from
 the vector. The Laplace approximation of this denominator is still complicated,
@@ -456,6 +460,28 @@ dense covariance matrix on the latent variables~\cite{rinla}. For GPs with a
 Mat\'{e}rn covariance function, a Gaussian Markov random field (GMRF)
 approximation can simplify computation, requiring only a sparse covariance
 structure.
+
+\begin{figure}[p]
+
+\subfloat[Example Gaussian process realization.]
+{\includegraphics[width=0.5\textwidth]{figures/surface.png}}
+\subfloat[Finite element approximation.]
+{\includegraphics[width=0.5\textwidth]{figures/interp.png}}
+
+\caption{A realization of a spatial Gaussian process and an
+approximation of that realization over a triangular mesh.}
+\label{surface}
+\end{figure}
+
+\begin{figure}[p]\centering
+\includegraphics[width=0.5\textwidth]{figures/dual.pdf}
+\caption{An illustration of the nodes (dots) and the weighting scheme for one
+node (large dot). In the SPDE approach, this node represents it dual region
+(shaded), so its weight is proportional to the shaded area. The dual region is
+constructed by connecting the midpoints of the node's edges to the midpoints
+of the adjacent triangles.}
+\label{dual}
+\end{figure}
 
 The GMRF approximation is motivated by the fact that Gaussian fields with
 Mat\'{e}rn covariances are solutions to the stochastic partial differential
@@ -521,29 +547,7 @@ triangle with vertices \(s_{1}, s_{2}, s_{3}\), the approximation is simply
 %Computationally doable when \(Z(\mathbf{s})\) has a Mat\'{e}rn covariance with
 %certain values of the smoothness parameter. Check newer references.
 
-\begin{figure}[p]
-
-\subfloat[Example Gaussian process realization.]
-{\includegraphics[width=0.5\textwidth]{figures/surface.png}}
-\subfloat[Finite element approximation.]
-{\includegraphics[width=0.5\textwidth]{figures/interp.png}}
-
-\caption{A realization of a spatial Gaussian process and an
-approximation of that realization over a triangular mesh.}
-\label{surface}
-\end{figure}
-
-\begin{figure}[p]\centering
-\includegraphics[width=0.5\textwidth]{figures/dual.pdf}
-\caption{An illustration of the nodes (dots) and the weighting scheme for one
-node (large dot). In the SPDE approach, this node represents the shaded
-region, so its weight is proportional to the shaded area. The shaded region is
-constructed by connecting the midpoints of the node's edges to the midpoints
-of the adjacent triangles.}
-\label{dual}
-\end{figure}
-
-\begin{figure}[h]\centering
+\begin{figure}[t]\centering
 
 \subfloat[A point \(u\) in a triangle with vertices \(s_{1}, s_{2}, s_{3}\).]
 {\includegraphics[width=0.4\textwidth]{figures/triangle.png}}
@@ -587,6 +591,7 @@ the domain and model the induced Poisson counts. It has long been understood
 that results are sensitive to the discretization scheme~\cite{brixmoeller}.
 Simpson et. al. (2016) explain that this is also computationally
 wasteful~\cite{simpsonetal}.
+
 % Tradeoff: small grid cells for spatial precision vs small number of zeros
 % for computational speed.
 
@@ -602,7 +607,7 @@ to gridding.
 % Thought on efficiency: fine grid is needed for precision regarding event
 % locations? Are there efficient adaptive grid methods?
 
-The approximation arises from a factorization of the Poisson processes
+The approximation arises from a factorization of the Poisson process
 likelihood. For notational clarity, assume \(\log[\lambda(u)]
 = \boldsymbol{\Psi}(u)\). The exact log-likelihood is
 \begin{displaymath}
@@ -738,6 +743,7 @@ and the elevation gradient~(Figure~\ref{bei}).
 
 
 \subsubsection{Model Specification}
+\label{beimodel}
 
 We use the log-Gaussian Cox process model with intensity
 \begin{displaymath}
@@ -769,12 +775,14 @@ to the prior used by M\"{o}ller and Waagepetersen~\cite{moellerwaagepetersen}.
 \subfloat[Magnitude of the elevation gradient, with events overlaid.]
 {\includegraphics[width=0.9\textwidth]{figures/bei_grad.pdf}}
 
-\caption{Plots of the event and covariate data.}
+\caption{Plots of the event and covariate data for the real-world data
+analysis. The study region is 1000 m by 500 m.}
 \label{bei}
 \end{figure}
 
 
 \subsubsection{Fitting in R-INLA}
+\label{beifitting}
 
 We fit the model in R using the \texttt{INLA} package and its implementation of
 the SPDE approach. Some manual preprocessing was needed to employ the Poisson
@@ -792,19 +800,11 @@ creating the mesh, we specifiy the priors for the covariance parameters and
 \texttt{INLA} can initialize an object to represent the covariance structure
 on the mesh.
 
-\begin{figure}[h]
-\subfloat[Triangular mesh with pseudodata overlaid. Black dots represent
+\begin{figure}[t]
+\includegraphics[width=\textwidth]{figures/bei_mesh.pdf}
+\caption{Triangular mesh with pseudodata overlaid. Black dots represent
 pseudodata with values of 0 at the mesh nodes. Red dots represent pseudodata
-with values of 1 at the events.]
-{\includegraphics[width=0.9\textwidth]{figures/bei_mesh.pdf}}
-
-\subfloat[Piecewise linear approximation of the elevation surface.]
-{\includegraphics[width=0.9\textwidth]{figures/bei_elev_mesh.pdf}}
-
-\subfloat[Piecewise linear approximation of the gradient surface.]
-{\includegraphics[width=0.9\textwidth]{figures/bei_grad_mesh.pdf}}
-
-\caption{Data used with the Simpson and SPDE methods.}
+with values of 1 at the events.}
 \label{beimesh}
 \end{figure}
 
@@ -835,6 +835,7 @@ function takes about 110 seconds to fit the model on a midrange laptop.
 
 
 \subsubsection{Results}
+\label{beiresults}
 
 The posterior marginals provide evidence that both higher elevation and larger
 gradient are associated with higher intensity. The elevation coefficent
@@ -860,7 +861,7 @@ has posterior mean 1.31 and 95\% central interval \((1.06, 1.65)\), while the
 range parameter \(\rho\) has a posterior mean of 178 with a 95\% interval of
 \((138, 234)\).
 
-\begin{figure}[h]
+\begin{figure}[p]
 
 \subfloat[Posterior mean surface for the fixed effects.]
 {\includegraphics[width=\textwidth]{figures/bei_betas.pdf}}
@@ -873,13 +874,7 @@ spatial GP.}
 \label{beimean}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei_sd.pdf}
-\caption{Pointwise posterior standard deviation of predictions.}
-\label{beisd}
-\end{figure}
-
-\begin{figure}[h]
+\begin{figure}[p]
 
 \subfloat[Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
@@ -896,24 +891,31 @@ using the posterior mean intensity.}
 
 
 \subsubsection{Model Checking}
+\label{beiresid}
 
-For a more general discussion of residuals, see \cite{baddeleyresiduals}. The
-classic Pearson residual,
+This section provides a brief and simple residual analysis to illustrate that
+their are no glaring issues with the model fit. Literature on residual analysis
+for spatial point process models is quite rich and not specific to INLA; for a
+more general discussion see Baddeley et. al.~(2005)~\cite{baddeleyresiduals}.
+
+We calculated the Pearson residuals,
 \begin{displaymath}
 \frac{\text{Observed count} - \text{Expected count}}
 {\sqrt{\text{Expected count}}},
 \end{displaymath}
-is a special case.
+on a 40 by 20 lattice of grid cells. We used functions from R-INLA to transform
+predictions from the log-scale to the natural scale and calculate the posterior
+mean intensity at the center of each grid
+cell~(Figure~\ref{beiintensity},~top). The expected counts were approximated by the posterior mean intensity times the area of the grid cell. The bottom panel
+of Figure~\ref{beiintensity} shows the Pearson residuals mapped across space.
 
-{\it Should make the whole four-panel plot if citing Baddeley et. al.}
-
-Pearson residuals~(Figure~\ref{beiintensity},~bottom): small magnitude in the
-region with no observed events and low posterior intensity (not possible to see
-much variation), the model overestimates the intensity in the canyon (too small
-to be accurately represented on the mesh), random with no obvious spatial
-patterns elsewhere, a few large-magnitude positive residuals (maybe there is
-some clustering?), tried a few different grids (not shown) and saw the same
-patterns
+The residuals have small magnitude in the central region with no observed
+events and low mean posterior intensity. This is not surprising because it is
+not possible to see much variation in counts in that region. There are a
+few large-magnitude positive residuals (about 4) suggetsing there is some
+clustering not described by the model. Elsewhere, the residuals appear random
+with no obvious spatial patterns. We repeated the residual analysis with
+several grid cell sizes and saw the same charecteristics each time.
 
 
 \subsection{Transect Sampling Example}
@@ -943,6 +945,7 @@ than for the fully-observed situation)}
 
 
 \subsubsection{Model Specification}
+\label{xsectmodel}
 
 We use the same model as fit to the full data, a log-Gaussian Cox process model
 with intensity
@@ -969,12 +972,29 @@ The prior distributions are again \(\beta_{0}\), \(\beta_{1}\), and
 overlaid.]
 {\includegraphics[width=0.9\textwidth]{figures/bei-effort_grad.pdf}}
 
-\caption{Plots of the event and covariate data.}
+\caption{Plots of the event and covariate data for the simulated transect
+survey. The study region is 1000 m by 500 m.}
 \label{effort}
 \end{figure}
 
 
 \subsubsection{Fitting in R-INLA}
+\label{xsectfitting}
+
+\begin{figure}[p]
+\includegraphics[width=\textwidth]{figures/bei-effort_mesh.pdf}
+\caption{Triangular mesh with observed region and events overlaid. Black dots
+represent pseudodata with values of 0 at the mesh nodes. Red dots represent
+pseudodata with values of 1 at the observed events.}
+\label{effortmesh}
+\end{figure}
+
+\begin{figure}[p]
+\includegraphics[width=\textwidth]{figures/bei-effort_partition.pdf}
+\caption{Partition of the observed region created by intersection with each
+mesh triangle.}
+\label{effortpartition}
+\end{figure}
 
 The procedure for fitting the LGCP model to variable sampling effort data is
 the same as for fully-observed data except that the weight vector
@@ -1020,29 +1040,9 @@ Finally, the pseudodata, covariates, and a node index are combined into a data
 list and the \texttt{inla()} function is called to fit the model. The model
 takes about 90 seconds to fit on our laptop computer.
 
-\begin{figure}[h]
-
-\subfloat[Triangular mesh with observed region and events overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/bei-effort_mesh.pdf}}
-
-\subfloat[Piecewise linear approximation of the elevation surface.]
-{\includegraphics[width=0.9\textwidth]{figures/bei-effort_elev_mesh.pdf}}
-
-\subfloat[Piecewise linear approximation of the gradient surface.]
-{\includegraphics[width=0.9\textwidth]{figures/bei-effort_grad_mesh.pdf}}
-
-\caption{Data used with the Simpson and SPDE methods.}
-\label{effortmesh}
-\end{figure}
-
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_partition.pdf}
-\caption{Partition of the observed region created by intersection with each
-mesh triangle.}
-\label{effortpartition}
-\end{figure}
 
 \subsubsection{Results}
+\label{xsectresults}
 
 The fixed effect posterior marginals give evidence of relationships between
 the intensity and both elevation and grandient. The elevation coefficient
@@ -1063,7 +1063,7 @@ posterior mean of 1.29 with a central 95\% posterior interval of
 \((0.967, 1.76)\). The range \(\rho\) has a posterior mean of 237 and
 95\% interval of \((162, 352)\).
 
-\begin{figure}[h]
+\begin{figure}[p]
 \subfloat[Posterior mean surface for the fixed effects.]
 {\includegraphics[width=\textwidth]{figures/bei-effort_betas.pdf}}
 
@@ -1075,13 +1075,7 @@ spatial GP.}
 \label{effortmean}
 \end{figure}
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{figures/bei-effort_sd.pdf}
-\caption{Pointwise posterior standard deviation of predictions.}
-\label{effortsd}
-\end{figure}
-
-\begin{figure}[h]
+\begin{figure}[p]
 \subfloat[Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
 means of the intercept, coefficients, and GP.]
@@ -1097,13 +1091,20 @@ using the posterior mean intensity.}
 
 
 \subsubsection{Model Checking}
+\label{effortresid}
 
-Pearson residuals~(Figure~\ref{effortintensity},~bottom): undefined where grid cells
-have 0 observed area (because 0 events expected), where defined the residuals
-appear similar to those from the model fit to the full data, small magnitude
-in the observed region with no events and low posterior intensity, more large
-positive residuals than large-magnitude negative residuals, random with no
-obvious spatial patterns
+To asses the model fit, we computed Pearson residuals on a 40 by 20 lattice of
+grid cells. The expected counts were approximated by the multiplying the
+posterior mean intensity~(Figure~\ref{effortintensity},~top) at the center of
+each grid cell times the observed area within the cell. Cells with no observed
+area have undefined residuals and appear white in the
+plot~(Figure~\ref{effortintensity},~bottom).
+
+The residuals have low magnitude in the large regions with no observed events
+and low posterior intensity. There are more large positive residuals than
+large-magnitude negative residuals, including in several places where events
+appear to form small clusters. Otherwise, the residuals appear random with no
+obvious spatial patterns.
 
 
 \section{Conclusion and Discussion}
@@ -1121,7 +1122,8 @@ represent the covariates (is there literature on this?)
 comment on similarities in posterior between model fit to full data and model
 fit to sampled data --- coefs from sample have wider intervals but lots of
 overlap; posterior mean of linear predictor very similar over space ---
-similar SD but larger range and less structure in predicted GP
+similar SD but larger range and less structure in predicted GP --- cannot
+model smaller scale structure such as clustering
 
 need further work on model checking when prediction is desired over a different
 region than observed
