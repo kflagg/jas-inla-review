@@ -197,7 +197,7 @@ lines_subsegs <- do.call(c, lapply(mesh_tris, function(x){
 }))
 
 pdf('figures/bei-effort_partition.pdf', width = 12, height = 6)
-par(mar = c(0, 0, 2, 2))
+par(mar = c(0, 0, 2, 0))
 plot(bei_win, border = 'grey', main = 'Partition of the Observed Region')
 for(i in seq_along(lines_subsegs)){
   plot(lines_subsegs[[i]], border = 'red', add = TRUE)
