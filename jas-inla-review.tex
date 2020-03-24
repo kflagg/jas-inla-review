@@ -37,7 +37,13 @@
 
 \begin{itemize}
 
-\item
+\item Added an abstract.
+
+\item Added an explanation of the prior specification in \ref{beimodel} and
+refit the models with priors that better illustrate the prior selection
+choices.
+
+\item Added citations throughout.
 
 \end{itemize}
 
@@ -61,11 +67,25 @@
 \maketitle
 
 \begin{abstract}
-This template is for authors who are preparing a manuscript for a Taylor \& Francis journal using the \LaTeX\ document preparation system and the \texttt{interact} class file, which is available via selected journals' home pages on the Taylor \& Francis website.
+Spatial point process models are theoretically useful for mapping discrete
+events, such as plant or animal presence, across space. The computational
+complexity of fitting these models is often a barrier to their practical use.
+The log-Gaussian Cox process (LGCP) is a point process driven by a latent
+Gaussian field, and recent advances have made it practical to fit Bayesian LGCP
+models using the integrated nested Laplace approximation (INLA). These advances
+include the stochastic partial differential equations (SPDE) approach to
+sparely approximate the Gaussian field and an extension using pseudodata with
+a Poisson response. To help link the theoretical results to statistical
+practice, we provide an overview of these methods and then illustrate their
+implementation using freely available data. The examples include both a
+censused dataset and an incomplete data situation, and our well-commented R
+code is shared in the online supplement. Our intent is to make these methods
+accessible to the practitioner of spatial statistics without requiring deep
+knowledge of point process theory.
 \end{abstract}
 
 \begin{keywords}
-INLA, spatial prediction, log-Gaussian Cox process, spatial point process
+Bayesian hierarchical model, INLA, spatial prediction, log-Gaussian Cox process, spatial point process
 \end{keywords}
 
 
@@ -87,15 +107,14 @@ prediction may require hundreds of thousands of latent variables.
 
 Spatial point process models further complicate the situation; in addition to
 computational challenges due to a large number of latent variables and
-parameters, point process models also require evaluating difficult likelihoods.
-{\it (Cite some computational papers --- Baddely?)} Both maximum
-likelihood and Bayesian model fitting require integrating the intensity
-function over space, but the integral is generally not available in closed
-form and, unlike a probability distribution, the integral over the entire
-domain does not necessarily equal one.
+parameters, point process models also require evaluating difficult
+likelihoods. Both maximum likelihood and Bayesian model fitting require
+integrating the intensity function over space, but the integral is generally
+not available in closed form and, unlike a probability distribution, the
+integral over the entire domain does not necessarily equal one.
 
 Many methods have been introduced for modeling spatial point patterns,
-including logistic regression approximations, maximum pseudolikelihood, and
+including Poisson regression approximations, maximum pseudolikelihood, and
 Markov chain Monte
 Carlo~\cite{bermanturner,baddeleyetal,baddeleyturner,moellerwaagepetersen}.
 The number of parameters and latent variables in these models still poses a
@@ -487,8 +506,8 @@ Here, \(\mathbf{W}\) is a Gaussian white noise process with variance 1, and
 \(\Delta\) is the Laplacian operator. The stationary solution
 \(\mathbf{e}\) is a Gaussian field having a Mat\'{e}rn covariance
 function with precision (inverse variance) \(\tau\),  scaling parameter
-\(\kappa\) (approximately inversly proportional to the range), and smoothness
-parameter \(\nu\).
+\(\kappa\) (inversly proportional to the range), and smoothness parameter
+\(\nu\).
 
 Lindgren, Rue, and Lindstr\"{o}m~(2011) investigate the limit as \(\nu \to 0\) for
 \(d = 2\), finding that the solution is a GMRF on a unit
@@ -572,8 +591,8 @@ account for regions that were observed to contain no events (in contrast to
 unobserved regions where it is unknown if any events are present). Many of
 these methods involve imputation of dummy points or discretization. In the
 world of maximum likelihood, perhaps the most well-developed of these use
-approximations based on logistic regression on presence/absence information in
-small disjoint regions {\it (cite a bunch of Baddely etc papers)}.
+approximations based on Poisson regression on presence/absence information in
+small disjoint regions~\cite{bermanturner,baddeleyturner}.
 % What is the state-of-the-art for dummy point selection? The papers I'm
 % familiar with use lattices or SRSs. Space-filling approaches?
 
@@ -648,8 +667,9 @@ the entire region of interest. For example, line-transect surveys routinely
 generate point pattern data but are analyzed after aggregation rather than
 using a point process model. Another issue is that of false negatives, in other
 words events which exist but are not detected during the survey. False
-negatives are an accepted part of species abundance surveys, where the species
-of interest may be camouflaged or hidden in thick cover {\it (citation?)}.
+negatives are an accepted part of species abundance and occupancy surveys,
+where the species of interest may be camouflaged or hidden in thick
+cover~\cite{linkbarker,bucklandetal,mackenzieetal}.
 
 The idea of the incompletely-observed domain has been around for some time.
 Brix and M\"{o}ller (2001) fit an LGCP model to weed data observed in
@@ -753,12 +773,17 @@ from \ref{inla}, \(\boldsymbol{\theta} = (\sigma, \rho)'\) and
 
 The prior distributions are set as follows. \(\beta_{0}\), \(\beta_{1}\), and
 \(\beta_{2}\) are independent \(\mathrm{N}(0, \infty)\). For the Mat\'{e}rn
-covariance parameters, R-INLA provides a PC prior defined in terms of the
-standard deviation \(\sigma\) and the effective range \(\rho\) {\it (citation?)}.
-The PC prior is specified by defining a tail probability for each parameter. We
-set \(\mathrm{Pr}(\sigma > 1) = 0.5\) to be relatively uninformative for the
-SD of a log-scale random effect, and \(\mathrm{Pr}(\rho < 45) = 0.5\) similar
-to the prior used by M\"{o}ller and Waagepetersen~\cite{moellerwaagepetersen}.
+covariance parameters, R-INLA provides a penalized complexity (PC) prior
+defined in terms of the standard deviation \(\sigma\) and the effective range
+\(\rho\) \cite{fuglstadetal,simpsonpc}. The PC prior is intended to provide an
+intuitive way to define informative priors and is specified by defining a tail
+probability for each parameter. INLA actually uses these inputs to set an
+exponential prior on the precision \(\tau = 1 / \sigma^{2}\) and a Weibull
+prior on the scale \(\kappa = \sqrt{8 \nu} / \rho\), but all of the software output
+is provided in terms of \(\sigma\) and \(\rho\). We set
+\(\mathrm{Pr}(\sigma > 2) = 0.1\) to be relatively uninformative for the SD of
+a log-scale random effect, and \(\mathrm{Pr}(\rho < 5) = 0.1\) similar to the
+prior used by M\"{o}ller and Waagepetersen~\cite{moellerwaagepetersen}.
 
 \begin{figure}[p]
 
@@ -827,7 +852,7 @@ This function is then called with arguments specifying a formula for the
 linear predictor, a Poisson family model (which defaults to a log link), the
 data list, the \(\mathbf{A}\) matrix, the priors for the coefficients, and the
 \(\boldsymbol{\alpha}\) vector as the exposure parameter. The \texttt{inla()}
-function takes about 110 seconds to fit the model on a midrange laptop.
+function takes about 90 seconds to fit the model on a midrange laptop.
 
 
 \subsubsection{Results}
@@ -835,10 +860,10 @@ function takes about 110 seconds to fit the model on a midrange laptop.
 
 The posterior marginals provide evidence that both higher elevation and larger
 gradient are associated with higher intensity. The elevation coefficent
-\(\beta_{1}\) has a posterior mean of 0.0327 with a central 95\% interval of
-\((0.0111, 0.0547)\), and the grandient coefficient \(\beta_{2}\) has posterior
-mean 4.43 with 95\% interval \((2.41, 6.45)\). The posterior mean of the
-intercept \(\beta_{0}\) is \(-10.9\) with 95\% interval of \((-14.2, -7.61)\).
+\(\beta_{1}\) has a posterior mean of 0.0328 with a central 95\% interval of
+\((0.0112, 0.0547)\), and the grandient coefficient \(\beta_{2}\) has posterior
+mean 4.44 with 95\% interval \((2.42, 6.46)\). The posterior mean of the
+intercept \(\beta_{0}\) is \(-10.9\) with 95\% interval of \((-14.2, -7.63)\).
 Mapped across space, the posterior mean of the fixed effect component of the
 linear predictor,
 \begin{displaymath}
@@ -853,9 +878,9 @@ some spatial structure remains to be described by the posterior predicted
 GP~(Figure~\ref{beimean},~bottom). The prediction surface shows a large region
 of low values in the center where there are nearly no events, and hotspots
 where many events are clumped together. The GP standard deviation \(\sigma\)
-has posterior mean 1.31 and 95\% central interval \((1.06, 1.65)\), while the
-range parameter \(\rho\) has a posterior mean of 178 with a 95\% interval of
-\((138, 234)\).
+has posterior mean 1.30 and 95\% central interval \((1.05, 1.63)\), while the
+range parameter \(\rho\) has a posterior mean of 176 with a 95\% interval of
+\((137, 229)\).
 
 \begin{figure}[p]
 
@@ -928,15 +953,15 @@ example in the supplementary materials, but the preprocessing and model-fitting
 procedure for distance sampling data is not much more complicated than for the
 fully-observed case.
 
-Suppose part of the study requires every observed
-tree to be visited so time-consuming measurements can be made on each. For
-practical reasons, the researchers decide to take a systematic sample of
-transects and limit data collection to events within 5~m of a transect.
-Sections of the site farther than 5~m from a transect are unobserved, meaning
-events in those regions cannot be observed and nothing is known about the
-number of events or their locations. We assume the elevation and gradient data
-were available from another source so that the full covariate data can be used
-to predict the intensity in the unobserved parts of the site.
+Suppose part of the study requires every observed tree to be visited so
+time-consuming measurements can be made on each. For practical reasons, the
+researchers decide to take a systematic sample of transects and limit data
+collection to events within 5~m of a transect. Sections of the site farther
+than 5~m from a transect are unobserved, meaning events in those regions
+cannot be observed and nothing is known about the number of events or their
+locations. We assume the elevation and gradient data were available from
+another source so that the full covariate data can be used to predict the
+intensity in the unobserved parts of the site.
 
 We simulate this by choosing a random starting point and defining transects
 running north-south spaced 50~m apart. All events within 5~m of a transect are
@@ -958,7 +983,7 @@ magnitude of the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a
 zero-mean Gaussian process with Mat\'{e}rn covariance and \(\alpha = 2\).
 The prior distributions are again \(\beta_{0}\), \(\beta_{1}\), and
 \(\beta_{2}\) independent \(\mathrm{N}(0, \infty)\),
-\(\mathrm{Pr}(\sigma > 1) = 0.5\), and \(\mathrm{Pr}(\rho < 45) = 0.5\).
+\(\mathrm{Pr}(\sigma > 2) = 0.1\), and \(\mathrm{Pr}(\rho < 5) = 0.1\).
 
 \begin{figure}[p]
 
@@ -1038,7 +1063,7 @@ for use in exactly one paragraph. ---Kenny}
 
 Finally, the pseudodata, covariates, and a node index are combined into a data
 list and the \texttt{inla()} function is called to fit the model. The model
-takes about 90 seconds to fit on our laptop computer.
+takes about 65 seconds to fit on our laptop computer.
 
 
 \subsubsection{Results}
@@ -1046,11 +1071,11 @@ takes about 90 seconds to fit on our laptop computer.
 
 The fixed effect posterior marginals give evidence of relationships between
 the intensity and both elevation and grandient. The elevation coefficient
-\(\beta_{1}\) has a posterior mean of 0.0445 and a central 95\% posterior
-interval of \((0.00676, 0.0839)\). The gradient coefficient \(\beta_{2}\) has
-a posterior mean of 6.19 and a 95\% interval of \((3.21, 9.19)\). The
+\(\beta_{1}\) has a posterior mean of 0.0444 and a central 95\% posterior
+interval of \((0.00686, 0.0836)\). The gradient coefficient \(\beta_{2}\) has
+a posterior mean of 6.21 and a 95\% interval of \((3.24, 9.20)\). The
 intercept \(\beta_{0}\) has posterior mean \(-12.7\) and 95\% interval
-\((-18.7, -7.07)\). The posterior mean of the fixed effect component of the
+\((-18.6, -7.10)\). The posterior mean of the fixed effect component of the
 linear predictor again appears as an average of the elevation and gradient
 surfaces~(Figure~\ref{effortmean},~top), very similar to the previous figure.
 
@@ -1059,9 +1084,9 @@ GP~(Figure~\ref{effortmean},~bottom). The prediction surface has low values
 in the center and north where no events were observed, hotspots where events
 are concentrated along the transects, and smooth transitions across the
 unsurved regions between transects. The standard deviation \(\sigma\) has a
-posterior mean of 1.29 with a central 95\% posterior interval of
-\((0.967, 1.76)\). The range \(\rho\) has a posterior mean of 237 and
-95\% interval of \((162, 352)\).
+posterior mean of 1.27 with a central 95\% posterior interval of
+\((0.956, 1.70)\). The range \(\rho\) has a posterior mean of 232 and
+95\% interval of \((161, 340)\).
 
 \begin{figure}[p]
 \subfloat[Posterior mean surface for the fixed effects.]
@@ -1133,8 +1158,8 @@ but the surface from the model fit to the sampled
 data~(Figure~\ref{effortmean}) is noticeably smoother than the surface inferred
 from the complete data~(Figure~\ref{beimean} for sampled, bottom panels).
 This is related to the range; the posterior interval for the range when using
-the sampled data (162 to 352) is much wider and shifted to the right compared
-the interval when using the complete data (138 to 234). The reason for this is
+the sampled data (161 to 340) is much wider and shifted to the right compared
+the interval when using the complete data (137 to 229). The reason for this is
 that the LGCP model simply cannot predict detail in regions far from the
 observed sections of the site, and there are no data in those unobserved
 regions to constrain possible values of the range. Indeed, Simpson et. al.
