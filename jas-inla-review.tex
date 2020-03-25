@@ -39,6 +39,11 @@
 
 \item Added an abstract.
 
+\item Rearranged \ref{methods} to clarify SPDE vs Simpson.
+
+\item Added the rest of the math and notation to \ref{methods} and
+\ref{application}.
+
 \item Added an explanation of the prior specification in \ref{beimodel} and
 refit the models with priors that better illustrate the prior selection
 choices.
@@ -191,9 +196,6 @@ equipment cannot leave the transect. Point patterns observed under variable
 sampling effort have traditionally been aggregated to the quadrat, transect,
 or grid cell level before analysis. However, INLA aids the fitting of LGCP
 models to such data.
-{\it (elaborate on the additional challenges of fitting point process models
-to incomplete point patterns --- computational and model-related --- here or
-in \ref{veffort}?)}
 
 This article provides a review of recent advances in the fitting of spatial
 LGCP models via INLA, including a finite element approach for dimension
@@ -210,87 +212,6 @@ concluding remarks.
 
 \subsection{Log-Gaussian Cox Process}
 \label{lgcp}
-
-%Notes from \cite{moellerwaagepetersen}
-%{\it (delete once fully integrated into text)}:
-
-%\begin{itemize}
-
-%\item applications mentioned: seismology, ecology, forestry, geography, spatial
-%epidemiology and materials science
-
-%\item modern computing (e.g. McMC) allows for model-based inference without a
-%stationarity assumption
-
-%\item Minke whale distance sampling data used as an example of incomplete
-%observation (they used a shot noise Cox process model)
-
-%\item distribution of point process is the joint distrubition of \(n\) and
-%the \(n\) events, or equivalently the distribution of the number of events in
-%any arbitrary region
-
-%\item in their presentation of the two Poisson process postulates, the second
-%one is given the number of events in a region they are iid proportional to the
-%intensity function
-
-%\item Cox process is driven by a non-negative random process such that
-%conditional on the driving process the Cox process is a Poisson process
-
-%\item LGCP has no edge effects because the point process in the window is
-%fully specified by the GP restricted to the window
-
-%\item quite a bit about Gibbs processes, densities wrt stationary Poisson
-%processes, and Papangelou conditional intensities \emph{(comments: The density
-%was traditionally used to facilitate McMC simulation and ML fitting when the
-%likelihood was not explicitly available. The conditional intensity of a
-%Poisson process is the intensity function because of independence among the
-%points. The hierarchical setup of the LGCP lets us work directly with a
-%Poisson process so the density and conditional intensity are not needed. LGCP
-%models with constructed covariate can model Gibbs processes.)}
-
-%\item more things about infinite Gibbs and Markov processes that go over my
-%head but we don't need because we deal with bounded and finite processes
-
-%\end{itemize}
-
-%Kenny's notation and terminology:
-
-%\begin{itemize}
-
-%\item process defined on \(\mathcal{D} \subset \mathbb{R}^{2}\), domain of the
-%intensity function, define \(d = \mathrm{dim}(\mathcal{D})\)
-
-%\item observation window \(\mathcal{S} \subset \mathcal{D}\)
-
-%\item \emph{(Note: When thinking about sampling, we need to define three
-%regions: the domain \(\mathcal{D}\) over which the process mathematically
-%operates, the region \(\mathcal{R}\) over which inferences are desired, and
-%the observed/sampled observation window \(\mathcal{S}\). The general
-%relationship is \(\mathcal{S} \subset \mathcal{R} \subset \mathcal{D}
-%\subset \mathbb{R}^{d}\), where all of the subset symbols taken to mean
-%``subset or equal''. The ``fully surveyed'' situation is \(\mathcal{S}
-%= \mathcal{R}\).)}
-
-%\item \(\mathbf{X}\) point process on \(\mathcal{R}\),
-%\(\mathbf{x} = \{x_{1}, \dots, x_{n}\}\) realized point pattern
-
-%\item point \(x \in \mathbf{x}\) called an event
-
-%\item intensity function \(\lambda(u)\)
-
-%\item \(x\) event, \(s\) numerical integration node, \(u\)
-%arbitrary location in \(\mathcal{D}\)
-
-%\item \(z(u)\) a column vector of covariates/predictors at \(u\)
-
-%\item ``point'' refers to a \(u\) unless clearly stated otherwise
-
-%\item bold for sets and spatial processes, normal italics for spatial vectors
-
-%\item \(y\) and variations will be used for objects derived from the point
-%pattern, e.g. pseudodata
-
-%\end{itemize}
 
 The log-Gaussian Cox process is a Poisson process driven by a latent Gaussian
 process~\cite{moelleretal}. This section provides a brief overview of the
@@ -472,6 +393,47 @@ Mat\'{e}rn covariance function, a Gaussian Markov random field (GMRF)
 approximation can simplify computation, requiring only a sparse covariance
 structure.
 
+The GMRF approximation is motivated by the fact that Gaussian fields with
+Mat\'{e}rn covariances are solutions to the stochastic partial differential
+equation (SPDE) below~\cite{lindgrenetal}:
+\begin{displaymath}
+\tau(\kappa^{2} - \Delta)^{\alpha / 2} \mathbf{e}(u) = \mathbf{W}(u),
+\qquad u \in \mathbb{R}^d, \quad \kappa > 0,
+\quad \alpha = \nu + d/2, \quad \nu > 0.
+\end{displaymath}
+Here, \(\mathbf{W}\) is a Gaussian white noise process with variance 1, and
+\(\Delta\) is the Laplacian operator. The stationary solution
+\(\mathbf{e}\) is a Gaussian field having a Mat\'{e}rn covariance
+function with precision (inverse variance) \(\tau\),  scaling parameter
+\(\kappa\) (inversly proportional to the range effective), and smoothness
+parameter \(\nu\).
+
+Lindgren, Rue, and Lindstr\"{o}m~(2011) investigate the limit as \(\nu \to 0\) for
+\(d = 2\), finding that the solution is a GMRF on a unit
+lattice~\cite{lindgrenetal}. They then construct approximations for positive
+integer values of \(\nu\) by \(\nu\)-fold convolution of \(\mathbf{e}\)
+with itself. Finally, they use a finite element method to generalize the
+approximation to arbitrary triangulations of the support. This approximation
+has considerable computational benefits because the GMRF has a sparse
+covariance structure; the only nodes with nonzero covariances are those
+directly connected by edges in the triangulation.
+
+The core of the SPDE approach is the finite-element GMRF representation of the
+GP. The idea is to model the GP at the nodes (vertices) of a triangular mesh.
+Values at points other than the nodes are found by linear interpolation,
+resulting in a surface constructed from triangular faces. Figure~\ref{surface}
+shows an example. The linear interpolation uses the barycentric coordinate
+system~(Figure~\ref{triangle}). The mathematical form of this interpolation is
+very simple; for a point \(u\) with barycentric coordinates \((\alpha, \beta,
+\gamma)\) inside a triangle with vertices \(s_{1}, s_{2}, s_{3}\), the
+approximation is simply
+\begin{displaymath}
+\mathbf{e}(u) \approx \alpha \mathbf{e}(s_{1})
++ \beta \mathbf{e}(s_{2}) + \gamma \mathbf{e}(s_{3}).
+\end{displaymath}
+This technique can approximate complicated surfaces as relatively
+low-dimensional vectors via a piecewise-linear approximation.
+
 \begin{figure}[p]
 
 \subfloat[Example Gaussian process realization.]
@@ -485,80 +447,6 @@ approximation of that realization over a triangular mesh.}
 \end{figure}
 
 \begin{figure}[p]\centering
-\includegraphics[width=0.5\textwidth]{figures/dual.pdf}
-\caption{An illustration of the nodes (dots) and the weighting scheme for one
-node (large dot). In the SPDE approach, this node represents it dual region
-(shaded), so its weight is proportional to the shaded area. The dual region is
-constructed by connecting the midpoints of the node's edges to the midpoints
-of the adjacent triangles.}
-\label{dual}
-\end{figure}
-
-The GMRF approximation is motivated by the fact that Gaussian fields with
-Mat\'{e}rn covariances are solutions to the stochastic partial differential
-equation (SPDE) below~\cite{lindgrenetal}:
-\begin{displaymath}
-\tau(\kappa^{2} - \Delta)^{\alpha / 2} \mathbf{e}(u) = \mathbf{W}(u),
-\qquad u \in \mathbb{R}^d, \quad \kappa > 0,
-\quad \alpha = \nu + d/2, \quad \nu > 0.
-\end{displaymath}
-Here, \(\mathbf{W}\) is a Gaussian white noise process with variance 1, and
-\(\Delta\) is the Laplacian operator. The stationary solution
-\(\mathbf{e}\) is a Gaussian field having a Mat\'{e}rn covariance
-function with precision (inverse variance) \(\tau\),  scaling parameter
-\(\kappa\) (inversly proportional to the range), and smoothness parameter
-\(\nu\).
-
-Lindgren, Rue, and Lindstr\"{o}m~(2011) investigate the limit as \(\nu \to 0\) for
-\(d = 2\), finding that the solution is a GMRF on a unit
-lattice~\cite{lindgrenetal}. They then construct approximations for positive
-integer values of \(\nu\) by \(\nu\)-fold convolution of \(\mathbf{e}\)
-with itself. Finally, they use a finite element method to generalize the
-approximation to arbitrary triangulations of the support. This approximation
-has considerable computational benefits because the GMRF has a sparse
-covariance structure; the only nodes with nonzero covariances are those
-directly connected by edges in the triangulation.
-
-The core of the SPDE approach is the finite-element GMRF representation of the
-GP. This technique can approximate complicated surfaces as relatively
-low-dimensional vectors via a piecewise-linear approximation.
-Figure~\ref{surface} shows an example. The surface is modeled at the nodes of
-the mesh. Values at points other than the nodes are found by linear
-interpolation, resulting in a surface constructed from triangular faces. When
-using the finite element representation to compute averages or for numerical
-integration, the values at the nodes are used, and are weighted by the area
-represented by the nodes~(Figure~\ref{dual}). This area is one of third the
-total area of the triangles of which the node is a vertex.
-{\it (Add linear algebra and basis function stuff here.)}
-
-In practice, the SPDE approach goes as follows. Choose nodes \(s_{i}\)
-at which to model \(\boldsymbol{\Psi}(s_{i})
-= \mathbf{z}(s_{i})' \boldsymbol{\beta} + \mathbf{e}(s_{i})\), then build a
-triangular mesh using these nodes. Typically the nodes will include locations
-where data or covariates are available, then the rest will be filled in with a
-Delaunay triangulation under some edge length constraints. The
-\(\mathbf{e}(s_{i})\) are modeled as a GMRF where the distribution of
-each \(\mathbf{e}(s_{i})\) depends only on the
-\(\mathbf{e}(s_{j})\) where \(s_{i}\) and \(s_{j}\) are connected by an
-edge. The GMRF representation is assumed to be a piecewise linear approximation
-of the continuous Gaussian field; values of \(\mathbf{e}(s)\) for
-\(s\) not in the set of nodes are predicted by linear interpolation using
-the barycentric coordinates of \(s\)~(Figure~\ref{triangle}). The mathematical
-form of this interpolation is very simple; for a point \(u\) inside the
-triangle with vertices \(s_{1}, s_{2}, s_{3}\), the approximation is simply
-\begin{displaymath}
-\mathbf{e}(u) \approx \alpha \mathbf{e}(s_{1})
-+ \beta \mathbf{e}(s_{2}) + \gamma \mathbf{e}(s_{3}).
-\end{displaymath}
-
-% Add comments about coarsenes/fineness of mesh.
-
-{\it (define the dual region)}
-
-%Computationally doable when \(Z(\mathbf{s})\) has a Mat\'{e}rn covariance with
-%certain values of the smoothness parameter. Check newer references.
-
-\begin{figure}[t]\centering
 
 \subfloat[A point \(u\) in a triangle with vertices \(s_{1}, s_{2}, s_{3}\).]
 {\includegraphics[width=0.4\textwidth]{figures/triangle.png}}
@@ -575,6 +463,56 @@ each axis. This transformation takes the point \(u\) to
 coordinates have the property that \(\alpha + \beta + \gamma = 1\).}
 \label{triangle}
 \end{figure}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.5\textwidth]{figures/dual.pdf}
+\caption{An illustration of the nodes (dots) and the weighting scheme for one
+node (large dot). In the SPDE approach, this node represents it dual region
+(shaded), so its weight is proportional to the shaded area. The dual region is
+constructed by connecting the midpoints of the node's edges to the midpoints
+of the adjacent triangles.}
+\label{dual}
+\end{figure}
+
+The full finite element representation is constructed in the following manner.
+Start with a triangular mesh over the spatial domain, with nodes
+\(s_{1}, \dots, s_{m}\). Then define a set of basis functions
+\(\{\phi_{1}, \dots, \phi_{m}\}\) that map the spatial domain to the
+barycentric coordinate system. That is, \(\phi_{i}\) corresponds to node
+\(s_{i}\), and for a point \(u\) there are at most three nonzero
+\(\phi_{i}(u)\). The nonzero values give the barycentric coordinates of \(u\)
+in a triangle containing it. The finite element representation has the form
+\begin{displaymath}
+\mathbf{e}(u) \approx \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u).
+\end{displaymath}
+The vector \(\boldsymbol{\psi} = (\psi_{1}, \dots, \psi_{m})'\) is a
+realization of the GMRF, so it is a multivariate Gaussian vector comprised of
+the values of the laten field at the nodes.
+
+The \(\psi_{i}\) values are used to compute averages and for numerical
+integration, in which cases they are weighted by the area represented by the
+nodes~(Figure~\ref{dual}). The region represented by a node is called its dual
+region, denoted \(\mathrm{dual}(s)\) for node \(s\). The dual region is
+constructed by connecting the midpoints of the edges and centroids of the
+triangles for which the node is a vertex. The weight is the area of the dual
+region, which is one third of the total area of the triangles used in its
+construction.
+
+In practice, the SPDE approach goes as follows. Choose nodes \(s_{i}\)
+at which to model \(\boldsymbol{\Psi}(s_{i})
+= \mathbf{z}(s_{i})' \boldsymbol{\beta} + \mathbf{e}(s_{i})\), then build a
+triangular mesh using these nodes. Typically the nodes will include locations
+where data or covariates are available, then the rest will be filled in with a
+Delaunay triangulation under some edge length constraints. The
+\(\mathbf{e}(s_{i})\) are modeled as a GMRF where the distribution of
+each \(\mathbf{e}(s_{i})\) depends only on the
+\(\mathbf{e}(s_{j})\) where \(s_{i}\) and \(s_{j}\) are connected by an
+edge. The GMRF representation is assumed to be a piecewise linear approximation
+of the continuous Gaussian field;
+% Add comments about coarsenes/fineness of mesh.
+
+%Computationally doable when \(Z(\mathbf{s})\) has a Mat\'{e}rn covariance with
+%certain values of the smoothness parameter. Check newer references.
 
 The SPDE approach is implemented in the \texttt{INLA} package alongside tools
 for constructing meshes. A wrapper for easily specifying LGCP models is
@@ -625,20 +563,15 @@ likelihood. For notational clarity, assume \(\log[\lambda(u)]
 \ell(\lambda) = C - \int \lambda(u) \mathrm{d}u
 + \sum_{i = 1}^{n} \log\left[\lambda(x_{i})\right]
 \end{displaymath}
-where \(C\) is a normalizing constant. The log-intensity is projected into the
-space spanned by a finite set of basis functions,
+where \(C\) is a normalizing constant. The log-intensity rewritten using the
+GMRF representation from the SPDE approach,
 \begin{displaymath}
 \log\left[\lambda(u)\right]
-\approx \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u)
+\approx \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u).
 \end{displaymath}
-with \(\boldsymbol{\psi} = (\psi_{1}, \dots, \psi_{m})'\) a multivariate
-normal random vector and \(\{\phi_{1}, \dots, \phi_{m}\}\) a set of linearly
-independant basis functions.
-{\it (The basis function representation is actually the SPDE representation.
-Say so and move this to the previous section.)}
 This defines a numerical integration scheme at nodes \(s_{i}\)
-with weights \(\alpha_{i}\), where the weight is the observed area represented
-by the node~(Figure~\ref{dual}), and yields the approximation,
+with weights \(\alpha_{i}\), where the weight is the observed area in
+\(\mathrm{dual}(s_{i})\), and yields the approximation,
 \begin{align*}
 \ell(\lambda) &\approx C - \sum_{i = 1}^{m} \alpha_{i}
 \exp\left[\sum_{j = 1}^{m} \psi_{j}\phi_{j}(s_{i})\right]
@@ -647,13 +580,26 @@ by the node~(Figure~\ref{dual}), and yields the approximation,
 \exp\left[\mathbf{A} \boldsymbol{\psi}\right]
 + \mathbf{y}' \mathbf{A} \boldsymbol{\psi}.
 \end{align*}
-This is equivalent to the likelihood of independent Poisson random variables
-with means \(\alpha_{i} \eta_{i}\) {\it (translate the confusing algebra from
-the appendix)}, and with observations \(y_{i} = 0\) at the nodes \(s_{i}\) and
-\(y_{i} = 1\) at the events \(x_{i}\). Thus, the SPDE approach, which can be
-easily fit in R-INLA, can be combined with a Poisson GLM to rapidly fit a LGCP
-model. There is no need to compute grid counts, only to define dummy points at
-the mesh nodes and construct a pseudodata vector \(\mathbf{y}\).
+We have introduced some simplyfying notation. The weight vector
+\begin{displaymath}
+\boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{m}, 0, \dots, 0)',
+\end{displaymath}
+contains the weight for each node and then \(n\) zeros corresponding to the
+events. \(\mathbf{y}\) is a pseudodata response vector with entries
+\(y_{i} = 0\) corresponding to the nodes \(s_{i}\) and \(y_{m+i} = 1\) to the
+events \(x_{i}\). \(\mathbf{A}\) is an \(m + n\) by \(m\) matrix where the
+first \(m\) rows are the barycentric coordinates of each node and the final
+\(n\) rows are the barycentric coordinates of each event.
+
+The rewritten log-likelihood is equivalent to the log-likelihood of
+independent Poisson random variables with means \(\alpha_{i} \eta_{i}\) and
+response vector \(\mathbf{y}\). The \(\alpha_{i}\) weights play the role of
+an offset. \(\eta_{i}\) is the intensity at the location of \(y_{i}\), which
+is being modeled by the GMRF. Thus, the SPDE approach, which can be easily
+implemented in R-INLA, can be combined hierarchically with a Poisson GLMM to
+rapidly fit a LGCP model. There is no need to compute grid counts, only to
+define dummy points at the mesh nodes and construct a pseudodata vector
+\(\mathbf{y}\).
 
 
 \subsection{Variable Sampling Effort}
@@ -829,13 +775,16 @@ Red dots represent pseudodata with values of 1 at the events.}
 \label{beimesh}
 \end{figure}
 
-The next step is to define the pseudodata and calculate the numerical
-integration weights. The pseudodata vector is
+The next step is to define the pseudodata, find the barycentric coordinate
+matrix \(\mathbf{A}\), and calculate the numerical integration weights. The
+pseudodata vector is
 \begin{displaymath}
 \mathbf{y} = (0, \dots, 0, 1, \dots, 1)'
 \end{displaymath}
 consisting of 2145 zeros corresponding to the mesh nodes and 3604 ones
-representing the events. The weight vector is
+representing the events. The first 2145 rows of \(\mathbf{A}\) are an
+identity matrix; the remaining rows are the barycentric coordinates of the
+events, which R-INLA calculates for us. The weight vector is
 \begin{displaymath}
 \boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{2145}, 0, \dots, 0)'.
 \end{displaymath}
@@ -844,14 +793,14 @@ node is a vertex, calculated by the \texttt{INLA} package. The zeros
 correspond to the 3604 events, which do not contribute to the numerical
 integration.
 
-{\it Talk about the \(\mathbf{A}\) matrix.}
-
 The final bit of setup is to combine the pseudodata, covariates at the nodes,
-and a node index variable into a data list for the \texttt{inla()} function.
+and a vector of node indices into a data list for the \texttt{inla()} function.
 This function is then called with arguments specifying a formula for the
 linear predictor, a Poisson family model (which defaults to a log link), the
 data list, the \(\mathbf{A}\) matrix, the priors for the coefficients, and the
-\(\boldsymbol{\alpha}\) vector as the exposure parameter. The \texttt{inla()}
+\(\boldsymbol{\alpha}\) vector as the exposure parameter. This function
+delivers the posterior marginal distribution of each parameter, latent
+variable, and any requested linear combinations of those. The \texttt{inla()}
 function takes about 90 seconds to fit the model on a midrange laptop.
 
 
