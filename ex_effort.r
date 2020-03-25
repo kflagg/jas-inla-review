@@ -89,8 +89,8 @@ Window(mesh_psp) <- mesh_win
 bei_spde <- inla.spde2.pcmatern(
   mesh = bei_mesh,
   alpha = 2,
-  prior.range = c(45, 0.5), # Pr(range < 45) = 0.5
-  prior.sigma = c(1, 0.5) # Pr(sd > 1) = 0.5
+  prior.range = c(5, 0.1), # Pr(range < 5) = 0.1
+  prior.sigma = c(2, 0.1) # Pr(sd > 2) = 0.1
 )
 
 # Set up a projection from the SPDE representation to a 400x200 grid.
@@ -198,7 +198,7 @@ lines_subsegs <- do.call(c, lapply(mesh_tris, function(x){
 
 pdf('figures/bei-effort_partition.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
-plot(bei_win, border = 'grey', main = 'Partition of the Observed Region')
+plot(mesh_psp, col = 'lightgrey', main = 'Partition of the Observed Region')
 for(i in seq_along(lines_subsegs)){
   plot(lines_subsegs[[i]], border = 'red', add = TRUE)
 }
