@@ -30,37 +30,37 @@
 %\newtheorem{notation}{Notation}
 
 \begin{document}
-
-{\Large\bf Progress this week}
-
-{\large\bf March 29, 2020}
-
-\begin{itemize}
-
-\item Added an abstract.
-
-\item Added some example LGCP applications to \ref{lgcp}.
-
-\item Rearranged \ref{methods} to clarify SPDE vs Simpson.
-
-\item Added the rest of the math and notation to \ref{methods} and
-\ref{application}.
-
-\item Added an explanation of the prior specification in \ref{beimodel} and
-refit the models with priors that better illustrate the prior selection
-choices.
-
-\item Added citations throughout.
-
-\end{itemize}
-
-\vfill
-
-\textbf{Previous word count:} 6872 \hfill \textbf{Current word count:} 7406
-
-\textbf{Previous page count:} 21 \hfill \textbf{Current page count:} 22.5
-
-\pagebreak
+% 
+% {\Large\bf Progress this week}
+% 
+% {\large\bf March 29, 2020}
+% 
+% \begin{itemize}
+% 
+% \item Added an abstract.
+% 
+% \item Added some example LGCP applications to \ref{lgcp}.
+% 
+% \item Rearranged \ref{methods} to clarify SPDE vs Simpson.
+% 
+% \item Added the rest of the math and notation to \ref{methods} and
+% \ref{application}.
+% 
+% \item Added an explanation of the prior specification in \ref{beimodel} and
+% refit the models with priors that better illustrate the prior selection
+% choices.
+% 
+% \item Added citations throughout.
+% 
+% \end{itemize}
+% 
+% \vfill
+% 
+% \textbf{Previous word count:} 6872 \hfill \textbf{Current word count:} 7406
+% 
+% \textbf{Previous page count:} 21 \hfill \textbf{Current page count:} 22.5
+% 
+% \pagebreak
 
 \articletype{REVIEW ARTICLE}% Specify the article type or omit as appropriate
 
@@ -75,17 +75,19 @@ choices.
 
 \begin{abstract}
 Spatial point process models are theoretically useful for mapping discrete
-events, such as plant or animal presence, across space. The computational
+events, such as plant or animal presence, across space; however, the computational
 complexity of fitting these models is often a barrier to their practical use.
 The log-Gaussian Cox process (LGCP) is a point process driven by a latent
-Gaussian field, and recent advances have made it practical to fit Bayesian LGCP
-models using the integrated nested Laplace approximation (INLA). These advances
-include the stochastic partial differential equations (SPDE) approach to
+Gaussian field, and recent advances have made it possible to fit Bayesian LGCP
+models using approximate methods that facilitate rapid computation. These advances
+include the integrated nested Laplace approximation (INLA) with 
+ stochastic partial differential equations (SPDE) approach to
 sparely approximate the Gaussian field and an extension using pseudodata with
 a Poisson response. To help link the theoretical results to statistical
-practice, we provide an overview of these methods and then illustrate their
-implementation using freely available data. The examples include both a
-censused dataset and an incomplete data situation, and our well-commented R
+practice, we provide an overview of INLA for point process data 
+and then illustrate their implementation using freely available data. 
+The analyzed datasets include both a completely observed spatial field
+ and an incomplete data situation. Our well-commented R
 code is shared in the online supplement. Our intent is to make these methods
 accessible to the practitioner of spatial statistics without requiring deep
 knowledge of point process theory.
@@ -134,9 +136,8 @@ Gaussian latent fields and allowing for non-Gaussian responses~\cite{rueetal}.
 This setting includes random effects models, generalized linear models, spline
 models, dynamic models, spatial and spatiotemporal models, among others.
 A non-Gaussian response in one of these models typically results in the
-posterior having no closed form. The standard solution is MCMC due to ease of
-implementation and because the simulation error can always be made smaller by
-running the sampler for more iterations. However, INLA is much faster; Rue,
+posterior having no closed form. The standard solution for analyzing these
+data is MCMC. However, INLA is much faster; Rue,
 Martino, and Chopin showed that INLA can find accurate and precise
 approximations in minutes or seconds when MCMC would take days or hours to
 achieve similar precision.
@@ -190,7 +191,7 @@ are sampled. The subregion situation commonly occurs when quadrat sampling is
 employed or when the domain is partitioned into areal regions and only certain
 regions can be surveyed. The random subset situation is best known from
 distance sampling, where a set of line transects are traversed and all events
-detected near the transects are recorded. The events are assumed to be detecded
+detected near the transects are recorded. The events are assumed to be detected
 with a probability depending on the distance from the transect. Hybrids of the
 subregion and random subset situation are possible when there is a hard limit
 to the distance at which events can be observed, for example because some
@@ -202,15 +203,13 @@ fitting of LGCP models to such data.
 This article provides a review of recent advances in the fitting of spatial
 LGCP models via INLA, including a finite element approach for dimension
 reduction, a likelihood factorization that avoids gridding, and incorporation
-of sampling effort or false negatives. The examples use a freely-available
-datasets and the R code is provided in the supplementary materials.
-
-The remainder of Section~\ref{intro} provides an overview of spatial LGCP
+of sampling effort or false negatives. The examples use freely-available
+datasets and the R code is provided in the supplementary materials. The remainder of
+Section~\ref{into} provides an overview of spatial LGCP
 models and INLA. Section~\ref{methods} describes the methodology developed to
 fit LGCP models in INLA, and Section~\ref{application} presents example
 analyses of real-world data. Finally, Section~\ref{conclusion} presents
 concluding remarks.
-
 
 \subsection{Log-Gaussian Cox Process}
 \label{lgcp}
@@ -223,7 +222,7 @@ spatial LGCP.
 A spatial point process generates a random set of events (points) in space.
 The process is characterized primarily by its intensity function
 \(\lambda(u)\), which gives the local mean number of events per unit area at
-any point in space. The instensity function is nonnegative and defined on a
+any point in space. The intensity function is nonnegative and defined on a
 domain \(\mathcal{D} \subset \mathbb{R}^{2}\). The point process is observed
 in a bounded window \(\mathcal{R} \subset \mathcal{D}\). The point process is
 denoted \(\mathbf{X}\), and its realizations are \(\mathbf{x} = \{x_{1},
@@ -249,9 +248,8 @@ The distribution function of a Poisson process is
 as given in Cressie (1993) \cite{cressie}. This can be extended to include
 further parameters used to define \(\lambda\), most commonly coefficients
 to construct a log-linear model with covariates, or a polynomial or spline
-function of the spatial coordinates.
-
-In a Poisson process, the intensity function is a fixed parameter (or a
+function of the spatial coordinates. In a Poisson process, the intensity 
+function is a fixed parameter (or a
 deterministic function of fixed parameters and covariates). In applications of
 spatial point process models, this is often too simplistic because spatial
 heterogeneity may be driven by other random processes with their own parameters
@@ -265,8 +263,8 @@ processes are commonly used to model clustering of events, such as in the
 classic Neyman-Scott process where cluster centers are generated by another
 Poisson process~\cite{neymanscott}. Another example is where the intensity is
 a Dirichlet process mixture~\cite{taddy}. In situations where the intensity
-function is less structred but exhibits spatial autocorrelation, the Cox
-process can incorporate a geostatistical process. The log-Gaussian Cox process
+function is less structured but exhibits spatial autocorrelation, the Cox
+process can incorporate a geostatistical process; the log-Gaussian Cox process
 is an example of this.
 
 The LGCP uses a log-linear model for the intensity
@@ -275,9 +273,8 @@ The LGCP uses a log-linear model for the intensity
 = \mathbf{z}(u)' \boldsymbol{\beta} + \mathbf{e}(u),
 \end{displaymath}
 where \(\mathbf{e}\) is a Gaussian process with mean 0 and covariance function
-\(C(u, v)\).
-
-Where the spatial Poisson process has a (stochastically) fixed intensity to be
+\(C(u, v)\). Where the spatial Poisson process has a (stochastically) 
+fixed intensity to be
 estimated from data, the spatial LGCP induces a hierarchical model where the
 intensity function is itself a random process to be predicted.
 
@@ -286,7 +283,7 @@ populations (Yuan et. al., 2017), landslides (Lombardo et. al., 2018), fMRI
 data (Samartsidis et. al., 2019), and disease mapping (Konstantinoudis et.
 al., 2020) to list only a few
 applications~\cite{yuanetal,lombardoetal,samartsidisetal,konstantinoudisetal}.
-Badeley et. al.~(2005) and M\"{o}ller and Waagepetersen~(2007) present model
+Baddeley et. al.~(2005) and M\"{o}ller and Waagepetersen~(2007) present model
 checking tools for LGCP and other spatial point process
 models~\cite{baddeleyresiduals,moellerwaagepetersen}.
 
@@ -322,7 +319,7 @@ non-Gaussian model parameters. The posterior distribution is
 {\int \pi\left(\mathbf{y}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)
 \mathrm{d}\mathbf{y}},
 \end{displaymath}
-but the integral is not available in clossed form, so the posterior must be
+but the integral is not available in closed form, so the posterior must be
 either sampled from or approximated. The INLA approach is to first find a
 Laplace approximation of \(\pi\left(\boldsymbol{\theta} | \mathbf{y}\right)\).
 Then, that result and a further Laplace expansion are used to approximate each
@@ -340,7 +337,7 @@ The Laplace approximation is applied the to denominator, taking a second-order
 Taylor expansion of
 \(\log\left[\pi\left(\boldsymbol{\xi} | \mathbf{y}, \boldsymbol{\theta}\right)\right]\)
 around the posterior mode of \(\boldsymbol{\xi}\) and then exponentiating. The
-result is a Gaussian aproximation of
+result is a Gaussian approximation of
 \(\pi\left(\boldsymbol{\xi} | \mathbf{y}, \boldsymbol{\theta}\right)\). Then
 the approximate posterior marginal distribution of \(\boldsymbol{\theta}\) is
 \begin{displaymath}
@@ -363,12 +360,12 @@ where the \(-i\) notation indicates that the \(i\)th element is omitted from
 the vector. The Laplace approximation of this denominator is still complicated,
 but further approximations make it tractable. The takeaway is that, by
 handling the Gaussian latent variables one at a time, computation can be made
-considerably simpler compared to methods that approximate the joint poster.
+considerably simpler compared to methods that approximate the joint posterior.
 
 These approximations, as well as fast numerical integration methods and
 numerical optimization to find the posterior modes, are packaged in the INLA
 software and R-INLA library. The software offerings are stable and documented
-to the point that the applied statistican can use them without knowing all of
+to the point that the applied statistician can use them without knowing all of
 the computational details.
 
 
@@ -378,7 +375,7 @@ the computational details.
 
 INLA provides an efficient computational framework for fitting Bayesian models
 with latent Gaussian variables. On top of this framework, several tools are
-built to further simplify the fitting of spatial LGCP models. The stochastic
+built to further simplify fitting spatial LGCP models. The stochastic
 partial differential equation (SPDE) approach provides dimension reduction for
 the spatial GP~\cite{lindgrenetal}. The SPDE approach employs a numerical
 integration scheme which can also be used to approximate the LGCP likelihood
@@ -410,7 +407,7 @@ Here, \(\mathbf{W}\) is a Gaussian white noise process with variance 1, and
 \(\Delta\) is the Laplacian operator. The stationary solution
 \(\mathbf{e}\) is a Gaussian field having a Mat\'{e}rn covariance
 function with precision (inverse variance) \(\tau\),  scaling parameter
-\(\kappa\) (inversly proportional to the range effective), and smoothness
+\(\kappa\) (inversely proportional to the effective range), and smoothness
 parameter \(\nu\).
 
 Lindgren, Rue, and Lindstr\"{o}m~(2011) investigate the limit as \(\nu \to 0\) for
@@ -426,7 +423,19 @@ directly connected by edges in the triangulation.
 The core of the SPDE approach is the finite-element GMRF representation of the
 GP. The idea is to model the GP at the nodes (vertices) of a triangular mesh.
 Values at points other than the nodes are found by linear interpolation,
-resulting in a surface constructed from triangular faces. Figure~\ref{surface}
+resulting in a surface constructed from triangular faces.
+
+\begin{figure}[h!]
+\subfloat[Example Gaussian process realization.]
+{\includegraphics[width=0.4\textwidth]{figures/surface.png}}
+\subfloat[Finite element approximation.]
+{\includegraphics[width=0.4\textwidth]{figures/interp.png}}
+
+\caption{A realization of a spatial Gaussian process and an
+approximation of that realization over a triangular mesh.}
+\label{surface}
+\end{figure}
+Figure~\ref{surface}
 shows an example. The linear interpolation uses the barycentric coordinate
 system~(Figure~\ref{triangle}). The mathematical form of this interpolation is
 very simple; for a point \(u\) with barycentric coordinates \((\alpha, \beta,
@@ -439,26 +448,15 @@ approximation is simply
 This technique can approximate complicated surfaces as relatively
 low-dimensional vectors via a piecewise-linear approximation.
 
-\begin{figure}[p]
 
-\subfloat[Example Gaussian process realization.]
-{\includegraphics[width=0.5\textwidth]{figures/surface.png}}
-\subfloat[Finite element approximation.]
-{\includegraphics[width=0.5\textwidth]{figures/interp.png}}
-
-\caption{A realization of a spatial Gaussian process and an
-approximation of that realization over a triangular mesh.}
-\label{surface}
-\end{figure}
-
-\begin{figure}[p]\centering
+\begin{figure}[h!]\centering
 
 \subfloat[A point \(u\) in a triangle with vertices \(s_{1}, s_{2}, s_{3}\).]
-{\includegraphics[width=0.4\textwidth]{figures/triangle.png}}
+{\includegraphics[width=0.3\textwidth]{figures/triangle.png}}
 \hspace{2em}
 \subfloat[A point \((\alpha, \beta, \gamma)\) in a simplex with vertices
 \((1, 0, 0), (0, 1, 0), (0, 0, 1)\). ]
-{\includegraphics[width=0.4\textwidth]{figures/simplex.png}}
+{\includegraphics[width=0.3\textwidth]{figures/simplex.png}}
 
 \caption{An illustration of the linear transformation from a mesh triangle to
 the 2-simplex. The transformation is defined from \(\mathbb{R}^{2}\) to
@@ -470,7 +468,7 @@ coordinates have the property that \(\alpha + \beta + \gamma = 1\).}
 \end{figure}
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.5\textwidth]{figures/dual.pdf}
+\includegraphics[width=0.3\textwidth]{figures/dual.pdf}
 \caption{An illustration of the nodes (dots) and the weighting scheme for one
 node (large dot). In the SPDE approach, this node represents it dual region
 (shaded), so its weight is proportional to the shaded area. The dual region is
@@ -492,7 +490,7 @@ in a triangle containing it. The finite element representation has the form
 \end{displaymath}
 The vector \(\boldsymbol{\psi} = (\psi_{1}, \dots, \psi_{m})'\) is a
 realization of the GMRF, so it is a multivariate Gaussian vector comprised of
-the values of the laten field at the nodes.
+the values of the latent field at the nodes.
 
 The \(\psi_{i}\) values are used to compute averages and for numerical
 integration, in which cases they are weighted by the area represented by the
@@ -532,14 +530,10 @@ the fact that information about where events did \emph{not} occur is both
 important and often overlooked. There have been many proposed methods to
 account for regions that were observed to contain no events (in contrast to
 unobserved regions where it is unknown if any events are present). Many of
-these methods involve imputation of dummy points or discretization. In the
-world of maximum likelihood, perhaps the most well-developed of these use
+these methods involve imputation of dummy points or discretization. With maximum likelihood, perhaps the most well-developed of these use
 approximations based on Poisson regression on presence/absence information in
-small disjoint regions~\cite{bermanturner,baddeleyturner}.
-% What is the state-of-the-art for dummy point selection? The papers I'm
-% familiar with use lattices or SRSs. Space-filling approaches?
-
-Another alternative, which is probably the most popular approach to Bayesian
+small disjoint regions~\cite{bermanturner,baddeleyturner}. Another alternative, 
+which is probably the most popular approach to Bayesian
 fitting of LGCP models but is also common in frequentist analyses, is to grid
 the domain and model the induced Poisson counts. It has long been understood
 that results are sensitive to the discretization scheme~\cite{brixmoeller}.
@@ -552,7 +546,7 @@ wasteful~\cite{simpsonetal}.
 % Tradeoff: small grid cells for spatial precision vs small number of zeros
 % for computational speed.
 
-Simpson et. al. took LGCP inference ``off grid'' by intoducing a
+Simpson et. al. took LGCP inference ``off grid'' by introducing a
 computationally-efficient approximation to the Poisson process likelihood that
 requires the intensity function only to be evaluated at the locations of
 observed events and at the nodes of a mesh. Thus, the SPDE approach can be
@@ -588,7 +582,7 @@ with weights \(\alpha_{i}\), where the weight is the observed area in
 \exp\left[\mathbf{A} \boldsymbol{\psi}\right]
 + \mathbf{y}' \mathbf{A} \boldsymbol{\psi}.
 \end{align*}
-We have introduced some simplyfying notation. The weight vector
+We have introduced some simplifying notation. The weight vector
 \begin{displaymath}
 \boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{m}, 0, \dots, 0)',
 \end{displaymath}
@@ -627,7 +621,7 @@ cover~\cite{linkbarker,bucklandetal,mackenzieetal}.
 
 The idea of the incompletely-observed domain has been around for some time.
 Brix and M\"{o}ller (2001) fit an LGCP model to weed data observed in
-rectangular frames and used a Metropolis-adjusted Langevin algorthim
+rectangular frames and used a Metropolis-adjusted Langevin algorithm
 to predict the intensity outside of the observed frames~\cite{brixmoeller}.
 Chakraborty et. al (2011) discuss nonhomogeneous Poisson process modeling as
 a richer alternative to ecological presence/absence models and describe their
@@ -636,14 +630,14 @@ region from being fully observed; they fit their model by aggregating the
 point pattern to counts in grid cells and using MCMC~\cite{chakrabortyetal}.
 Gabriel et. al. (2016, 2017) derived a relationship between the Kriging
 predictor and the LGCP to predict the LGCP intensity across an unobserved
-subset of the region of interest~\cite{gabrieletal2016, gabrieletal2017}.
+subset of the region of interest~\cite{gabrieletal2016, gabrieletal2017}. 
+Flagg et. al. used a Dirichlet Process to indentify hot spots with 
+unexploded ordnances \cite{flagg2020}.
 
 With INLA, the SPDE approach, and the ``off grid'' approximation
 facilitating the routine fitting of LGCP models, there is now renewed interest
 in accounting for variable sampling effort in spatial point process
-models~\cite{simpsonetal,yuanetal}.
-
-Sampling effort is accounted for using the theory of thinned point processes.
+models~\cite{simpsonetal,yuanetal}. Sampling effort is accounted for using the theory of thinned point processes.
 Thinning refers to the events of one point process being kept or discarded
 probabilistically. Let \(\lambda(u)\) be the intensity of the parent process,
 and let an event \(x=u\) (if it exists) be observed with probability
@@ -690,14 +684,11 @@ function~\cite{yuanetal}.
 %  {\bf Application of your Methodology:} Present some applications of the reviewed methods to some recent data in this or more sections. Also note: Simulation studies can be presented as a sub-section in this section or in a new standalone section.
 
 
-\subsection{Beilschmiedia Pendula Lauraceae Dataset}
-\label{beianalysis}
-
 For an example analysis of real-world data, we consider the locations of
 \(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in a 1000~meter by
 500~meter plot in a tropical rainforest on Barro Colorado Island,
 Panama~\cite{moellerwaagepetersen}. This dataset has appeared as an example
-in several articles, including the origial INLA paper where the events were
+in several articles, including the original INLA paper where the events were
 aggregated to grid cell counts. We present an analysis that does not use
 aggregation.
 
@@ -706,6 +697,26 @@ package~\cite{spatstat}. The point pattern is accompanied by elevation and
 gradient covariates measured on a square lattice with 5 m spacing. The point
 pattern exhibits inhomogeneity which appears to be associated with elevation
 and the elevation gradient~(Figure~\ref{bei}).
+
+
+\begin{figure}[h!]
+\centering
+\subfloat[Locations of trees (events).]
+{\includegraphics[width=0.75\textwidth]{figures/bei.pdf}}
+
+\subfloat[Elevation in meters, with events overlaid.]
+{\includegraphics[width=0.75\textwidth]{figures/bei_elev.pdf}}
+
+\subfloat[Magnitude of the elevation gradient, with events overlaid.]
+{\includegraphics[width=0.75\textwidth]{figures/bei_grad.pdf}}
+
+\caption{Plots of the event and covariate data for the Beilschmiedia Pendula Lauraceae data
+analysis. The study region is 1000 m by 500 m.}
+\label{bei}
+\end{figure}
+
+\subsection{Full Beilschmiedia Pendula Lauraceae Dataset}
+\label{beianalysis}
 
 
 \subsubsection{Model Specification}
@@ -739,22 +750,6 @@ is provided in terms of \(\sigma\) and \(\rho\). We set
 a log-scale random effect, and \(\mathrm{Pr}(\rho < 5) = 0.1\) similar to the
 prior used by M\"{o}ller and Waagepetersen~\cite{moellerwaagepetersen}.
 
-\begin{figure}[p]
-
-\subfloat[Locations of trees (events).]
-{\includegraphics[width=0.9\textwidth]{figures/bei.pdf}}
-
-\subfloat[Elevation in meters, with events overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/bei_elev.pdf}}
-
-\subfloat[Magnitude of the elevation gradient, with events overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/bei_grad.pdf}}
-
-\caption{Plots of the event and covariate data for the real-world data
-analysis. The study region is 1000 m by 500 m.}
-\label{bei}
-\end{figure}
-
 
 \subsubsection{Fitting in R-INLA}
 \label{beifitting}
@@ -771,13 +766,14 @@ triangulation with a maximum edge length of 25~m. The resulting mesh has
 \(m = 2145\) nodes \(s_{1},  \dots, s_{2145}\) and 4096
 triangles~(Figure~\ref{beimesh}). We used linear interpolation to approximate
 the covariates \(z_{1}(s_{i})\) and \(z_{2}(s_{i})\) at each node. After
-creating the mesh, we specifiy the priors for the covariance parameters and
+creating the mesh, we specify the priors for the covariance parameters and
 \texttt{INLA} can initialize an object to represent the covariance structure
 on the mesh.
 
 \begin{figure}[t]
-\includegraphics[width=\textwidth]{figures/bei_mesh.pdf}
-\caption{Triangular mesh with pseudodata overlaid for the real-world data
+\centering
+\includegraphics[width=.7\textwidth]{figures/bei_mesh.pdf}
+\caption{Triangular mesh with pseudodata overlaid for the Beilschmiedia Pendula Lauraceae data
 analysis. Black dots represent pseudodata with values of 0 at the mesh nodes.
 Red dots represent pseudodata with values of 1 at the events.}
 \label{beimesh}
@@ -818,7 +814,7 @@ function takes about 90 seconds to fit the model on a midrange laptop.
 The posterior marginals provide evidence that both higher elevation and larger
 gradient are associated with higher intensity. The elevation coefficent
 \(\beta_{1}\) has a posterior mean of 0.0328 with a central 95\% interval of
-\((0.0112, 0.0547)\), and the grandient coefficient \(\beta_{2}\) has posterior
+\((0.0112, 0.0547)\), and the gradient coefficient \(\beta_{2}\) has posterior
 mean 4.44 with 95\% interval \((2.42, 6.46)\). The posterior mean of the
 intercept \(\beta_{0}\) is \(-10.9\) with 95\% interval of \((-14.2, -7.63)\).
 Mapped across space, the posterior mean of the fixed effect component of the
@@ -848,7 +844,7 @@ range parameter \(\rho\) has a posterior mean of 176 with a 95\% interval of
 {\includegraphics[width=\textwidth]{figures/bei_mean.pdf}}
 
 \caption{Posterior mean surfaces of the fixed effects component and the
-spatial GP from the real-world data analysis.}
+spatial GP from the Beilschmiedia Pendula Lauraceae data analysis.}
 \label{beimean}
 \end{figure}
 
@@ -863,10 +859,9 @@ means of the intercept, coefficients, and GP.]
 {\includegraphics[width=\textwidth]{figures/bei_residuals.pdf}}
 
 \caption{Posterior mean intensity function and Pearson residuals calculated
-using the posterior mean intensity from the real-world data analysis.}
+using the posterior mean intensity from the Beilschmiedia Pendula Lauraceae data analysis.}
 \label{beiintensity}
 \end{figure}
-
 
 \subsubsection{Model Checking}
 \label{beiresid}
@@ -891,9 +886,9 @@ The residuals have small magnitude in the central region and on the eastern
 edge where there are no observed events and low mean posterior intensity. This
 is not surprising because it is not possible to see much variation in counts
 in that region. There are a few large-magnitude positive residuals (about 4)
-suggetsing there is some clustering not described by the model. Elsewhere, the
+suggesting there is some clustering not described by the model. Elsewhere, the
 residuals appear random with no obvious spatial patterns. We repeated the
-residual analysis with several grid cell sizes and saw the same charecteristics
+residual analysis with several grid cell sizes and saw the same characteristics
 each time.
 
 
@@ -942,17 +937,17 @@ The prior distributions are again \(\beta_{0}\), \(\beta_{1}\), and
 \(\beta_{2}\) independent \(\mathrm{N}(0, \infty)\),
 \(\mathrm{Pr}(\sigma > 2) = 0.1\), and \(\mathrm{Pr}(\rho < 5) = 0.1\).
 
-\begin{figure}[p]
-
+\begin{figure}[h!]
+\centering
 \subfloat[Locations of observed trees (events).]
-{\includegraphics[width=0.9\textwidth]{figures/bei-effort.pdf}}
+{\includegraphics[width=0.8\textwidth]{figures/bei-effort.pdf}}
 
 \subfloat[Elevation in meters, with observed region and events overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/bei-effort_elev.pdf}}
+{\includegraphics[width=0.8\textwidth]{figures/bei-effort_elev.pdf}}
 
 \subfloat[Magnitude of the elevation gradient, with observed region and events
 overlaid.]
-{\includegraphics[width=0.9\textwidth]{figures/bei-effort_grad.pdf}}
+{\includegraphics[width=0.8\textwidth]{figures/bei-effort_grad.pdf}}
 
 \caption{Plots of the event and covariate data for the simulated transect
 survey. The study region is 1000 m by 500 m.}
@@ -963,7 +958,7 @@ survey. The study region is 1000 m by 500 m.}
 \subsubsection{Fitting in R-INLA}
 \label{xsectfitting}
 
-\begin{figure}[p]
+\begin{figure}[h!]
 \includegraphics[width=\textwidth]{figures/bei-effort_mesh.pdf}
 \caption{Triangular mesh with observed region and events overlaid for the
 simulated transect data analysis. Black dots represent pseudodata with values
@@ -972,7 +967,7 @@ observed events.}
 \label{effortmesh}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[h!]
 \includegraphics[width=\textwidth]{figures/bei-effort_partition.pdf}
 \caption{Partition of the observed region created by intersection with each
 mesh triangle.}
@@ -1015,10 +1010,6 @@ gets the most weight while the farthest node get the least weight. Finally,
 the alpha value for each node is computed by summing the weights contributed
 by each shard to that node.
 
-{\it Is there a better (or more formal) term than ``shard''? It has an
-intuitive meaning to me, but it feels weird to create nonstandard terminology
-for use in exactly one paragraph. ---Kenny}
-
 Finally, the pseudodata, covariates, and a node index are combined into a data
 list and the \texttt{inla()} function is called to fit the model. The model
 takes about 65 seconds to fit on our laptop computer.
@@ -1028,7 +1019,7 @@ takes about 65 seconds to fit on our laptop computer.
 \label{xsectresults}
 
 The fixed effect posterior marginals give evidence of relationships between
-the intensity and both elevation and grandient. The elevation coefficient
+the intensity and both elevation and gradient. The elevation coefficient
 \(\beta_{1}\) has a posterior mean of 0.0444 and a central 95\% posterior
 interval of \((0.00686, 0.0836)\). The gradient coefficient \(\beta_{2}\) has
 a posterior mean of 6.21 and a 95\% interval of \((3.24, 9.20)\). The
@@ -1041,12 +1032,12 @@ As before, there is some additional spatial structure described by the
 GP~(Figure~\ref{effortmean},~bottom). The prediction surface has low values
 in the center and north where no events were observed, hotspots where events
 are concentrated along the transects, and smooth transitions across the
-unsurved regions between transects. The standard deviation \(\sigma\) has a
+unsurveyed regions between transects. The standard deviation \(\sigma\) has a
 posterior mean of 1.27 with a central 95\% posterior interval of
 \((0.956, 1.70)\). The range \(\rho\) has a posterior mean of 232 and
 95\% interval of \((161, 340)\).
 
-\begin{figure}[p]
+\begin{figure}[h!]
 \subfloat[Posterior mean surface for the fixed effects.]
 {\includegraphics[width=\textwidth]{figures/bei-effort_betas.pdf}}
 
@@ -1058,7 +1049,7 @@ spatial GP from the simulated transect data analysis.}
 \label{effortmean}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[h!]
 \subfloat[Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
 means of the intercept, coefficients, and GP.]
@@ -1067,7 +1058,7 @@ means of the intercept, coefficients, and GP.]
 \subfloat[Pearson residuals calculated on a grid.]
 {\includegraphics[width=\textwidth]{figures/bei-effort_residuals.pdf}}
 
-\caption{Posterior mean intensity function and Pearson resuiduals calculated
+\caption{Posterior mean intensity function and Pearson residuals calculated
 using the posterior mean intensity from the simulated transect data analysis.}
 \label{effortintensity}
 \end{figure}
@@ -1097,9 +1088,7 @@ obvious spatial patterns.
 The SPDE approach, Poisson factorization, INLA, and the R-INLA software make
 it practical to fit Bayesian spatial LGCP models to real data. It is possible
 to make useful maps of spatial predictions with only the pointwise posterior
-marginals.
-
-The example analyses in this article, using a full real-word dataset and
+marginals. The example analyses in this article, using a full real-word dataset and
 simulated variable sampling effort applied to the same dataset, show that these
 tools can facilitate accurate inference from data collected through sampling.
 Both models yielded similar posterior marginal distributions for the
