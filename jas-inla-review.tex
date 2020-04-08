@@ -30,37 +30,6 @@
 %\newtheorem{notation}{Notation}
 
 \begin{document}
-% 
-% {\Large\bf Progress this week}
-% 
-% {\large\bf March 29, 2020}
-% 
-% \begin{itemize}
-% 
-% \item Added an abstract.
-% 
-% \item Added some example LGCP applications to \ref{lgcp}.
-% 
-% \item Rearranged \ref{methods} to clarify SPDE vs Simpson.
-% 
-% \item Added the rest of the math and notation to \ref{methods} and
-% \ref{application}.
-% 
-% \item Added an explanation of the prior specification in \ref{beimodel} and
-% refit the models with priors that better illustrate the prior selection
-% choices.
-% 
-% \item Added citations throughout.
-% 
-% \end{itemize}
-% 
-% \vfill
-% 
-% \textbf{Previous word count:} 6872 \hfill \textbf{Current word count:} 7406
-% 
-% \textbf{Previous page count:} 21 \hfill \textbf{Current page count:} 22.5
-% 
-% \pagebreak
 
 \articletype{REVIEW ARTICLE}% Specify the article type or omit as appropriate
 
@@ -80,8 +49,8 @@ complexity of fitting these models is often a barrier to their practical use.
 The log-Gaussian Cox process (LGCP) is a point process driven by a latent
 Gaussian field, and recent advances have made it possible to fit Bayesian LGCP
 models using approximate methods that facilitate rapid computation. These advances
-include the integrated nested Laplace approximation (INLA) with 
- stochastic partial differential equations (SPDE) approach to
+include the integrated nested Laplace approximation (INLA) with a
+stochastic partial differential equations (SPDE) approach to
 sparely approximate the Gaussian field and an extension using pseudodata with
 a Poisson response. To help link the theoretical results to statistical
 practice, we provide an overview of INLA for point process data 
@@ -100,9 +69,6 @@ Bayesian hierarchical model, INLA, spatial prediction, log-Gaussian Cox process,
 
 \section{Introduction}
 \label{intro}
-%  {\bf Introduction:} Please introduce one or more current statistical research methods that have been widely used by other discipline(s) in the Introduction section or divide the discussion into two or more subsections within this Introduction section.
-
-% More introduction, define point process terms.
 
 Statistical methods for spatial prediction result in a high-dimensional
 inference problem that can present computational challenges, particularly for
@@ -141,19 +107,6 @@ data is MCMC. However, INLA is much faster; Rue,
 Martino, and Chopin showed that INLA can find accurate and precise
 approximations in minutes or seconds when MCMC would take days or hours to
 achieve similar precision.
-% The paper also discuss VB and similar methods, identify limitations in
-% applicability, point out bias in posterior variance that scales with the
-% number of latent variables.
-% Illustrates how to compute model comparison criteria and predictions.
-% LGCP example using \texttt{bei} gridded to a 200 by 100 lattice,
-% resulting in 40003 latent Gaussian variables.
-% LGCP took 4 hours to fit, paper did not include MCMC results on full
-% resolution lattice for comparison due to time.
-% INLA can be further sped up with more recent advancements
-
-% Kenny observation about terminology:
-%   accuracy ~ convergeance
-%   precision ~ number of iterations
 
 Development of INLA has made accurate approximate model fitting considerably
 more feasible for a particular class of log-Gaussian Cox process (LGCP)
@@ -175,11 +128,6 @@ Gibbs processes, Markov processes, point process densities, or the Papangelou
 conditional intensity function. For readers interested in the general spatial
 point process context in which the LGCP originates, we recommend other
 references~\cite{moellerwaagepetersen, digglepoint, cressie}.
-
-%Much recent work in point process modeling involves spatiotemporal models,
-%which are easily implemented in INLA by allowing the parameters of a spatial
-%point process model to vary over time. To keep the focus on the spatial
-%aspects, we do not discuss spatiotemporal models.
 
 Recently, there has been renewed interest in fitting LGCP models to
 incompletely-observed point patterns, known in the point process literature as
@@ -205,7 +153,7 @@ LGCP models via INLA, including a finite element approach for dimension
 reduction, a likelihood factorization that avoids gridding, and incorporation
 of sampling effort or false negatives. The examples use freely-available
 datasets and the R code is provided in the supplementary materials. The remainder of
-Section~\ref{into} provides an overview of spatial LGCP
+Section~\ref{intro} provides an overview of spatial LGCP
 models and INLA. Section~\ref{methods} describes the methodology developed to
 fit LGCP models in INLA, and Section~\ref{application} presents example
 analyses of real-world data. Finally, Section~\ref{conclusion} presents
@@ -240,11 +188,11 @@ independent and identically distributed with probability density
 \(\lambda(u) / \int_{\mathcal{B}} \lambda(u)\mathrm{d}u\).
 \end{enumerate}
 The distribution function of a Poisson process is
-\begin{displaymath}
+\begin{equation}
 \pi(\mathbf{X}|\lambda)
-= \frac{\exp\left[-\int_{\mathcal{R}} \lambda(u) \mathrm{d}u\right]}
-{n!} \prod_{x \in \mathbf{X}} \lambda(x)
-\end{displaymath}
+= \exp\left[-\int_{\mathcal{R}} \lambda(u) \mathrm{d}u\right] / n!
+\prod_{x \in \mathbf{X}} \lambda(x)
+\end{equation}
 as given in Cressie (1993) \cite{cressie}. This can be extended to include
 further parameters used to define \(\lambda\), most commonly coefficients
 to construct a log-linear model with covariates, or a polynomial or spline
@@ -262,16 +210,16 @@ Poisson process properties, but the intensity function can take any form. Cox
 processes are commonly used to model clustering of events, such as in the
 classic Neyman-Scott process where cluster centers are generated by another
 Poisson process~\cite{neymanscott}. Another example is where the intensity is
-a Dirichlet process mixture~\cite{taddy}. In situations where the intensity
+a Dirichlet process mixture~\cite{taddy,flagg2020}. In situations where the intensity
 function is less structured but exhibits spatial autocorrelation, the Cox
 process can incorporate a geostatistical process; the log-Gaussian Cox process
 is an example of this.
 
 The LGCP uses a log-linear model for the intensity
-\begin{displaymath}
+\begin{equation}
 \log\lambda(u) = \boldsymbol{\Psi}(u)
 = \mathbf{z}(u)' \boldsymbol{\beta} + \mathbf{e}(u),
-\end{displaymath}
+\end{equation}
 where \(\mathbf{e}\) is a Gaussian process with mean 0 and covariance function
 \(C(u, v)\). Where the spatial Poisson process has a (stochastically) 
 fixed intensity to be
@@ -300,7 +248,7 @@ with temporal and/or spatial dependence. Such models commonly include many
 Gaussian latent variables or parameters with Gaussian priors and relatively
 few non-Gaussian parameters. The INLA approach makes repeated use of Laplace
 expansion, numerical integration, and numerical search. The method has
-established usefulness for LGCP~\cite{illianetal}. It is readily implemented
+established usefulness for the LGCP~\cite{illianetal}. It is readily implemented
 using the standalone INLA software or in R via the R-INLA
 package~\cite{inlar}.
 
@@ -313,12 +261,12 @@ Gaussian variables in the model, including both parameters with Gaussian
 priors, and latent Gaussian variables such as random effects or values of a
 Gaussian field to be predicted. Let \(\boldsymbol{\theta}\) be a vector of all
 non-Gaussian model parameters. The posterior distribution is
-\begin{displaymath}
+\begin{equation}
 \pi\left(\boldsymbol{\xi}, \boldsymbol{\theta}| \mathbf{y}\right)
 = \frac{\pi\left(\mathbf{y}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)}
 {\int \pi\left(\mathbf{y}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)
-\mathrm{d}\mathbf{y}},
-\end{displaymath}
+\mathrm{d}\mathbf{y}}
+\end{equation}
 but the integral is not available in closed form, so the posterior must be
 either sampled from or approximated. The INLA approach is to first find a
 Laplace approximation of \(\pi\left(\boldsymbol{\theta} | \mathbf{y}\right)\).
@@ -328,11 +276,11 @@ is the \(i\)th latent Gaussian variable in \(\boldsymbol{\xi}\).
 
 The derivation begins by invoking the definition of conditional probability,
 rewriting
-\begin{displaymath}
+\begin{equation}
 \pi\left(\boldsymbol{\theta} | \mathbf{y}\right)
 \propto \frac{\pi\left(\mathbf{y}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)}
 {\pi\left(\boldsymbol{\xi} | \mathbf{y}, \boldsymbol{\theta}\right)}.
-\end{displaymath}
+\end{equation}
 The Laplace approximation is applied the to denominator, taking a second-order
 Taylor expansion of
 \(\log\left[\pi\left(\boldsymbol{\xi} | \mathbf{y}, \boldsymbol{\theta}\right)\right]\)
@@ -340,22 +288,22 @@ around the posterior mode of \(\boldsymbol{\xi}\) and then exponentiating. The
 result is a Gaussian approximation of
 \(\pi\left(\boldsymbol{\xi} | \mathbf{y}, \boldsymbol{\theta}\right)\). Then
 the approximate posterior marginal distribution of \(\boldsymbol{\theta}\) is
-\begin{displaymath}
+\begin{equation}
 \tilde{\pi}\left(\boldsymbol{\theta} | \mathbf{y}\right)
 \propto \left.\frac{\pi\left(\mathbf{y}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)}
 {\pi_{G}\left(\boldsymbol{\xi} | \mathbf{y}, \boldsymbol{\theta}\right)}
 \right|_{\boldsymbol{\xi}=\boldsymbol{\xi}^{*}}
-\end{displaymath}
+\end{equation}
 with \(\boldsymbol{\xi}^{*}\) denoting the posterior mode of
 \(\boldsymbol{\xi}\).
 
 A similar process is repeated for the posterior marginal of each \(\xi_{i}\),
 beginning with
-\begin{displaymath}
+\begin{equation}
 \pi\left(\xi_{i} | \mathbf{y}, \boldsymbol{\theta}\right)
 \propto \frac{\pi\left(\mathbf{y}, \boldsymbol{\xi}, \boldsymbol{\theta}\right)}
-{\pi\left(\boldsymbol{\xi}_{-i} | \xi_{i}, \mathbf{y}, \boldsymbol{\theta}\right)},
-\end{displaymath}
+{\pi\left(\boldsymbol{\xi}_{-i} | \xi_{i}, \mathbf{y}, \boldsymbol{\theta}\right)}
+\end{equation}
 where the \(-i\) notation indicates that the \(i\)th element is omitted from
 the vector. The Laplace approximation of this denominator is still complicated,
 but further approximations make it tractable. The takeaway is that, by
@@ -371,7 +319,6 @@ the computational details.
 
 \section{Methodology}
 \label{methods}
-%  {\bf Methodology or Approach:} Present the method(s) and relevant applications being reviewed in this or more sections.
 
 INLA provides an efficient computational framework for fitting Bayesian models
 with latent Gaussian variables. On top of this framework, several tools are
@@ -398,11 +345,11 @@ structure.
 The GMRF approximation is motivated by the fact that Gaussian fields with
 Mat\'{e}rn covariances are solutions to the stochastic partial differential
 equation (SPDE) below~\cite{lindgrenetal}:
-\begin{displaymath}
+\begin{equation}
 \tau(\kappa^{2} - \Delta)^{\alpha / 2} \mathbf{e}(u) = \mathbf{W}(u),
 \qquad u \in \mathbb{R}^d, \quad \kappa > 0,
-\quad \alpha = \nu + d/2, \quad \nu > 0.
-\end{displaymath}
+\quad \alpha = \nu + d/2, \quad \nu > 0
+\end{equation}
 Here, \(\mathbf{W}\) is a Gaussian white noise process with variance 1, and
 \(\Delta\) is the Laplacian operator. The stationary solution
 \(\mathbf{e}\) is a Gaussian field having a Mat\'{e}rn covariance
@@ -426,6 +373,7 @@ Values at points other than the nodes are found by linear interpolation,
 resulting in a surface constructed from triangular faces.
 
 \begin{figure}[h!]
+\centering
 \subfloat[Example Gaussian process realization.]
 {\includegraphics[width=0.4\textwidth]{figures/surface.png}}
 \subfloat[Finite element approximation.]
@@ -441,10 +389,10 @@ system~(Figure~\ref{triangle}). The mathematical form of this interpolation is
 very simple; for a point \(u\) with barycentric coordinates \((\alpha, \beta,
 \gamma)\) inside a triangle with vertices \(s_{1}, s_{2}, s_{3}\), the
 approximation is simply
-\begin{displaymath}
+\begin{equation}
 \mathbf{e}(u) \approx \alpha \mathbf{e}(s_{1})
 + \beta \mathbf{e}(s_{2}) + \gamma \mathbf{e}(s_{3}).
-\end{displaymath}
+\end{equation}
 This technique can approximate complicated surfaces as relatively
 low-dimensional vectors via a piecewise-linear approximation.
 
@@ -472,7 +420,7 @@ coordinates have the property that \(\alpha + \beta + \gamma = 1\).}
 \caption{An illustration of the nodes (dots) and the weighting scheme for one
 node (large dot). In the SPDE approach, this node represents it dual region
 (shaded), so its weight is proportional to the shaded area. The dual region is
-constructed by connecting the midpoints of the node's edges to the midpoints
+constructed by connecting the midpoints of the node's edges to the centroids
 of the adjacent triangles.}
 \label{dual}
 \end{figure}
@@ -485,9 +433,9 @@ barycentric coordinate system. That is, \(\phi_{i}\) corresponds to node
 \(s_{i}\), and for a point \(u\) there are at most three nonzero
 \(\phi_{i}(u)\). The nonzero values give the barycentric coordinates of \(u\)
 in a triangle containing it. The finite element representation has the form
-\begin{displaymath}
+\begin{equation}
 \mathbf{e}(u) \approx \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u).
-\end{displaymath}
+\end{equation}
 The vector \(\boldsymbol{\psi} = (\psi_{1}, \dots, \psi_{m})'\) is a
 realization of the GMRF, so it is a multivariate Gaussian vector comprised of
 the values of the latent field at the nodes.
@@ -512,12 +460,8 @@ each \(\mathbf{e}(s_{i})\) depends only on the
 \(\mathbf{e}(s_{j})\) where \(s_{i}\) and \(s_{j}\) are connected by an
 edge. The GMRF representation is assumed to be a piecewise linear approximation
 of the continuous Gaussian field;
-% Add comments about coarsenes/fineness of mesh.
 
-%Computationally doable when \(Z(\mathbf{s})\) has a Mat\'{e}rn covariance with
-%certain values of the smoothness parameter. Check newer references.
-
-The SPDE approach is implemented in the \texttt{INLA} package alongside tools
+The SPDE approach is implemented in the R-INLA package alongside tools
 for constructing meshes. A wrapper for easily specifying LGCP models is
 provided in the \texttt{inlabru} package~\cite{inlabru}.
 
@@ -539,12 +483,6 @@ the domain and model the induced Poisson counts. It has long been understood
 that results are sensitive to the discretization scheme~\cite{brixmoeller}.
 Simpson et. al. (2016) explain that this is also computationally
 wasteful~\cite{simpsonetal}.
-% I think Taylor and Diggle (2014) should be worked into this paragraph, but
-% don't know how. They did a simulation study comparing INLA to MCMC/MALA for
-% fitting LGCP models after gridding and found INLA to be inferior.
-
-% Tradeoff: small grid cells for spatial precision vs small number of zeros
-% for computational speed.
 
 Simpson et. al. took LGCP inference ``off grid'' by introducing a
 computationally-efficient approximation to the Poisson process likelihood that
@@ -555,37 +493,34 @@ evaluation of the Poisson process likelihood. The result is a substantial
 improvement in both computing time and accuracy of the approximation compared
 to gridding.
 
-% Thought on efficiency: fine grid is needed for precision regarding event
-% locations? Are there efficient adaptive grid methods?
-
 The approximation arises from a factorization of the Poisson process
 likelihood. For notational clarity, assume \(\log[\lambda(u)]
 = \boldsymbol{\Psi}(u)\). The exact log-likelihood is
-\begin{displaymath}
+\begin{equation}
 \ell(\lambda) = C - \int \lambda(u) \mathrm{d}u
 + \sum_{i = 1}^{n} \log\left[\lambda(x_{i})\right]
-\end{displaymath}
-where \(C\) is a normalizing constant. The log-intensity rewritten using the
+\end{equation}
+where \(C\) is a normalizing constant. The log-intensity is rewritten using the
 GMRF representation from the SPDE approach,
-\begin{displaymath}
+\begin{equation}
 \log\left[\lambda(u)\right]
 \approx \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u).
-\end{displaymath}
+\end{equation}
 This defines a numerical integration scheme at nodes \(s_{i}\)
 with weights \(\alpha_{i}\), where the weight is the observed area in
 \(\mathrm{dual}(s_{i})\), and yields the approximation,
-\begin{align*}
+\begin{align}
 \ell(\lambda) &\approx C - \sum_{i = 1}^{m} \alpha_{i}
 \exp\left[\sum_{j = 1}^{m} \psi_{j}\phi_{j}(s_{i})\right]
 + \sum_{i = 1}^{n} \sum_{j = 1}^{m} \psi_{j}\phi_{j}(x_{i}) \\
 & = C - \boldsymbol{\alpha}'
 \exp\left[\mathbf{A} \boldsymbol{\psi}\right]
-+ \mathbf{y}' \mathbf{A} \boldsymbol{\psi}.
-\end{align*}
++ \mathbf{y}' \mathbf{A} \boldsymbol{\psi}. \label{logpois}
+\end{align}
 We have introduced some simplifying notation. The weight vector
-\begin{displaymath}
-\boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{m}, 0, \dots, 0)',
-\end{displaymath}
+\begin{equation}
+\boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{m}, 0, \dots, 0)'
+\end{equation}
 contains the weight for each node and then \(n\) zeros corresponding to the
 events. \(\mathbf{y}\) is a pseudodata response vector with entries
 \(y_{i} = 0\) corresponding to the nodes \(s_{i}\) and \(y_{m+i} = 1\) to the
@@ -593,7 +528,7 @@ events \(x_{i}\). \(\mathbf{A}\) is an \(m + n\) by \(m\) matrix where the
 first \(m\) rows are the barycentric coordinates of each node and the final
 \(n\) rows are the barycentric coordinates of each event.
 
-The rewritten log-likelihood is equivalent to the log-likelihood of
+The rewritten log-likelihood~\eqref{logpois} is equivalent to the log-likelihood of
 independent Poisson random variables with means \(\alpha_{i} \eta_{i}\) and
 response vector \(\mathbf{y}\). The \(\alpha_{i}\) weights play the role of
 an offset. \(\eta_{i}\) is the intensity at the location of \(y_{i}\), which
@@ -631,8 +566,9 @@ point pattern to counts in grid cells and using MCMC~\cite{chakrabortyetal}.
 Gabriel et. al. (2016, 2017) derived a relationship between the Kriging
 predictor and the LGCP to predict the LGCP intensity across an unobserved
 subset of the region of interest~\cite{gabrieletal2016, gabrieletal2017}. 
-Flagg et. al. used a Dirichlet Process to indentify hot spots with 
-unexploded ordnances \cite{flagg2020}.
+Flagg et. al. (2020) used a Cox model with a Dirichlet process mixture
+intensity to map hot spots in unexploded ordnance data collected along
+line transects~\cite{flagg2020}.
 
 With INLA, the SPDE approach, and the ``off grid'' approximation
 facilitating the routine fitting of LGCP models, there is now renewed interest
@@ -643,9 +579,9 @@ probabilistically. Let \(\lambda(u)\) be the intensity of the parent process,
 and let an event \(x=u\) (if it exists) be observed with probability
 \(p(u)\). The observed point process is a thinned point process with
 intensity
-\begin{displaymath}
-\lambda_{p}(u) = p(u) \lambda(u),
-\end{displaymath}
+\begin{equation}
+\lambda_{p}(u) = p(u) \lambda(u) \label{thinintensity}
+\end{equation}
 and if the parent process is a Poisson process then the observed process is
 also a Poisson process~\cite{moellerbook}.
 
@@ -657,23 +593,21 @@ domain, the weights become zero so those nodes do not contribute to the
 integral. More generally, when a known subdomain is surveyed, \(p(u)\) is
 an indicator function for \(u\) being in the surveyed region. When \(p(u)\)
 is known, the integration weight for node \(s_{i}\) is multiplied by
-\begin{displaymath}
-\int_{\mathrm{dual}(s_{i})} p(u) \mathrm{d}u
-\end{displaymath}
+\(\int_{\mathrm{dual}(s_{i})} p(u) \mathrm{d}u\)
 which, for indicator functions, is simply the proportion of the dual region
 that is inside the surveyed region.
 
-If \(p(u)\) is unknown, it can be modeled. Taking the logarithm of
-the thinned intensity and substituting in the basis function representation,
-we have the log-linear model
-\begin{displaymath}
+If \(p(u)\) is unknown, it can be modeled. Taking the logarithm of the thinned
+intensity~\eqref{thinintensity} and substituting in the basis function
+representation, we have the log-linear model
+\begin{equation}
 \log\left[\lambda_{p}(u)\right]
 = \log\left[p(u)\right] + \sum_{j = 1}^{m} \psi_{j} \phi_{j}(u).
-\end{displaymath}
+\end{equation}
 Thus, any log-linear model for \(p(u)\) that can be fit by INLA and the SPDE
 approach can be incorporated into the LGCP model. This provides a convenient
 way to estimate the detection function from distance sampling data; the model
-for \(\log(p(u))\) includes the distance to the nearest transect as a
+for \(\log[p(u)]\) includes the distance to the nearest transect as a
 covariate. For example, Yuan et. al (2017) fit such a model to data from a
 line-transect survey using a spline model to account for the unknown detection
 function~\cite{yuanetal}.
