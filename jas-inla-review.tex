@@ -33,7 +33,7 @@
 
 \articletype{REVIEW ARTICLE}% Specify the article type or omit as appropriate
 
-\title{The Integrated Nested Laplace Approximation applied to Spatial Log-Gaussian Cox Process Models}
+\title{The integrated nested Laplace approximation applied to spatial log-Gaussian Cox process models}
 
 \author{
 \name{Kenneth Flagg\thanks{CONTACT Kenneth Flagg. Email: kenneth.flagg@montana.edu} and Andrew Hoegh}
@@ -615,8 +615,6 @@ function~\cite{yuanetal}.
 
 \section{Applications}
 \label{application}
-%  {\bf Application of your Methodology:} Present some applications of the reviewed methods to some recent data in this or more sections. Also note: Simulation studies can be presented as a sub-section in this section or in a new standalone section.
-
 
 For an example analysis of real-world data, we consider the locations of
 \(n = 3605\) \emph{Beilschmiedia pendula Lauraceae} trees in a 1000~meter by
@@ -644,12 +642,12 @@ and the elevation gradient~(Figure~\ref{bei}).
 \subfloat[Magnitude of the elevation gradient, with events overlaid.]
 {\includegraphics[width=0.75\textwidth]{figures/bei_grad.pdf}}
 
-\caption{Plots of the event and covariate data for the Beilschmiedia Pendula Lauraceae data
-analysis. The study region is 1000 m by 500 m.}
+\caption{Plots of the event and covariate data for the \emph{Beilschmiedia
+pendula Lauraceae} data analysis. The study region is 1000 m by 500 m.}
 \label{bei}
 \end{figure}
 
-\subsection{Full Beilschmiedia Pendula Lauraceae Dataset}
+\subsection{Full {\it Beilschmiedia Pendula Lauraceae} Dataset}
 \label{beianalysis}
 
 
@@ -657,16 +655,16 @@ analysis. The study region is 1000 m by 500 m.}
 \label{beimodel}
 
 We use the log-Gaussian Cox process model with intensity
-\begin{displaymath}
+\begin{equation}
 \log\left[\lambda(u)\right] = \beta_{0} + \beta_{1} z_{1}(u)
 + \beta_{2} z_{2}(u) + \mathbf{e}(u)
-\end{displaymath}
+\end{equation}
 where \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the magnitude of
 the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a zero-mean
 stationary and isotropic Gaussian process with Mat\'{e}rn covariance and fixed
 \(\alpha = 2\). We parameterize the GP in terms of the standard deviation
 \(\sigma\) and effective range \(\rho\). To connect this with the notation
-from \ref{inla}, \(\boldsymbol{\theta} = (\sigma, \rho)'\) and
+from Section \ref{inla}, \(\boldsymbol{\theta} = (\sigma, \rho)'\) and
 \(\boldsymbol{\xi} = (\beta_{0}, \beta_{1}, \beta_{2}, \mathbf{e}(s_{1}),
 \dots, \mathbf{e}(s_{m}))'\).
 
@@ -676,7 +674,7 @@ covariance parameters, R-INLA provides a penalized complexity (PC) prior
 defined in terms of the standard deviation \(\sigma\) and the effective range
 \(\rho\) \cite{fuglstadetal,simpsonpc}. The PC prior is intended to provide an
 intuitive way to define informative priors and is specified by defining a tail
-probability for each parameter. INLA actually uses these inputs to set an
+probability for each parameter. R-INLA actually uses these inputs to set an
 exponential prior on the precision \(\tau = 1 / \sigma^{2}\) and a Weibull
 prior on the scale \(\kappa = \sqrt{8 \nu} / \rho\), but all of the software output
 is provided in terms of \(\sigma\) and \(\rho\). We set
@@ -688,48 +686,48 @@ prior used by M\"{o}ller and Waagepetersen~\cite{moellerwaagepetersen}.
 \subsubsection{Fitting in R-INLA}
 \label{beifitting}
 
-We fit the model in R using the \texttt{INLA} package and its implementation of
+We fit the model using R-INLA package and its implementation of
 the SPDE approach. Some manual preprocessing was needed to employ the Poisson
 factorization. Our R code can be found in the supplementary materials. This
 section provides a conceptual explanation of the model-fitting process.
 
 The first task is to construct a mesh for the piecewise linear approximations.
 A 25 meter resolution appears adequate to accurately represent the covariate
-surfaces. We used tools in the \texttt{INLA} package to create a Delaunay
+surfaces. We used tools in R-INLA to create a Delaunay
 triangulation with a maximum edge length of 25~m. The resulting mesh has
 \(m = 2145\) nodes \(s_{1},  \dots, s_{2145}\) and 4096
 triangles~(Figure~\ref{beimesh}). We used linear interpolation to approximate
 the covariates \(z_{1}(s_{i})\) and \(z_{2}(s_{i})\) at each node. After
 creating the mesh, we specify the priors for the covariance parameters and
-\texttt{INLA} can initialize an object to represent the covariance structure
+R-INLA initializes an object to represent the covariance structure
 on the mesh.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=.7\textwidth]{figures/bei_mesh.pdf}
-\caption{Triangular mesh with pseudodata overlaid for the Beilschmiedia Pendula Lauraceae data
-analysis. Black dots represent pseudodata with values of 0 at the mesh nodes.
-Red dots represent pseudodata with values of 1 at the events.}
+\caption{Triangular mesh with pseudodata overlaid for the \emph{Beilschmiedia
+pendula Lauraceae} data analysis. Black dots represent pseudodata with values
+of 0 at the mesh nodes. Red dots represent pseudodata with values of 1 at the
+events.}
 \label{beimesh}
 \end{figure}
 
 The next step is to define the pseudodata, find the barycentric coordinate
 matrix \(\mathbf{A}\), and calculate the numerical integration weights. The
 pseudodata vector is
-\begin{displaymath}
+\begin{equation}
 \mathbf{y} = (0, \dots, 0, 1, \dots, 1)'
-\end{displaymath}
+\end{equation}
 consisting of 2145 zeros corresponding to the mesh nodes and 3604 ones
 representing the events. The first 2145 rows of \(\mathbf{A}\) are an
 identity matrix; the remaining rows are the barycentric coordinates of the
 events, which R-INLA calculates for us. The weight vector is
-\begin{displaymath}
+\begin{equation}
 \boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{2145}, 0, \dots, 0)'.
-\end{displaymath}
+\end{equation}
 The alphas equal one-third of the total area of all triangles of which each
-node is a vertex, calculated by the \texttt{INLA} package. The zeros
-correspond to the 3604 events, which do not contribute to the numerical
-integration.
+node is a vertex, calculated by R-INLA. The zeros correspond to the
+3604 events, which do not contribute to the numerical integration.
 
 The final bit of setup is to combine the pseudodata, covariates at the nodes,
 and a vector of node indices into a data list for the \texttt{inla()} function.
@@ -752,11 +750,11 @@ gradient are associated with higher intensity. The elevation coefficent
 mean 4.44 with 95\% interval \((2.42, 6.46)\). The posterior mean of the
 intercept \(\beta_{0}\) is \(-10.9\) with 95\% interval of \((-14.2, -7.63)\).
 Mapped across space, the posterior mean of the fixed effect component of the
-linear predictor,
-\begin{displaymath}
+linear predictor
+\begin{equation}
 E(\beta_{0} | \mathbf{x}) + E(\beta_{1} | \mathbf{x}) z_{1}(u)
-+ E(\beta_{2} | \mathbf{x}) z_{2}(u),
-\end{displaymath}
++ E(\beta_{2} | \mathbf{x}) z_{2}(u)
+\end{equation}
 appears as an average of the elevation and gradient
 surfaces~(Figure~\ref{beimean},~top).
 
@@ -778,7 +776,7 @@ range parameter \(\rho\) has a posterior mean of 176 with a 95\% interval of
 {\includegraphics[width=\textwidth]{figures/bei_mean.pdf}}
 
 \caption{Posterior mean surfaces of the fixed effects component and the
-spatial GP from the Beilschmiedia Pendula Lauraceae data analysis.}
+spatial GP from the \emph{Beilschmiedia pendula Lauraceae} data analysis.}
 \label{beimean}
 \end{figure}
 
@@ -793,7 +791,8 @@ means of the intercept, coefficients, and GP.]
 {\includegraphics[width=\textwidth]{figures/bei_residuals.pdf}}
 
 \caption{Posterior mean intensity function and Pearson residuals calculated
-using the posterior mean intensity from the Beilschmiedia Pendula Lauraceae data analysis.}
+using the posterior mean intensity from the \emph{Beilschmiedia pendula
+Lauraceae} data analysis.}
 \label{beiintensity}
 \end{figure}
 
@@ -805,11 +804,11 @@ their are no glaring issues with the model fit. Literature on residual analysis
 for spatial point process models is quite rich and not specific to INLA; for a
 more general discussion see Baddeley et. al.~(2005)~\cite{baddeleyresiduals}.
 
-We calculated the Pearson residuals,
-\begin{displaymath}
+We calculated the Pearson residuals
+\begin{equation}
 \frac{\text{Observed count} - \text{Expected count}}
-{\sqrt{\text{Expected count}}},
-\end{displaymath}
+{\sqrt{\text{Expected count}}}
+\end{equation}
 on a 40 by 20 lattice of grid cells. We used functions from R-INLA to transform
 predictions from the log-scale to the natural scale and calculate the posterior
 mean intensity at the center of each grid
@@ -860,10 +859,10 @@ observed in 20 rectangles sized 500~m by 10~m~(Figure~\ref{effort}).
 
 We use the same model as fit to the full data, a log-Gaussian Cox process model
 with intensity
-\begin{displaymath}
+\begin{equation}
 \log\left[\lambda(u)\right] = \beta_{0} + \beta_{1} z_{1}(u)
 + \beta_{2} z_{2}(u) + \mathbf{e}(u).
-\end{displaymath}
+\end{equation}
 As before, \(z_{1}(u)\) is the elevation at \(u\), \(z_{2}(u)\) is the
 magnitude of the elevation gradient at \(u\), and \(\mathbf{e}(u)\) is a
 zero-mean Gaussian process with Mat\'{e}rn covariance and \(\alpha = 2\).
@@ -915,18 +914,18 @@ supplementary materials.
 
 The mesh~(Figure~\ref{effortmesh}) is the same as used with the fully-observed
 point pattern, with \(m = 2145\) nodes. We interpolated the covariates
-at the nodes and had \texttt{INLA} can initialize the covariance structure as
+at the nodes and had R-INLA initialize the covariance structure as
 before. The pseudodata vector changes dimension, becoming
-\begin{displaymath}
+\begin{equation}
 \mathbf{y} = (0, \dots, 0, 1, \dots, 1)'
-\end{displaymath}
+\end{equation}
 with 2145 zeros corresponding to the mesh nodes and 710 ones for the observed
 events.
 
 The computation of the weight vector is more involved. The notation is again
-\begin{displaymath}
+\begin{equation}
 \boldsymbol{\alpha} = (\alpha_{1}, \dots, \alpha_{2145}, 0, \dots, 0)',
-\end{displaymath}
+\end{equation}
 now with 710 zeros representing the observed events. The alphas equal the
 observed area represented by each node. We used tools from \texttt{spatstat}
 to calculate these areas. First, we created an \texttt{owin} object defining
@@ -975,7 +974,7 @@ posterior mean of 1.27 with a central 95\% posterior interval of
 \subfloat[Posterior mean surface for the fixed effects.]
 {\includegraphics[width=\textwidth]{figures/bei-effort_betas.pdf}}
 
-\subfloat[Posterior mean of prediction surface.]
+\subfloat[Posterior mean of the GP prediction surface.]
 {\includegraphics[width=\textwidth]{figures/bei-effort_mean.pdf}}
 
 \caption{Posterior mean surfaces of the fixed effects component and the
@@ -1001,7 +1000,7 @@ using the posterior mean intensity from the simulated transect data analysis.}
 \subsubsection{Model Checking}
 \label{effortresid}
 
-To asses the model fit, we computed Pearson residuals on a 40 by 20 lattice of
+To assess the model fit, we computed Pearson residuals on a 40 by 20 lattice of
 grid cells. The expected counts were approximated by the multiplying the
 posterior mean intensity~(Figure~\ref{effortintensity},~top) at the center of
 each grid cell times the observed area within the cell. Cells with no observed
@@ -1017,7 +1016,6 @@ obvious spatial patterns.
 
 \section{Conclusion and Discussion}
 \label{conclusion}
-%  {\bf Conclusion and Discussion:} In this conclusion and discussion section, provide conclusions of your review and provide anticipated future direction(s) in this area.
 
 The SPDE approach, Poisson factorization, INLA, and the R-INLA software make
 it practical to fit Bayesian spatial LGCP models to real data. It is possible
@@ -1036,8 +1034,8 @@ look very similar when mapped across space (Figures \ref{beimean} and
 Our example models differ in the posterior distributions of the predicted GP
 and the range. The GP prediction surfaces have the same large-scale structure,
 but the surface from the model fit to the sampled
-data~(Figure~\ref{effortmean}) is noticeably smoother than the surface inferred
-from the complete data~(Figure~\ref{beimean} for sampled, bottom panels).
+data~(Figure~\ref{effortmean}, bottom) is noticeably smoother than the surface
+inferred from the complete data~(Figure~\ref{beimean}, bottom).
 This is related to the range; the posterior interval for the range when using
 the sampled data (161 to 340) is much wider and shifted to the right compared
 the interval when using the complete data (137 to 229). The reason for this is
@@ -1054,11 +1052,8 @@ GP. These examples are not particularly complex, but if computation needed
 to be further simplified, the mesh could be adaptively coarsened or refined
 depending on the local complexity of the covariates.
 
-%need further work on model checking when prediction is desired over a different
-%region than observed
-
 We have illustrated that, using these tools, spatial mapping based on Bayesian
-LGCP models is now practical with useful accuracy in short amount of time. This
+LGCP models is now practical with useful accuracy in a short amount of time. This
 includes when the point pattern is incompletely observed. We look forward to
 wider application of spatial LGCP models and future advancements in sampling
 for spatial point process models.
