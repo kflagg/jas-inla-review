@@ -1,7 +1,4 @@
-% interacttfssample.tex
-% v1.05 - August 2017
-
-\documentclass[]{interact}
+\documentclass{interact}
 
 %\usepackage{epstopdf}% To incorporate .eps illustrations using PDFLaTeX, etc.
 \usepackage[caption=false]{subfig}% Support for small, `sub' figures and tables
@@ -372,7 +369,7 @@ GP. The idea is to model the GP at the nodes (vertices) of a triangular mesh.
 Values at points other than the nodes are found by linear interpolation,
 resulting in a surface constructed from triangular faces.
 
-\begin{figure}[h!]
+\begin{figure}[t!]
 \centering
 \subfloat[Example Gaussian process realization.]
 {\includegraphics[width=0.4\textwidth]{figures/surface.png}}
@@ -397,7 +394,7 @@ This technique can approximate complicated surfaces as relatively
 low-dimensional vectors via a piecewise-linear approximation.
 
 
-\begin{figure}[h!]\centering
+\begin{figure}[t!]\centering
 
 \subfloat[A point \(u\) in a triangle with vertices \(s_{1}, s_{2}, s_{3}\).]
 {\includegraphics[width=0.3\textwidth]{figures/triangle.png}}
@@ -415,7 +412,7 @@ coordinates have the property that \(\alpha + \beta + \gamma = 1\).}
 \label{triangle}
 \end{figure}
 
-\begin{figure}[t]\centering
+\begin{figure}[t!]\centering
 \includegraphics[width=0.3\textwidth]{figures/dual.pdf}
 \caption{An illustration of the nodes (dots) and the weighting scheme for one
 node (large dot). In the SPDE approach, this node represents it dual region
@@ -631,16 +628,16 @@ pattern exhibits inhomogeneity which appears to be associated with elevation
 and the elevation gradient~(Figure~\ref{bei}).
 
 
-\begin{figure}[h!]
-\centering
+\begin{figure}[p!]\centering
+
 \subfloat[Locations of trees (events).]
-{\includegraphics[width=0.75\textwidth]{figures/bei.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei.pdf}}
 
 \subfloat[Elevation in meters, with events overlaid.]
-{\includegraphics[width=0.75\textwidth]{figures/bei_elev.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei_elev.pdf}}
 
 \subfloat[Magnitude of the elevation gradient, with events overlaid.]
-{\includegraphics[width=0.75\textwidth]{figures/bei_grad.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei_grad.pdf}}
 
 \caption{Plots of the event and covariate data for the \emph{Beilschmiedia
 pendula Lauraceae} data analysis. The study region is 1000 m by 500 m.}
@@ -702,9 +699,8 @@ creating the mesh, we specify the priors for the covariance parameters and
 R-INLA initializes an object to represent the covariance structure
 on the mesh.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=.7\textwidth]{figures/bei_mesh.pdf}
+\begin{figure}[t!]\centering
+\includegraphics[width=\textwidth]{figures/bei_mesh.pdf}
 \caption{Triangular mesh with pseudodata overlaid for the \emph{Beilschmiedia
 pendula Lauraceae} data analysis. Black dots represent pseudodata with values
 of 0 at the mesh nodes. Red dots represent pseudodata with values of 1 at the
@@ -743,6 +739,19 @@ function takes about 90 seconds to fit the model on a midrange laptop.
 \subsubsection{Results}
 \label{beiresults}
 
+\begin{figure}[t!]\centering
+
+\subfloat[Posterior mean surface for the fixed effects.]
+{\includegraphics[width=0.9\textwidth]{figures/bei_betas.pdf}}
+
+\subfloat[Posterior mean of the GP prediction surface.]
+{\includegraphics[width=0.9\textwidth]{figures/bei_mean.pdf}}
+
+\caption{Posterior mean surfaces of the fixed effects component and the
+spatial GP from the \emph{Beilschmiedia pendula Lauraceae} data analysis.}
+\label{beimean}
+\end{figure}
+
 The posterior marginals provide evidence that both higher elevation and larger
 gradient are associated with higher intensity. The elevation coefficent
 \(\beta_{1}\) has a posterior mean of 0.0328 with a central 95\% interval of
@@ -767,37 +776,25 @@ has posterior mean 1.30 and 95\% central interval \((1.05, 1.63)\), while the
 range parameter \(\rho\) has a posterior mean of 176 with a 95\% interval of
 \((137, 229)\).
 
-\begin{figure}[p]
 
-\subfloat[Posterior mean surface for the fixed effects.]
-{\includegraphics[width=\textwidth]{figures/bei_betas.pdf}}
+\subsubsection{Model Checking}
+\label{beiresid}
 
-\subfloat[Posterior mean of the GP prediction surface.]
-{\includegraphics[width=\textwidth]{figures/bei_mean.pdf}}
-
-\caption{Posterior mean surfaces of the fixed effects component and the
-spatial GP from the \emph{Beilschmiedia pendula Lauraceae} data analysis.}
-\label{beimean}
-\end{figure}
-
-\begin{figure}[p]
+\begin{figure}[t!]\centering
 
 \subfloat[Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
 means of the intercept, coefficients, and GP.]
-{\includegraphics[width=\textwidth]{figures/bei_intensity.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei_intensity.pdf}}
 
 \subfloat[Pearson residuals calculated on a grid.]
-{\includegraphics[width=\textwidth]{figures/bei_residuals.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei_residuals.pdf}}
 
 \caption{Posterior mean intensity function and Pearson residuals calculated
 using the posterior mean intensity from the \emph{Beilschmiedia pendula
 Lauraceae} data analysis.}
 \label{beiintensity}
 \end{figure}
-
-\subsubsection{Model Checking}
-\label{beiresid}
 
 This section provides a brief and simple residual analysis to illustrate that
 their are no glaring issues with the model fit. Literature on residual analysis
@@ -827,6 +824,23 @@ each time.
 
 \subsection{Transect Sampling Example}
 \label{xsectanalysis}
+
+\begin{figure}[p!]\centering
+
+\subfloat[Locations of observed trees (events).]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort.pdf}}
+
+\subfloat[Elevation in meters, with observed region and events overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_elev.pdf}}
+
+\subfloat[Magnitude of the elevation gradient, with observed region and events
+overlaid.]
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_grad.pdf}}
+
+\caption{Plots of the event and covariate data for the simulated transect
+survey. The study region is 1000 m by 500 m.}
+\label{effort}
+\end{figure}
 
 In this section, we illustrate the analysis of incompletely-observed point
 pattern data using the \emph{Beilschmiedia pendula Lauraceae} and a simulated
@@ -870,28 +884,11 @@ The prior distributions are again \(\beta_{0}\), \(\beta_{1}\), and
 \(\beta_{2}\) independent \(\mathrm{N}(0, \infty)\),
 \(\mathrm{Pr}(\sigma > 2) = 0.1\), and \(\mathrm{Pr}(\rho < 5) = 0.1\).
 
-\begin{figure}[h!]
-\centering
-\subfloat[Locations of observed trees (events).]
-{\includegraphics[width=0.8\textwidth]{figures/bei-effort.pdf}}
-
-\subfloat[Elevation in meters, with observed region and events overlaid.]
-{\includegraphics[width=0.8\textwidth]{figures/bei-effort_elev.pdf}}
-
-\subfloat[Magnitude of the elevation gradient, with observed region and events
-overlaid.]
-{\includegraphics[width=0.8\textwidth]{figures/bei-effort_grad.pdf}}
-
-\caption{Plots of the event and covariate data for the simulated transect
-survey. The study region is 1000 m by 500 m.}
-\label{effort}
-\end{figure}
-
 
 \subsubsection{Fitting in R-INLA}
 \label{xsectfitting}
 
-\begin{figure}[h!]
+\begin{figure}[p!]
 \includegraphics[width=\textwidth]{figures/bei-effort_mesh.pdf}
 \caption{Triangular mesh with observed region and events overlaid for the
 simulated transect data analysis. Black dots represent pseudodata with values
@@ -900,7 +897,7 @@ observed events.}
 \label{effortmesh}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[p!]
 \includegraphics[width=\textwidth]{figures/bei-effort_partition.pdf}
 \caption{Partition of the observed region created by intersection with each
 mesh triangle.}
@@ -970,26 +967,28 @@ posterior mean of 1.27 with a central 95\% posterior interval of
 \((0.956, 1.70)\). The range \(\rho\) has a posterior mean of 232 and
 95\% interval of \((161, 340)\).
 
-\begin{figure}[h!]
+\begin{figure}[t!]\centering
+
 \subfloat[Posterior mean surface for the fixed effects.]
-{\includegraphics[width=\textwidth]{figures/bei-effort_betas.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_betas.pdf}}
 
 \subfloat[Posterior mean of the GP prediction surface.]
-{\includegraphics[width=\textwidth]{figures/bei-effort_mean.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_mean.pdf}}
 
 \caption{Posterior mean surfaces of the fixed effects component and the
 spatial GP from the simulated transect data analysis.}
 \label{effortmean}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[t!]\centering
+
 \subfloat[Posterior intensity surface in events per square meter, calculated
 using the piecewise linear approximate covariate surfaces and the posterior
 means of the intercept, coefficients, and GP.]
-{\includegraphics[width=\textwidth]{figures/bei-effort_intensity.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_intensity.pdf}}
 
 \subfloat[Pearson residuals calculated on a grid.]
-{\includegraphics[width=\textwidth]{figures/bei-effort_residuals.pdf}}
+{\includegraphics[width=0.9\textwidth]{figures/bei-effort_residuals.pdf}}
 
 \caption{Posterior mean intensity function and Pearson residuals calculated
 using the posterior mean intensity from the simulated transect data analysis.}
