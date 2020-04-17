@@ -51,7 +51,7 @@ Gaussian field, and recent advances have made it possible to fit Bayesian LGCP
 models using approximate methods that facilitate rapid computation. These advances
 include the integrated nested Laplace approximation (INLA) with a
 stochastic partial differential equations (SPDE) approach to
-sparely approximate the Gaussian field and an extension using pseudodata with
+sparsely approximate the Gaussian field and an extension using pseudodata with
 a Poisson response. To help link the theoretical results to statistical
 practice, we provide an overview of INLA for point process data 
 and then illustrate their implementation using freely available data. 
@@ -190,7 +190,7 @@ independent and identically distributed with probability density
 The distribution function of a Poisson process is
 \begin{equation}
 \pi(\mathbf{X}|\lambda)
-= \exp\left[-\int_{\mathcal{R}} \lambda(u) \mathrm{d}u\right] / n!
+= \frac{\exp\left[-\int_{\mathcal{R}} \lambda(u) \mathrm{d}u\right]}{n!}
 \prod_{x \in \mathbf{X}} \lambda(x)
 \end{equation}
 as given in Cressie (1993) \cite{cressie}. This can be extended to include

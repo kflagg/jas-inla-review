@@ -115,7 +115,6 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
         unitname = c('meter', 'meters')),
         riblab = 'Meters', ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Elevation')
-plot(bei_win, border = '#80808080', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
@@ -128,7 +127,6 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         unitname = c('meter', 'meters')),
         ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
-plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
@@ -240,11 +238,12 @@ plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$mean)),
         unitname = c('meter', 'meters')),
      riblab = expression(E(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Predicted Mean of Latent GP')
-plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the posterior standard deviation of the latent surface.
+# A better way would be to use linear combinations to predict the
+# latent surface at each pixel instead of interpolating the SD.
 pdf('figures/bei_sd.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
@@ -253,7 +252,6 @@ plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
         unitname = c('meter', 'meters')),
      riblab = expression(SD(bold(e)(u)*'|'*bold(x))), ribsep = 0.05,
      main = 'Posterior Prediction SD of Latent GP')
-plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
@@ -274,7 +272,6 @@ plot(im(t(
                          E(beta[1]*'|'*bold(x)) * z[1](u) +
                          E(beta[2]*'|'*bold(x)) * z[2](u)), ribsep = 0.05,
      main = 'Posterior Mean of Fixed Effects')
-plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
@@ -294,7 +291,6 @@ plot(im(t(exp(
         unitname = c('meter', 'meters')),
      riblab = 'Events per Square Meter', ribsep = 0.05,
      main = 'Posterior Intensity Function')
-plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
@@ -334,34 +330,28 @@ dev.off()
 NGRID_X <- 40
 NGRID_Y <- 20
 
-# Have spatstat find centers for the grid cells.
-centers <- gridcenters(
-  owin(range(bei_boundary$loc[,1]), range(bei_boundary$loc[,2])),
-  NGRID_X, NGRID_Y)
+# Have spatstat produce quadrat counts.
+bei_qcounts <- t(quadratcount(
+  bei,
+  xbreaks = seq(min(bei_win$xrange), max(bei_win$xrange), length.out = NGRID_X + 1),
+  ybreaks = seq(min(bei_win$yrange), max(bei_win$yrange), length.out = NGRID_Y + 1),
+))
 
-# Compute the grid cell size.
-dx <- sum(unique(centers$x)[1:2] * c(-1, 1)) / 2
-dy <- sum(unique(centers$y)[1:2] * c(-1, 1)) / 2
+# Get the tesselation created by quadratcount().
+bei_resid_tess <- as.tess(bei_qcounts)
 
-# Initialize a data frame to store the counts.
-bei_resid_df <- data.frame(x = centers$x, y = centers$y,
-                           count = NA_integer_, area = NA_real_)
+# Get the centroids of the tesselation tiles and put them in a data frame.
+bei_resid_df <- do.call(rbind, lapply(lapply(tiles(bei_resid_tess), centroid.owin), data.frame))
 
-# Loop through the cells, finding the event count and cell area.
-for(r in seq_len(nrow(bei_resid_df))){
-  bei_resid_df$count[r] <- sum(bei$x >= bei_resid_df$x[r] - dx &
-                               bei$x < bei_resid_df$x[r] + dx &
-                               bei$y >= bei_resid_df$y[r] - dy &
-                               bei$y < bei_resid_df$y[r] + dy)
-  bei_resid_df$area[r] <- area(bei_win[owin(c(bei_resid_df$x[r] - dx,
-                                              bei_resid_df$x[r] + dx),
-                                            c(bei_resid_df$y[r] - dy,
-                                              bei_resid_df$y[r] + dy))])
-}
+# Add the counts to the data frame.
+bei_resid_df$count <- as.numeric(bei_qcounts)
+
+# Find the observed area of each cell.
+bei_resid_df$area <- tile.areas(bei_resid_tess)
 
 # Set up a projection from the SPDE representation to the residual grid.
 bei_resid_proj <- inla.mesh.projector(bei_mesh,
-  loc = as.matrix(as.data.frame(centers)))
+  loc = as.matrix(bei_resid_df[,c('x', 'y')]))
 
 # Project the intensity surface to the residual grid.
 bei_resid_df$intensity <- as.vector(inla.mesh.project(bei_resid_proj,
@@ -375,11 +365,10 @@ bei_resid_df$pearson <- (bei_resid_df$count - bei_resid_df$expected) /
 # Gridded Pearson residual plot.
 pdf('figures/bei_residuals.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
-plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
-        unique(bei_resid_df$x), unique(bei_resid_df$y),
-        unitname = c('meter', 'meters')),
+plot(bei_resid_tess, border = NA, do.col = TRUE,
+     values = as.hyperframe(bei_resid_df)$pearson,
+     ribargs = list(lty = 1, box = TRUE),
      ribsep = 0.05, main = 'Gridded Pearson Residuals')
-plot(bei_win, border = 'white', add = TRUE)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
@@ -401,7 +390,6 @@ plot(im(t(sqrt(inla.mesh.project(bei_proj,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
         ribsep = 0.05, main = 'Mark Plot')
-plot(bei_win, border = 'white', add = TRUE)
 plot(bei_marked, col = '#ffffff80', add = TRUE)
 dev.off()
 
