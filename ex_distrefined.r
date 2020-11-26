@@ -51,7 +51,7 @@ marks(bei) <- distfromxsect(bei, bei_psp)
 bei_obs <- bei[as.logical(rbinom(bei$n, 1, exp(-0.1 * marks(bei)^2)))]
 
 # Plot the observed point pattern and its window.
-pdf('figures/bei-dist.pdf', width = 12, height = 6)
+pdf('figures/bei-distrefined.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei_win, border = 'grey', main = expression(bold(paste('Observed ', italic('Beilschmiedia pendula Lauraceae'), ' Locations'))))
 plot(bei_psp, add = TRUE)
@@ -59,17 +59,17 @@ points(bei_obs, col = '#00000080')
 dev.off()
 
 # Plot the elevation surface.
-pdf('figures/bei-dist_elev.pdf', width = 12, height = 6)
-par(mar = c(0, 0, 2, 2))
+pdf('figures/bei-distrefined_elev.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 0))
 plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
 plot(bei_psp, col = '#ffffff80', add = TRUE)
 points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the gradient surface.
-pdf('figures/bei-dist_grad.pdf', width = 12, height = 6)
-par(mar = c(0, 0, 2, 2))
-plot(bei.extra$grad, main = 'Gradient', riblab = 'm/m', rib.sep = 0.05)
+pdf('figures/bei-distrefined_grad.pdf', width = 12, height = 6)
+par(mar = c(0, 0, 2, 0))
+plot(bei.extra$grad, main = 'Gradient', rib.sep = 0.05)
 plot(bei_psp, col = '#ffffff80', add = TRUE)
 points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
@@ -79,6 +79,18 @@ dev.off()
 ## MESH CONSTRUCTION ##
 #######################
 
+# Refined mesh near transects.
+loc_along_xsect <- do.call(rbind,
+  lapply(
+    dilation(bei_psp, 10)$bdry,
+    function(bdry){return(inla.mesh.create(
+      boundary = as.matrix(as.data.frame(vertices(owin(poly = bdry)[bei_win]))),
+      refine = list(max.edge = 10),
+      cutoff = 1
+    )$loc[,1:2])}
+  )
+)
+
 # Get the boundary polygon for the observation window
 # and define mesh edge segments for INLA.
 bei_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices(bei_win)))
@@ -86,6 +98,7 @@ bei_boundary <- inla.mesh.segment(loc = do.call(cbind, vertices(bei_win)))
 # Create a Delaunay triangulation with maximum edge length of 25 meters to use
 # as the mesh.
 bei_mesh <- inla.mesh.create(
+  loc = loc_along_xsect,
   boundary = bei_boundary,
   refine = list(max.edge = 25)
 )
@@ -123,7 +136,7 @@ bei_proj <- inla.mesh.projector(bei_mesh, dims = c(400, 200))
 
 
 # Plot the mesh and point pattern.
-pdf('figures/bei-dist_mesh.pdf', width = 12, height = 6)
+pdf('figures/bei-distrefined_mesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 0))
 plot(bei_mesh, asp = 1, main = '')
 plot(bei_psp, add = TRUE, col = 'red', border = NA)
@@ -171,7 +184,7 @@ bei_mesh_grad <- as.vector(bei_change_of_support %*% bei_grad$value)
 bei_mesh_dist <- distfromxsect(as.ppp(bei_mesh$loc[,1:2], bei_win), bei_psp)
 
 # Plot the piecewise linear approximation of the elevation surface.
-pdf('figures/bei-dist_elev_mesh.pdf', width = 12, height = 6)
+pdf('figures/bei-distrefined_elev_mesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_mesh_elev)),
         xrange = bei_win$x,
@@ -184,13 +197,12 @@ points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the piecewise linear approximation of the gradient surface.
-pdf('figures/bei-dist_grad_mesh.pdf', width = 12, height = 6)
+pdf('figures/bei-distrefined_grad_mesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         xrange = bei_win$x,
         yrange = bei_win$y,
         unitname = c('meter', 'meters')),
-        riblab = 'm/m',
         ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
@@ -198,13 +210,12 @@ points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the piecewise linear approximation of the distance surface.
-pdf('figures/bei-dist_dist_mesh.pdf', width = 12, height = 6)
+pdf('figures/bei-dist_distrefined_mesh.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_mesh_dist)),
         xrange = bei_win$x,
         yrange = bei_win$y,
         unitname = c('meter', 'meters')),
-        riblab = 'Meters',
         zlim = c(0, 35), ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Distance to Transect')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
@@ -265,7 +276,7 @@ bei_pseudopoints <- rbind(bei_int_matrix, bei_bary)
 # idx. The indices correspond to the indixes of the mesh nodes.
 bei_formula <- y ~ -1 + intercept + elev + grad + I(dist^2) + f(idx, model = bei_spde)
 
-# Define linear combinations to predict the posterior distribution of the linear
+# Define linear combinations to predict the posterior distribution of the inear
 # predictor for the log-intensity surface at each node. We will use these for
 # model checking, exponentiating them and projecting to different lattices as
 # needed. A much more accurate overall approach is to specify a lincomb for
@@ -326,8 +337,6 @@ points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the posterior standard deviation of the latent surface.
-# A better way would be to use linear combinations to predict the
-# latent surface at each pixel instead of interpolating the SD.
 pdf('figures/bei-dist_sd.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
 plot(im(t(inla.mesh.project(bei_proj, bei_result$summary.random$idx$sd)),
@@ -442,12 +451,12 @@ plot(inla.smarginal(bei_result$marginals.fixed$`I(dist^2)`), type = 'l',
      main = 'Posterior Distribution of the Distance Coefficient')
 dev.off()
 
-# Plot the detection function.
+# Plot the detection functions.
 pdf('figures/bei-dist_detect_curve.pdf', width = 7, height = 6)
 par(bty = 'n')
 curve(exp(bei_result$summary.fixed['I(dist^2)', 'mean'] * x^2),
       from = 0, to = 25, ylim = 0:1,,
-      ylab = 'Detection Probability', xlab = 'Distance (m)',
+      ylab = 'Detection Probability', xlab = 'Distance',
       main = 'Posterior Detection Function')
 dev.off()
 
@@ -461,28 +470,34 @@ dev.off()
 NGRID_X <- 40
 NGRID_Y <- 20
 
-# Have spatstat produce quadrat counts.
-bei_qcounts <- t(quadratcount(
-  bei_obs,
-  xbreaks = seq(min(bei_win$xrange), max(bei_win$xrange), length.out = NGRID_X + 1),
-  ybreaks = seq(min(bei_win$yrange), max(bei_win$yrange), length.out = NGRID_Y + 1),
-))
+# Have spatstat find centers for the grid cells.
+centers <- gridcenters(
+  owin(range(bei_boundary$loc[,1]), range(bei_boundary$loc[,2])),
+  NGRID_X, NGRID_Y)
 
-# Get the tesselation created by quadratcount().
-bei_resid_tess <- as.tess(bei_qcounts)
+# Compute the grid cell size.
+dx <- sum(unique(centers$x)[1:2] * c(-1, 1)) / 2
+dy <- sum(unique(centers$y)[1:2] * c(-1, 1)) / 2
 
-# Get the centroids of the tesselation tiles and put them in a data frame.
-bei_resid_df <- do.call(rbind, lapply(lapply(tiles(bei_resid_tess), centroid.owin), data.frame))
+# Initialize a data frame to store the counts.
+bei_resid_df <- data.frame(x = centers$x, y = centers$y,
+                           count = NA_integer_, area = NA_real_)
 
-# Add the counts to the data frame.
-bei_resid_df$count <- as.numeric(bei_qcounts)
-
-# Find the observed area of each cell.
-bei_resid_df$area <- tile.areas(bei_resid_tess)
+# Loop through the cells, finding the event count and cell area.
+for(r in seq_len(nrow(bei_resid_df))){
+  bei_resid_df$count[r] <- sum(bei_obs$x >= bei_resid_df$x[r] - dx &
+                               bei_obs$x < bei_resid_df$x[r] + dx &
+                               bei_obs$y >= bei_resid_df$y[r] - dy &
+                               bei_obs$y < bei_resid_df$y[r] + dy)
+  bei_resid_df$area[r] <- area(bei_win[owin(c(bei_resid_df$x[r] - dx,
+                                              bei_resid_df$x[r] + dx),
+                                            c(bei_resid_df$y[r] - dy,
+                                              bei_resid_df$y[r] + dy))])
+}
 
 # Set up a projection from the SPDE representation to the residual grid.
 bei_resid_proj <- inla.mesh.projector(bei_mesh,
-  loc = as.matrix(bei_resid_df[,c('x', 'y')]))
+  loc = as.matrix(as.data.frame(centers)))
 
 # Project the intensity surface to the residual grid.
 bei_resid_df$intensity <- as.vector(inla.mesh.project(bei_resid_proj,
@@ -496,14 +511,12 @@ bei_resid_df$pearson <- (bei_resid_df$count - bei_resid_df$expected) /
 # Gridded Pearson residual plot.
 pdf('figures/bei-dist_residuals.pdf', width = 12, height = 6)
 par(mar = c(0, 0, 2, 2))
-plot(bei_resid_tess, border = NA, do.col = TRUE,
-     values = as.hyperframe(bei_resid_df)$pearson,
-     xlim = bei_win$xrange, ylim = bei_win$yrange,
-     ribargs = list(lty = 1, box = TRUE),
+plot(im(t(matrix(bei_resid_df$pearson, nrow = length(unique(bei_resid_df$x)))),
+        unique(bei_resid_df$x), unique(bei_resid_df$y),
+        unitname = c('meter', 'meters')),
      ribsep = 0.05, main = 'Gridded Pearson Residuals')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
 points(bei_obs, pch = '.', col = '#ffffff80')
-mtext('Pearson Residual', 4)
 dev.off()
 
 # Set up a projection from the SPDE representation to the event locations.
@@ -523,7 +536,6 @@ plot(im(t(sqrt(inla.mesh.project(bei_proj,
         xrange = bei_win$x,
         yrange = bei_win$y,
         unitname = c('meter', 'meters')),
-        riblab = 'Square-Root Intensity',
         ribsep = 0.05, main = 'Mark Plot')
 plot(bei_psp, col = '#ffffff80', add = TRUE)
 plot(bei_marked, col = '#ffffff80', add = TRUE)
@@ -570,7 +582,7 @@ cum_pearson_x <- do.call(rbind, c(
 pdf('figures/bei-dist_lurk_x.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ x, data = cum_pearson_x, type = 'l', ylim = c(-4, 2),
-     xlab = 'Horizontal Coordinate (m)', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Horizontal Coordinate')
 abline(h = 0, lty = 2)
 lines(lower ~ x, data = cum_pearson_x, type = 'l', lty = 3)
@@ -600,7 +612,7 @@ cum_pearson_y <- do.call(rbind, c(
 pdf('figures/bei-dist_lurk_y.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ y, data = cum_pearson_y, type = 'l', ylim = c(-3, 2),
-     xlab = 'Vertical Coordinate (m)', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Vertical Coordinate')
 abline(h = 0, lty = 2)
 lines(lower ~ y, data = cum_pearson_y, type = 'l', lty = 3)
@@ -630,7 +642,7 @@ cum_pearson_dist <- do.call(rbind,
 pdf('figures/bei-dist_lurk_dist.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ d, data = cum_pearson_dist, type = 'l',
-     xlab = 'Distance (m)', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Distance', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Distance')
 abline(h = 0, lty = 2)
 lines(lower ~ d, data = cum_pearson_dist, type = 'l', lty = 3)
@@ -660,7 +672,7 @@ cum_pearson_elev <- do.call(rbind,
 pdf('figures/bei-dist_lurk_elev.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ elev, data = cum_pearson_elev, type = 'l', ylim = c(-2, 2),
-     xlab = 'Elevation (m)', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Elevation', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Elevation')
 abline(h = 0, lty = 2)
 lines(lower ~ elev, data = cum_pearson_elev, type = 'l', lty = 3)
@@ -690,7 +702,7 @@ cum_pearson_grad <- do.call(rbind,
 pdf('figures/bei-dist_lurk_grad.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ grad, data = cum_pearson_grad, type = 'l', ylim = c(-2, 2),
-     xlab = 'Gradient (m/m)', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Gradient', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Gradient')
 abline(h = 0, lty = 2)
 lines(lower ~ grad, data = cum_pearson_grad, type = 'l', lty = 3)

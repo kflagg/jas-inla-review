@@ -15,15 +15,15 @@ dev.off()
 
 # Plot the elevation surface.
 pdf('figures/bei_elev.pdf', width = 12, height = 6)
-par(mar = c(0, 0, 2, 0))
+par(mar = c(0, 0, 2, 2))
 plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
 # Plot the gradient surface.
 pdf('figures/bei_grad.pdf', width = 12, height = 6)
-par(mar = c(0, 0, 2, 0))
-plot(bei.extra$grad, main = 'Gradient', ribsep = 0.05)
+par(mar = c(0, 0, 2, 2))
+plot(bei.extra$grad, main = 'Gradient', riblab = 'm/m', ribsep = 0.05)
 points(bei, pch = '.', col = '#ffffff80')
 dev.off()
 
@@ -50,7 +50,7 @@ bei_spde <- inla.spde2.pcmatern(
   prior.range = c(5, 0.1), # Pr(range < 5) = 0.1
   prior.sigma = c(2, 0.1) # Pr(sd > 2) = 0.1
 )
-# Note: alpha = 3/2 is exponential covariance. Only interger alpha are implemented.
+# Note: alpha = 3/2 is exponential covariance. Only integer alpha are implemented.
 # Moeller and Waagepetersen:
 #   Exponential covariance
 #   alpha is one-third of the range
@@ -125,6 +125,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
+        riblab = 'm/m',
         ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
 points(bei, pch = '.', col = '#ffffff80')
@@ -162,7 +163,7 @@ bei_pseudodata_exp <- c(bei_int_weights, rep(0, bei_n_events))
 bei_bary <- inla.mesh.project(bei_mesh, bei_pts)$A
 
 # Compute the barycentric coordinates of the nodes. Because the
-# node coordinatess are the basis vectors, this is an identity matrix.
+# node coordinates are the basis vectors, this is an identity matrix.
 bei_int_matrix <- sparseMatrix(
   i = seq_len(bei_mesh_size),
   j = seq_len(bei_mesh_size),
@@ -184,7 +185,7 @@ bei_pseudopoints <- rbind(bei_int_matrix, bei_bary)
 # idx. The indices correspond to the indixes of the mesh nodes.
 bei_formula <- y ~ -1 + intercept + elev + grad + f(idx, model = bei_spde)
 
-# Define linear combinations to predict the posterior distribution of the inear
+# Define linear combinations to predict the posterior distribution of the linear
 # predictor for the log-intensity surface at each node. We will use these for
 # model checking, exponentiating them and projecting to different lattices as
 # needed. A much more accurate overall approach is to specify a lincomb for
@@ -370,6 +371,7 @@ plot(bei_resid_tess, border = NA, do.col = TRUE,
      ribargs = list(lty = 1, box = TRUE),
      ribsep = 0.05, main = 'Gridded Pearson Residuals')
 points(bei, pch = '.', col = '#ffffff80')
+mtext('Pearson Residual', 4)
 dev.off()
 
 # Set up a projection from the SPDE representation to the event locations.
@@ -389,6 +391,7 @@ plot(im(t(sqrt(inla.mesh.project(bei_proj,
         xrange = Frame(bei)$x,
         yrange = Frame(bei)$y,
         unitname = c('meter', 'meters')),
+        riblab = 'Square-Root Intensity',
         ribsep = 0.05, main = 'Mark Plot')
 plot(bei_marked, col = '#ffffff80', add = TRUE)
 dev.off()
@@ -431,7 +434,7 @@ cum_pearson_x <- do.call(rbind, c(
 pdf('figures/bei_lurk_x.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ x, data = cum_pearson_x, type = 'l', ylim = c(-2, 2),
-     xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Horizontal Coordinate (m)', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Horizontal Coordinate')
 abline(h = 0, lty = 2)
 lines(lower ~ x, data = cum_pearson_x, type = 'l', lty = 3)
@@ -461,7 +464,7 @@ cum_pearson_y <- do.call(rbind, c(
 pdf('figures/bei_lurk_y.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ y, data = cum_pearson_y, type = 'l', ylim = c(-2, 2),
-     xlab = 'Vertical Coordinate', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Vertical Coordinate (m)', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Vertical Coordinate')
 abline(h = 0, lty = 2)
 lines(lower ~ y, data = cum_pearson_y, type = 'l', lty = 3)
@@ -491,7 +494,7 @@ cum_pearson_elev <- do.call(rbind,
 pdf('figures/bei_lurk_elev.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ elev, data = cum_pearson_elev, type = 'l', ylim = c(-2, 2),
-     xlab = 'Elevation', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Elevation (m)', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Elevation')
 abline(h = 0, lty = 2)
 lines(lower ~ elev, data = cum_pearson_elev, type = 'l', lty = 3)
@@ -521,7 +524,7 @@ cum_pearson_grad <- do.call(rbind,
 pdf('figures/bei_lurk_grad.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ grad, data = cum_pearson_grad, type = 'l', ylim = c(-3.5, 2),
-     xlab = 'Gradient', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Gradient (m/m)', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Gradient')
 abline(h = 0, lty = 2)
 lines(lower ~ grad, data = cum_pearson_grad, type = 'l', lty = 3)

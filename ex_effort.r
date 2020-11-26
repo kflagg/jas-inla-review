@@ -35,7 +35,7 @@ dev.off()
 
 # Plot the elevation surface.
 pdf('figures/bei-effort_elev.pdf', width = 12, height = 6)
-par(mar = c(0, 0, 2, 0))
+par(mar = c(0, 0, 2, 2))
 plot(bei.extra$elev, main = 'Elevation', riblab = 'Meters', ribsep = 0.05)
 plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
 points(bei_obs, pch = '.', col = '#ffffff80')
@@ -43,8 +43,8 @@ dev.off()
 
 # Plot the gradient surface.
 pdf('figures/bei-effort_grad.pdf', width = 12, height = 6)
-par(mar = c(0, 0, 2, 0))
-plot(bei.extra$grad, main = 'Gradient', ribsep = 0.05)
+par(mar = c(0, 0, 2, 2))
+plot(bei.extra$grad, main = 'Gradient', riblab = 'm/m', ribsep = 0.05)
 plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
 points(bei_obs, pch = '.', col = '#ffffff80')
 dev.off()
@@ -162,7 +162,7 @@ plot(im(t(inla.mesh.project(bei_proj, bei_mesh_grad)),
         xrange = bei_win$x,
         yrange = bei_win$y,
         unitname = c('meter', 'meters')),
-        ribsep = 0.05,
+        riblab = 'm/m', ribsep = 0.05,
         main = 'Piecewise Linear Approximation of Gradient')
 plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
 points(bei_obs, pch = '.', col = '#ffffff80')
@@ -214,7 +214,7 @@ lines_bary <- inla.mesh.projector(bei_mesh, loc = lines_midpoints)$proj$A
 # Get the area of each segment within each triangle.
 lines_areas <- unlist(sapply(lines_subsegs, area))
 
-# Distribute the area among nodes according to the barycentric coordincates.
+# Distribute the area among nodes according to the barycentric coordinates.
 lines_bary_area <- as(apply(lines_bary, 2, `*`, lines_areas), 'sparseMatrix')
 
 # Sum the columns to get the observed area represented by each node.
@@ -232,7 +232,7 @@ bei_pseudodata_exp <- c(mesh_weights, rep(0, bei_n_events))
 bei_bary <- inla.mesh.project(bei_mesh, bei_pts)$A
 
 # Compute the barycentric coordinates of the nodes. Because the
-# node coordinatess are the basis vectors, this is an identity matrix.
+# node coordinates are the basis vectors, this is an identity matrix.
 bei_int_matrix <- sparseMatrix(
   i = seq_len(bei_mesh_size),
   j = seq_len(bei_mesh_size),
@@ -254,7 +254,7 @@ bei_pseudopoints <- rbind(bei_int_matrix, bei_bary)
 # idx. The indices correspond to the indixes of the mesh nodes.
 bei_formula <- y ~ -1 + intercept + elev + grad + f(idx, model = bei_spde)
 
-# Define linear combinations to predict the posterior distribution of the inear
+# Define linear combinations to predict the posterior distribution of the linear
 # predictor for the log-intensity surface at each node. We will use these for
 # model checking, exponentiating them and projecting to different lattices as
 # needed. A much more accurate overall approach is to specify a lincomb for
@@ -447,6 +447,7 @@ plot(bei_resid_tess, lty = 0, do.col = TRUE,
      ribsep = 0.05, main = 'Gridded Pearson Residuals')
 plot(bei_win, add = TRUE)
 points(bei_obs, pch = '.', col = '#ffffff80')
+mtext('Pearson Residual', 4)
 dev.off()
 
 # Set up a projection from the SPDE representation to the event locations.
@@ -466,6 +467,7 @@ plot(im(t(sqrt(inla.mesh.project(bei_proj,
         xrange = bei_win$x,
         yrange = bei_win$y,
         unitname = c('meter', 'meters')),
+        riblab = 'Square-Root Intensity',
         ribsep = 0.05, main = 'Mark Plot')
 plot(bei_xsect, border = NA, col = '#ffffff20', add = TRUE)
 plot(bei_marked, col = '#ffffff80', add = TRUE)
@@ -509,7 +511,7 @@ cum_pearson_x <- do.call(rbind, c(
 pdf('figures/bei-effort_lurk_x.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ x, data = cum_pearson_x, type = 'l', ylim = c(-6.5, 2),
-     xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Horizontal Coordinate (m)', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Horizontal Coordinate')
 abline(h = 0, lty = 2)
 lines(lower ~ x, data = cum_pearson_x, type = 'l', lty = 3)
@@ -539,7 +541,7 @@ cum_pearson_y <- do.call(rbind, c(
 pdf('figures/bei-effort_lurk_y.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ y, data = cum_pearson_y, type = 'l', ylim = c(-3.5, 2),
-     xlab = 'Horizontal Coordinate', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Vertical Coordinate (m)', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Vertical Coordinate')
 abline(h = 0, lty = 2)
 lines(lower ~ y, data = cum_pearson_y, type = 'l', lty = 3)
@@ -569,7 +571,7 @@ cum_pearson_elev <- do.call(rbind,
 pdf('figures/bei-effort_lurk_elev.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ elev, data = cum_pearson_elev, type = 'l', ylim = c(-2, 2),
-     xlab = 'Elevation', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Elevation (m)', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Elevation')
 abline(h = 0, lty = 2)
 lines(lower ~ elev, data = cum_pearson_elev, type = 'l', lty = 3)
@@ -599,7 +601,7 @@ cum_pearson_grad <- do.call(rbind,
 pdf('figures/bei-effort_lurk_grad.pdf', width = 7, height = 6)
 par(bty = 'n')
 plot(pearson ~ grad, data = cum_pearson_grad, type = 'l', ylim = c(-2, 2),
-     xlab = 'Gradient', ylab = 'Cumulative Pearson Residual',
+     xlab = 'Gradient (m/m)', ylab = 'Cumulative Pearson Residual',
      main = 'Lurking Variable Plot for Gradient')
 abline(h = 0, lty = 2)
 lines(lower ~ grad, data = cum_pearson_grad, type = 'l', lty = 3)
