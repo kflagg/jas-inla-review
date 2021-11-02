@@ -263,7 +263,7 @@ bei_pseudopoints <- rbind(bei_int_matrix, bei_bary)
 # idx. The indices correspond to the indixes of the mesh nodes.
 bei_formula <- y ~ -1 + intercept + elev + grad + I(dist^2) + f(idx, model = bei_spde)
 
-# Define linear combinations to predict the posterior distribution of the inear
+# Define linear combinations to predict the posterior distribution of the linear
 # predictor for the log-intensity surface at each node. We will use these for
 # model checking, exponentiating them and projecting to different lattices as
 # needed. A much more accurate overall approach is to specify a lincomb for

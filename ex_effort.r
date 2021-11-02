@@ -214,7 +214,7 @@ lines_bary <- inla.mesh.projector(bei_mesh, loc = lines_midpoints)$proj$A
 # Get the area of each segment within each triangle.
 lines_areas <- unlist(sapply(lines_subsegs, area))
 
-# Distribute the area among nodes according to the barycentric coordincates.
+# Distribute the area among nodes according to the barycentric coordinates.
 lines_bary_area <- as(apply(lines_bary, 2, `*`, lines_areas), 'sparseMatrix')
 
 # Sum the columns to get the observed area represented by each node.
@@ -232,7 +232,7 @@ bei_pseudodata_exp <- c(mesh_weights, rep(0, bei_n_events))
 bei_bary <- inla.mesh.project(bei_mesh, bei_pts)$A
 
 # Compute the barycentric coordinates of the nodes. Because the
-# node coordinatess are the basis vectors, this is an identity matrix.
+# node coordinates are the basis vectors, this is an identity matrix.
 bei_int_matrix <- sparseMatrix(
   i = seq_len(bei_mesh_size),
   j = seq_len(bei_mesh_size),
@@ -254,7 +254,7 @@ bei_pseudopoints <- rbind(bei_int_matrix, bei_bary)
 # idx. The indices correspond to the indixes of the mesh nodes.
 bei_formula <- y ~ -1 + intercept + elev + grad + f(idx, model = bei_spde)
 
-# Define linear combinations to predict the posterior distribution of the inear
+# Define linear combinations to predict the posterior distribution of the linear
 # predictor for the log-intensity surface at each node. We will use these for
 # model checking, exponentiating them and projecting to different lattices as
 # needed. A much more accurate overall approach is to specify a lincomb for

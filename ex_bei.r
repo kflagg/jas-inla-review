@@ -50,7 +50,7 @@ bei_spde <- inla.spde2.pcmatern(
   prior.range = c(5, 0.1), # Pr(range < 5) = 0.1
   prior.sigma = c(2, 0.1) # Pr(sd > 2) = 0.1
 )
-# Note: alpha = 3/2 is exponential covariance. Only interger alpha are implemented.
+# Note: alpha = 3/2 is exponential covariance. Only integer alpha are implemented.
 # Moeller and Waagepetersen:
 #   Exponential covariance
 #   alpha is one-third of the range
@@ -162,7 +162,7 @@ bei_pseudodata_exp <- c(bei_int_weights, rep(0, bei_n_events))
 bei_bary <- inla.mesh.project(bei_mesh, bei_pts)$A
 
 # Compute the barycentric coordinates of the nodes. Because the
-# node coordinatess are the basis vectors, this is an identity matrix.
+# node coordinates are the basis vectors, this is an identity matrix.
 bei_int_matrix <- sparseMatrix(
   i = seq_len(bei_mesh_size),
   j = seq_len(bei_mesh_size),
@@ -184,7 +184,7 @@ bei_pseudopoints <- rbind(bei_int_matrix, bei_bary)
 # idx. The indices correspond to the indixes of the mesh nodes.
 bei_formula <- y ~ -1 + intercept + elev + grad + f(idx, model = bei_spde)
 
-# Define linear combinations to predict the posterior distribution of the inear
+# Define linear combinations to predict the posterior distribution of the linear
 # predictor for the log-intensity surface at each node. We will use these for
 # model checking, exponentiating them and projecting to different lattices as
 # needed. A much more accurate overall approach is to specify a lincomb for
