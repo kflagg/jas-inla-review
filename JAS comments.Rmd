@@ -1,0 +1,89 @@
+---
+title: "JAS Comments"
+output: pdf_document
+---
+
+I like this paper, it is very well done and gives a good overview of the recent developments, both methodologlical and computational for LGCP's and its extentions.
+
+I have no major comments, but just some minor ones I would request the authors to consider for the revision.
+
+### Minor Comments
+
+1. INLA can also do joint approximations, not just marginal ones. Currently, this is done using `inla.posterior.sample()` and Monte Carlo, which sample iid from the internal joint mixture approximation. A recent development is the ability for the sampler to also account for skewness in the marginals. The `inla()` function has also now an argument, 'selection', for which an analytic approximation to the joint is computed, and can be extracted from the result object (`result$jmarginal`) or we can sample from this approximation using `inla.rjmarginal()`. The approximation is skew-normal marginals with a Gaussian copula. These new features are available in the testing version.
+
+__comment: the following sentence has been added to the end of Section 3.1.2 It is worth noting that joint samples can also be taken using `inla.posterior.sample()` which uses a Monte Carlo procedure to sample from the internal joint mixture approximation.__
+
+2. There is a recent paper in the journal STAT: ``Investigating mesh based approximation methods for the normalization constant in the log Gaussian Cox process likelihood'', by M Jullum, that investigate the integral approximation in more detail.
+
+__comment: the following sentence is added to prior to the start of Section 2.1 "Recently Jullum 2020 has further explored this integral approximation and made recommendations for an analytical approach than can be more accurate"__
+
+3. For a tutorial, I think the reference list is somewhat incomplete. Here are some notes I made.
+
+__comment: all  11 additional references have been included. Sub comments below identify where the references have been included in the text.__
+
+_The recent book should be mentioned (see also www.r-inla.org/books)_
+
+- E. T. Krainski, V. Gómez-Rubio, H. Bakka, A. Lenzi, D. Castro-Camilio, D. Simpson, F. Lindgren, and H. Rue. Advanced Spatial Modeling with Stochastic Partial Differential Equations using R and INLA. Github version www.r-inla.org/spde-book. CRC press, Dec. 2018
+
+__comment: reference added to end of section 2.1__
+
+_I would also mention the ability to deal with barriers like islands, coastlines, etc, for LGCP's, as the Gaussian field can now do this automatically following (and there is full support for this in the R-INLA package)._
+
+- H. Bakka, J. Vanhatalo, J. Illian, D. Simpson, and H. Rue. “Non-stationary Gaussian models with physical barriers”. In: Spatial Statistics 29.March (2019), pp. 268– 288. DOI : https://doi.org/10.1016/j.spasta.2019.01.002.
+
+__comment: reference added to  section 2.3__
+
+_Another use of LGCP's_
+
+- S. Pereira, K. F. Turkman, L. Correia, and H. Rue. “Unemployment estimation: Spatial point referenced methods and models”. In: Spatial Statistics xx.xx (xx 2019), pp. xx–xx. DOI : https : / / doi . org /
+10 . 1016 / j . spasta . 2019 . 100363.
+
+__comment: reference added to end of Section 1.1__
+
+_Discussion of priors for LGCP_
+
+- S. H. Sørbye, J. B. Illian, D. P. Simpson, D. Burslem, and H. Rue. “Careful prior specification avoids incautious inference for log-Gaussian Cox point processes”. In: Journal of the Royal Statistical Society, Series C 68.3 (2019), pp. 543–564. DOI : 10.1111/rssc.12321.
+
+__comment: reference added to Section 1.2__
+
+
+_Review paper about SPDE's etc_
+
+- H. Bakka, H. Rue, G. A. Fuglstad, A. Riebler, D. Bolin, J. Illian, E. Krainski, D. Simpson, and F. Lindgren. “Spatial modelling with R-INLA: A review”. In: WIREs Computational Statistics 10:e1443.6 (2018). (Invited extended review). DOI : 10.1002/wics.1443.
+
+__comment: reference added to end of Section 2.1__
+
+_Review paper about INLA etc_
+
+- H. Rue, A. Riebler, S. H. Sørbye, J. B. Illian, D. P. Simpson, and F.
+K. Lindgren. “Bayesian Computing with INLA: A Review”. In: Annual Reviews of Statistics and Its Applications 4.March (2017), pp. 395–421. DOI : 10 . 1146 / annurev - statistics-060116-054045.
+
+__comment: reference added to end of Section 1__
+
+_Another use of LGCP's_
+
+- L. Serra, M. Saez ad J. Mateu, D. Varga, P. Juan, C. Dias-Ávalos, and H. Rue. “Spatio-temporal log-Gaussian Cox processes for modelling wildfire occurrence: the case of Catalonia, 1994-2008”. In: Environmental and Ecological Statistics 21.3 (2013), pp. 531–563.
+
+__comment: added to end of Section 1.1__
+
+_Two early papers about LGCP's_
+
+- J. B. Illian, S. H. Sørbye, H. Rue, and D. K. Hendrichsen. “Using INLA
+To Fit A Complex Point Process Model With Temporally Varying Effects – A Case Study”. In: Journal of Environmental Statistics 3.7 (2012).
+
+__comment: added to Section 1__
+
+- Y. Li, P. Brown, H. Rue, and D. C. Gesink. “Log Gaussian Cox Processes and spatially aggregated disease incidence data”. In: Statistical Methods in Medical Research 21.5 (2012), pp. 479–507.
+
+__comment: added to Section 1__
+
+_Two papers on the background for 'why SPDEs' and why INLA which will fit nicely_
+
+- D. P. Simpson, F. K. Lindgren, and H. Rue. “Think continuous: Markovian Gaussian models in spatial statistics”. In: Spatial Statistics 1.1
+(2011), pp. 16–29
+
+__comment: added to Section 2.1__
+
+- D. Simpson, F. Lindgren, and H. Rue. “In order to make spatial statistics computationally feasible, we need to forget about the covariance function”. In: Environmetrics 23.1 (2012), pp. 65–74.
+
+__comment: added to Section 2.1__

@@ -107,7 +107,7 @@ achieve similar precision.
 
 Development of INLA has made accurate approximate model fitting considerably
 more feasible for a particular class of log-Gaussian Cox process (LGCP)
-models. A key part of INLA's computational simplicity is that it calculates
+models. Early work applying INLA to LGCP models included studying replicated point patterns for syphilis risk \cite{li2012log} and muskoxen locations \cite{illian2012using}. A key part of INLA's computational simplicity is that it calculates
 the posterior distribution of each latent Gaussian variable one at a time;
 that is, it provides only the posterior marginal distributions rather than the
 full joint distribution.
@@ -225,9 +225,9 @@ intensity function is itself a random process to be predicted.
 
 Spatial or spatiotemporal LGCP models have recently been applied to whale
 populations (Yuan et. al., 2017), landslides (Lombardo et. al., 2018), fMRI
-data (Samartsidis et. al., 2019), and disease mapping (Konstantinoudis et.
+data (Samartsidis et. al., 2019), unemployment estimates (Pereira 2019 et. al., 2019), wildfile mapping (Serra et. al., 2014) and disease mapping (Konstantinoudis et.
 al., 2020) to list only a few
-applications~\cite{yuanetal,lombardoetal,samartsidisetal,konstantinoudisetal}.
+applications~\cite{yuanetal,lombardoetal,samartsidisetal,pereira2019,serra2014,konstantinoudisetal}.
 Baddeley et. al.~(2005) and M\"{o}ller and Waagepetersen~(2007) present model
 checking tools for LGCP and other spatial point process
 models~\cite{baddeleyresiduals,moellerwaagepetersen}.
@@ -256,7 +256,7 @@ consistent with spatial point process notation. Let \(\mathbf{y}\) be the
 response (vector). Let \(\boldsymbol{\xi}\) be a vector of all unobserved
 Gaussian variables in the model, including both parameters with Gaussian
 priors, and latent Gaussian variables such as random effects or values of a
-Gaussian field to be predicted. Let \(\boldsymbol{\theta}\) be a vector of all
+Gaussian field to be predicted. (Note S$\o$rbye et. al. (2019) provides guidance on prior specification \cite{s2019}). Let \(\boldsymbol{\theta}\) be a vector of all
 non-Gaussian model parameters. The posterior distribution is
 \begin{equation}
 \pi\left(\boldsymbol{\xi}, \boldsymbol{\theta}| \mathbf{y}\right)
@@ -311,7 +311,7 @@ These approximations, as well as fast numerical integration methods and
 numerical optimization to find the posterior modes, are packaged in the INLA
 software and R-INLA library. The software offerings are stable and documented
 to the point that the applied statistician can use them without knowing all of
-the computational details.
+the computational details. Rue et. al. (2017) provides a helpful review of INLA \cite{rue2017bayesian}.
 
 
 \section{Methodology}
@@ -326,7 +326,7 @@ integration scheme which can also be used to approximate the LGCP likelihood
 and negate the need to grid the events into Poisson counts~\cite{simpsonetal}.
 With these computational improvements, researchers are now able to efficiently
 fit LGCP models to large spatial point pattern datasets and even
-incompletely-observed point patterns~\cite{yuanetal}.  
+incompletely-observed point patterns~\cite{yuanetal}. Recently Jullum (2020) has further explored this integral approximation and made recommendations for an analytical approach than can be more accurate \cite{jullum2020}.
 
 
 \subsection{The SPDE Approach}
@@ -337,7 +337,7 @@ Gaussian processes is critical when working with LGCP models. The GP imposes a
 dense covariance matrix on the latent variables~\cite{rinla}. For GPs with a
 Mat\'{e}rn covariance function, a Gaussian Markov random field (GMRF)
 approximation can simplify computation, requiring only a sparse covariance
-structure.
+structure. Simpson, Lindgren, and Rue (2012) frame this idea through the lens of using a continuously specified Markovian Gaussian random fields induced by a SPDE \cite{simpson2012think}. More explicitly, Simpson, Lindgren, and Rue (2012) also showed that the Gaussian Markov random field was a better representation than kernel convolution \cite{simpson2012order}.
 
 The GMRF approximation is motivated by the fact that Gaussian fields with
 Mat\'{e}rn covariances are solutions to the stochastic partial differential
@@ -460,7 +460,7 @@ of the continuous Gaussian field;
 
 The SPDE approach is implemented in the R-INLA package alongside tools
 for constructing meshes. A wrapper for easily specifying LGCP models is
-provided in the \texttt{inlabru} package~\cite{inlabru}.
+provided in the \texttt{inlabru} package~\cite{inlabru}. A recent textbook contains additional information and reproducible code for using SPDE's and R-INLA \cite{krainski2018}. Furthermore, Bakka et. al. (2018) provides an review of spatial modeling for SPDEs \cite{bakka2018spatial}.
 
 
 \subsection{Going Off the Grid}
@@ -541,7 +541,7 @@ define dummy points at the mesh nodes and construct a pseudodata vector
 
 There has long been a gap between point process modeling theory and practice,
 where point process models are only fit to data from completely-observed
-domains under the assumption that every event was detected perfectly. In
+domains under the assumption that every event was detected perfectly. While R-INLA contains functionality to fit models that account for physical barriers \cite{bakka2019}, incompletely-observed domain is a different problem. In
 practice, this is not the case as it may be impossible or impractical to census
 the entire region of interest. For example, line-transect surveys routinely
 generate point pattern data but are analyzed after aggregation rather than
@@ -732,9 +732,7 @@ linear predictor, a Poisson family model (which defaults to a log link), the
 data list, the \(\mathbf{A}\) matrix, the priors for the coefficients, and the
 \(\boldsymbol{\alpha}\) vector as the exposure parameter. This function
 delivers the posterior marginal distribution of each parameter, latent
-variable, and any requested linear combinations of those. The \texttt{inla()}
-function takes about 90 seconds to fit the model on a midrange laptop.
-
+variable, and any requested linear combinations of those. The \texttt{inla()} function takes about 90 seconds to fit the model on a midrange laptop. It is worth noting that joint samples can also be taken using \texttt{inla.posterior.sample()} which uses a Monte Carlo procedure to sample from the internal joint mixture approximation.
 
 \subsubsection{Results}
 \label{beiresults}
