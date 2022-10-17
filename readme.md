@@ -1,1 +1,1 @@
-INLA review for JAS
+Example code to accompany Flagg and Hoegh 2022, [The integrated nested Laplace approximation applied to spatial log-Gaussian Cox process models](https://www.tandfonline.com/doi/abs/10.1080/02664763.2021.2023116)
